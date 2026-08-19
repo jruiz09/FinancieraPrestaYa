@@ -1,0 +1,44 @@
+Prestayalanus!2026
+root
+
+
+CREATE USER 'financieralanus'@'localhost'
+IDENTIFIED BY 'Prestayalanus!2026';
+
+
+CREATE USER 'financieralanus'@'localhost'
+IDENTIFIED BY 'Prestayalanus!2026';
+
+
+
+GRANT ALL PRIVILEGES
+ON depositolanus.*
+TO 'financieralanus'@'localhost';
+
+FLUSH PRIVILEGES;
+
+
+
+
+
+CREATE USER 'workbench'@'190.247.243.215'
+IDENTIFIED BY 'workbench123';
+
+
+
+GRANT ALL PRIVILEGES
+ON financieralanus.*
+TO 'workbench'@'190.247.243.215';
+
+FLUSH PRIVILEGES;
+
+
+GRANT ALL PRIVILEGES
+ON depositolanus.*
+TO 'workbench'@'190.247.243.215';
+
+FLUSH PRIVILEGES;
+
+
+
+ufw allow from 190.247.243.215 to any port 3306 proto tcp

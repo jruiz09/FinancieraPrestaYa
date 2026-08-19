@@ -1,0 +1,42 @@
+@import "tailwindcss";
+
+html,
+body,
+#root {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  min-height: 100vh;
+}
+
+body {
+  font-family: Inter, sans-serif;
+  background: #f8fafc;
+}
+
+
+@keyframes slide-up {
+
+  from {
+
+    transform: translateY(100%);
+
+    opacity: 0;
+
+  }
+
+  to {
+
+    transform: translateY(0);
+
+    opacity: 1;
+
+  }
+
+}
+
+.animate-slide-up {
+
+  animation: slide-up .25s ease-out;
+
+}

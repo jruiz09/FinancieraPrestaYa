@@ -31,13 +31,13 @@ const porcentaje = (recaudado, aRecaudar) => {
   );
 };
 
-const diaAnterior = fecha => {
+const diaSiguiente = fecha => {
 
   const [anio, mes, dia] = fecha.split('-').map(Number);
 
   const date = new Date(anio, mes - 1, dia);
 
-  date.setDate(date.getDate() - 1);
+  date.setDate(date.getDate() + 1);
 
   const y = date.getFullYear();
   const m = String(date.getMonth() + 1).padStart(2, '0');
@@ -66,7 +66,7 @@ export const getInformeDiario = async (req, res, next) => {
       });
     }
 
-    const fechaAyer = diaAnterior(fecha);
+    const fechaManana = diaSiguiente(fecha);
 
     /*
     =================================================
@@ -115,7 +115,7 @@ export const getInformeDiario = async (req, res, next) => {
 
     /*
     =================================================
-    REGISTROS MANUALES (hoy y ayer)
+    REGISTRO MANUAL DEL DIA
     =================================================
     */
 
@@ -128,20 +128,65 @@ export const getInformeDiario = async (req, res, next) => {
       }
     });
 
-    const registrosAyer = await RegistroDiarioZona.findAll({
-      where: {
-        zoneId: zonaIds,
-        fecha: fechaAyer
-      }
-    });
-
     const registroHoyMap = new Map(
       registrosHoy.map(r => [r.zoneId, r])
     );
 
-    const registroAyerMap = new Map(
-      registrosAyer.map(r => [r.zoneId, r])
-    );
+    /*
+    =================================================
+    A RECAUDAR (cuotas que vencen fechaObjetivo, via
+    Credito.cobradorId -> zona). Se usa tanto para HOY
+    (A RECAUDAR) como para MAÑANA (RECAUDACION DIA SIG
+    calculado).
+    =================================================
+    */
+
+    const calcularVencimientosPorZona = async fechaObjetivo => {
+
+      const porZona = new Map();
+
+      if (todosLosCollectorIds.length === 0) {
+        return porZona;
+      }
+
+      const cuotas = await CreditoDetalle.findAll({
+        where: {
+          activo: true,
+          fechaVencimiento: fechaObjetivo
+        },
+        attributes: ['id', 'monto'],
+        include: [
+          {
+            model: Credito,
+            as: 'credito',
+            required: true,
+            attributes: ['id', 'cobradorId'],
+            where: {
+              activo: true,
+              cobradorId: todosLosCollectorIds
+            }
+          }
+        ]
+      });
+
+      for (const cuota of cuotas) {
+
+        const zonaId = collectorZonaMap.get(cuota.credito.cobradorId);
+
+        if (!zonaId) continue;
+
+        porZona.set(
+          zonaId,
+          numero(porZona.get(zonaId)) + numero(cuota.monto)
+        );
+      }
+
+      return porZona;
+    };
+
+    const aRecaudarPorZona = await calcularVencimientosPorZona(fecha);
+    const recaudacionDiaSigCalculadaPorZona =
+      await calcularVencimientosPorZona(fechaManana);
 
     /*
     =================================================
@@ -333,17 +378,18 @@ export const getInformeDiario = async (req, res, next) => {
     const data = zonas.map(zona => {
 
       const registroHoy = registroHoyMap.get(zona.id);
-      const registroAyer = registroAyerMap.get(zona.id);
 
-      const sinDatoAnterior = registroAyer?.recaudacionDiaSig == null;
+      const aRecaudar = numero(aRecaudarPorZona.get(zona.id));
 
-      const aRecaudar = sinDatoAnterior
-        ? (
-            registroHoy?.aRecaudarManual != null
-              ? numero(registroHoy.aRecaudarManual)
-              : null
-          )
-        : numero(registroAyer.recaudacionDiaSig);
+      const recaudacionDiaSigCalculado =
+        numero(recaudacionDiaSigCalculadaPorZona.get(zona.id));
+
+      const tieneOverride =
+        registroHoy?.recaudacionDiaSigOverride != null;
+
+      const recaudacionDiaSig = tieneOverride
+        ? numero(registroHoy.recaudacionDiaSigOverride)
+        : recaudacionDiaSigCalculado;
 
       const recaudado = numero(recaudadoPorZona.get(zona.id));
       const ayuda = numero(ayudaPorZona.get(zona.id));
@@ -362,7 +408,6 @@ export const getInformeDiario = async (req, res, next) => {
         zoneId: zona.id,
         zona: zona.nombre,
         aRecaudar,
-        aRecaudarEditable: sinDatoAnterior,
         porcentajeCobranza: porcentaje(recaudado, aRecaudar),
         recaudado,
         entregas,
@@ -374,10 +419,8 @@ export const getInformeDiario = async (req, res, next) => {
         mp,
         deja,
         ecu,
-        recaudacionDiaSig:
-          registroHoy?.recaudacionDiaSig != null
-            ? numero(registroHoy.recaudacionDiaSig)
-            : null
+        recaudacionDiaSig,
+        recaudacionDiaSigEsOverride: tieneOverride
       };
     });
 
@@ -422,8 +465,7 @@ export const guardarInformeDiario = async (req, res, next) => {
       pr,
       mp,
       ecu,
-      recaudacionDiaSig,
-      aRecaudarManual
+      recaudacionDiaSigOverride
     } = req.body;
 
     const zona = await Zone.findOne({
@@ -458,8 +500,7 @@ export const guardarInformeDiario = async (req, res, next) => {
       pr,
       mp,
       ecu,
-      recaudacionDiaSig,
-      aRecaudarManual
+      recaudacionDiaSigOverride
     };
 
     for (const [campo, valor] of Object.entries(campos)) {

@@ -75,11 +75,7 @@ export default function InformeDiarioPage() {
             pr: zona.pr ?? 0,
             mp: zona.mp ?? 0,
             ecu: zona.ecu ?? 0,
-            recaudacionDiaSig: zona.recaudacionDiaSig ?? '',
-            aRecaudarManual:
-              zona.aRecaudarEditable && zona.aRecaudar != null
-                ? zona.aRecaudar
-                : ''
+            recaudacionDiaSig: zona.recaudacionDiaSig ?? ''
           }
         }
 
@@ -125,18 +121,10 @@ export default function InformeDiarioPage() {
           pr: valores.pr,
           mp: valores.mp,
           ecu: valores.ecu,
-          recaudacionDiaSig:
+          recaudacionDiaSigOverride:
             valores.recaudacionDiaSig === ''
               ? null
               : valores.recaudacionDiaSig
-        }
-
-        if (zona.aRecaudarEditable) {
-
-          payload.aRecaudarManual =
-            valores.aRecaudarManual === ''
-              ? null
-              : valores.aRecaudarManual
         }
 
         await informeDiarioService.guardar(payload)
@@ -148,6 +136,36 @@ export default function InformeDiarioPage() {
         setError(
           err.response?.data?.message ||
           'Error guardando la zona'
+        )
+
+      } finally {
+
+        setGuardandoZona(null)
+
+      }
+
+    }
+
+  const handleRevertirRecaudacionDiaSig =
+    async (zona) => {
+
+      try {
+
+        setGuardandoZona(zona.zoneId)
+
+        await informeDiarioService.guardar({
+          zoneId: zona.zoneId,
+          fecha,
+          recaudacionDiaSigOverride: null
+        })
+
+        await cargar()
+
+      } catch (err) {
+
+        setError(
+          err.response?.data?.message ||
+          'Error revirtiendo el valor calculado'
         )
 
       } finally {
@@ -280,28 +298,7 @@ export default function InformeDiarioPage() {
                     </td>
 
                     <td className="p-3 text-right">
-
-                      {zona.aRecaudarEditable ? (
-
-                        <input
-                          type="number"
-                          value={valores.aRecaudarManual}
-                          onChange={(e) =>
-                            handleChange(
-                              zona.zoneId,
-                              'aRecaudarManual',
-                              e.target.value
-                            )
-                          }
-                          className={inputClass}
-                        />
-
-                      ) : (
-
-                        money(zona.aRecaudar)
-
-                      )}
-
+                      {money(zona.aRecaudar)}
                     </td>
 
                     <td className="p-3 text-right">
@@ -410,20 +407,85 @@ export default function InformeDiarioPage() {
 
                     </td>
 
-                    <td className="p-3 text-right">
+                    <td className="p-3">
 
-                      <input
-                        type="number"
-                        value={valores.recaudacionDiaSig}
-                        onChange={(e) =>
-                          handleChange(
-                            zona.zoneId,
-                            'recaudacionDiaSig',
-                            e.target.value
-                          )
-                        }
-                        className={inputClass}
-                      />
+                      <div
+                        className="
+                          flex
+                          flex-col
+                          items-end
+                          gap-1
+                        "
+                      >
+
+                        <input
+                          type="number"
+                          value={valores.recaudacionDiaSig}
+                          onChange={(e) =>
+                            handleChange(
+                              zona.zoneId,
+                              'recaudacionDiaSig',
+                              e.target.value
+                            )
+                          }
+                          className={inputClass}
+                        />
+
+                        <div
+                          className="
+                            flex
+                            items-center
+                            gap-1.5
+                          "
+                        >
+
+                          <span
+                            className={`
+                              text-[10px]
+                              font-semibold
+                              px-1.5
+                              py-0.5
+                              rounded
+                              ${
+                                zona.recaudacionDiaSigEsOverride
+                                  ? 'bg-amber-100 text-amber-700'
+                                  : 'bg-gray-100 text-gray-500'
+                              }
+                            `}
+                          >
+                            {
+                              zona.recaudacionDiaSigEsOverride
+                                ? 'Manual'
+                                : 'Calculado'
+                            }
+                          </span>
+
+                          {zona.recaudacionDiaSigEsOverride && (
+
+                            <button
+                              type="button"
+                              title="Volver al valor calculado"
+                              onClick={() =>
+                                handleRevertirRecaudacionDiaSig(zona)
+                              }
+                              disabled={
+                                guardandoZona === zona.zoneId
+                              }
+                              className="
+                                text-[10px]
+                                text-cyan-600
+                                hover:text-cyan-800
+                                underline
+                              "
+                            >
+                              Revertir
+                            </button>
+
+                          )}
+
+                        </div>
+
+                      </div>
 
                     </td>
 

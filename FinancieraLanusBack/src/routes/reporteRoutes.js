@@ -51,8 +51,9 @@ router.put(
   body('pr').optional().isFloat({ min: 0 }),
   body('mp').optional().isFloat({ min: 0 }),
   body('ecu').optional().isFloat({ min: 0 }),
-  body('recaudacionDiaSig').optional().isFloat({ min: 0 }),
-  body('aRecaudarManual').optional().isFloat({ min: 0 }),
+  body('recaudacionDiaSigOverride')
+    .optional({ nullable: true })
+    .isFloat({ min: 0 }),
   validateRequest,
   guardarInformeDiario
 );

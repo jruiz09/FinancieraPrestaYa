@@ -4,6 +4,7 @@ import Pagination from '../components/Pagination'
 import ErrorAlert from '../components/ErrorAlert'
 import TipoPlanModal from '../components/TipoPlanModal'
 import { tipoPlanService } from '../services/tipoPlanService'
+import { ReceiptText } from 'lucide-react'
 
 export default function TiposPlanPage() {
   const [tiposPlan, setTiposPlan] = useState([])
@@ -109,125 +110,341 @@ export default function TiposPlanPage() {
   )
 
   return (
-    <div>
-      <div className="mb-4 flex justify-between items-center">
-        <h2 className="text-2xl font-semibold">
-          Tipos de Plan
-        </h2>
+    <div className="space-y-6 pb-10">
 
-        <button
-          onClick={openCreateModal}
-          className="px-4 py-2 bg-cyan-500 hover:bg-cyan-600 text-white rounded font-medium"
+      {/* HEADER */}
+      <section
+        className="
+          relative
+          overflow-hidden
+          rounded-3xl
+          border
+          border-stone-200
+          bg-gradient-to-br
+          from-stone-50
+          via-white
+          to-amber-50
+          px-5
+          py-6
+          shadow-sm
+          sm:px-7
+          sm:py-7
+        "
+      >
+        <div
+          className="
+            pointer-events-none
+            absolute
+            -right-16
+            -top-16
+            h-48
+            w-48
+            rounded-full
+            bg-amber-200/30
+            blur-3xl
+          "
+        />
+
+        <div
+          className="
+            relative
+            flex
+            flex-col
+            gap-5
+            sm:flex-row
+            sm:items-center
+            sm:justify-between
+          "
         >
-          + Nuevo
-        </button>
-      </div>
+          <div>
+            <div
+              className="
+                mb-2
+                inline-flex
+                items-center
+                gap-2
+                rounded-full
+                border
+                border-amber-200
+                bg-amber-50
+                px-3
+                py-1
+                text-xs
+                font-semibold
+                text-amber-700
+              "
+            >
+              <span className="h-2 w-2 rounded-full bg-amber-500" />
+              Configuración
+            </div>
+
+            <h1
+              className="
+                text-2xl
+                font-bold
+                tracking-tight
+                text-stone-900
+                sm:text-3xl
+              "
+            >
+              Tipos de plan
+            </h1>
+
+            <p
+              className="
+                mt-1
+                text-sm
+                text-stone-500
+                sm:text-base
+              "
+            >
+              Definí los plazos disponibles
+              para armar créditos.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={openCreateModal}
+            className="
+              inline-flex
+              min-h-[46px]
+              items-center
+              justify-center
+              gap-2
+              rounded-xl
+              bg-stone-900
+              px-5
+              py-3
+              text-sm
+              font-semibold
+              text-white
+              shadow-sm
+              transition
+              hover:-translate-y-0.5
+              hover:bg-stone-800
+              hover:shadow-md
+            "
+          >
+            <span className="text-xl leading-none">+</span>
+            Nuevo tipo de plan
+          </button>
+        </div>
+      </section>
 
       <ErrorAlert
         message={error}
         onDismiss={() => setError('')}
       />
 
-      <SearchBar
-        placeholder="Buscar por descripción..."
-        value={search}
-        onChange={setSearch}
-      />
+      {/* BUSCADOR */}
+      <section
+        className="
+          rounded-2xl
+          border
+          border-stone-200
+          bg-white
+          p-4
+          shadow-sm
+          sm:p-5
+        "
+      >
+        <SearchBar
+          placeholder="Buscar por descripción..."
+          value={search}
+          onChange={setSearch}
+        />
+      </section>
 
       {isLoading ? (
-        <div className="text-center py-8">
-          Cargando...
+
+        <div
+          className="
+            rounded-2xl
+            border
+            border-stone-200
+            bg-white
+            p-6
+            shadow-sm
+          "
+        >
+          <div className="space-y-4">
+            {[1, 2, 3].map((item) => (
+              <div
+                key={item}
+                className="
+                  h-14
+                  animate-pulse
+                  rounded-xl
+                  bg-stone-100
+                "
+              />
+            ))}
+          </div>
         </div>
+
       ) : (
         <>
-          <div className="overflow-x-auto bg-white dark:bg-gray-800 rounded shadow">
-            <table className="w-full text-sm">
-              <thead className="bg-gray-100 dark:bg-gray-700 border-b dark:border-gray-600">
-                <tr>
-                  <th className="px-4 py-3 text-left font-semibold">
-                    Descripción
-                  </th>
+          <div
+            className="
+              overflow-hidden
+              rounded-2xl
+              border
+              border-stone-200
+              bg-white
+              shadow-sm
+            "
+          >
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-stone-50/80">
+                  <tr
+                    className="
+                      border-b
+                      border-stone-200
+                      text-xs
+                      uppercase
+                      tracking-wide
+                      text-stone-500
+                    "
+                  >
+                    <th className="px-5 py-3 text-left">
+                      Descripción
+                    </th>
 
-                  <th className="px-4 py-3 text-left font-semibold">
-                    Días
-                  </th>
+                    <th className="px-4 py-3 text-left">
+                      Días
+                    </th>
 
-                  <th className="px-4 py-3 text-left font-semibold">
-                    Estado
-                  </th>
+                    <th className="px-4 py-3 text-left">
+                      Estado
+                    </th>
 
-                  <th className="px-4 py-3 text-left font-semibold">
-                    Acciones
-                  </th>
-                </tr>
-              </thead>
-
-              <tbody>
-                {filteredTiposPlan.length === 0 ? (
-                  <tr>
-                    <td
-                      colSpan="4"
-                      className="px-4 py-8 text-center text-gray-500"
-                    >
-                      Sin tipos de plan
-                    </td>
+                    <th className="px-5 py-3 text-right">
+                      Acciones
+                    </th>
                   </tr>
-                ) : (
-                  filteredTiposPlan.map((tipoPlan) => (
-                    <tr
-                      key={tipoPlan.id}
-                      className="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
-                    >
-                      <td className="px-4 py-3">
-                        {tipoPlan.descripcion}
-                      </td>
+                </thead>
 
-                      <td className="px-4 py-3">
-                        {tipoPlan.dias}
-                      </td>
-
-                      <td className="px-4 py-3">
-                        <span
-                          className={`px-2 py-1 rounded text-xs font-medium ${
-                            tipoPlan.activo
-                              ? 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-100'
-                              : 'bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-100'
-                          }`}
-                        >
-                          {tipoPlan.activo
-                            ? 'Activo'
-                            : 'Inactivo'}
-                        </span>
-                      </td>
-
-                      <td className="px-4 py-3 flex gap-2">
-                        <button
-                          onClick={() =>
-                            openEditModal(tipoPlan)
-                          }
-                          className="px-2 py-1 text-xs bg-blue-500 hover:bg-blue-600 text-white rounded"
-                        >
-                          Editar
-                        </button>
-
-                        {tipoPlan.activo && (
-                          <button
-                            onClick={() =>
-                              handleDeactivate(
-                                tipoPlan.id
-                              )
-                            }
-                            className="px-2 py-1 text-xs bg-red-500 hover:bg-red-600 text-white rounded"
-                          >
-                            Desactivar
-                          </button>
-                        )}
+                <tbody className="divide-y divide-stone-100">
+                  {filteredTiposPlan.length === 0 ? (
+                    <tr>
+                      <td
+                        colSpan="4"
+                        className="px-5 py-12 text-center text-stone-400"
+                      >
+                        No se encontraron tipos de plan.
                       </td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+                  ) : (
+                    filteredTiposPlan.map((tipoPlan) => (
+                      <tr
+                        key={tipoPlan.id}
+                        className="transition hover:bg-amber-50/40"
+                      >
+                        <td className="px-5 py-4">
+                          <div className="flex items-center gap-3">
+                            <div
+                              className="
+                                flex
+                                h-9
+                                w-9
+                                shrink-0
+                                items-center
+                                justify-center
+                                rounded-lg
+                                bg-amber-50
+                                text-amber-700
+                              "
+                            >
+                              <ReceiptText className="h-4 w-4" />
+                            </div>
+
+                            <span className="font-semibold text-stone-800">
+                              {tipoPlan.descripcion}
+                            </span>
+                          </div>
+                        </td>
+
+                        <td className="px-4 py-4 text-stone-600">
+                          {tipoPlan.dias}
+                          {' '}
+                          {Number(tipoPlan.dias) === 1 ? 'día' : 'días'}
+                        </td>
+
+                        <td className="px-4 py-4">
+                          <span
+                            className={`
+                              inline-flex
+                              rounded-full
+                              px-2.5
+                              py-1
+                              text-xs
+                              font-bold
+                              ${
+                                tipoPlan.activo
+                                  ? 'bg-emerald-100 text-emerald-700'
+                                  : 'bg-red-100 text-red-700'
+                              }
+                            `}
+                          >
+                            {tipoPlan.activo ? 'Activo' : 'Inactivo'}
+                          </span>
+                        </td>
+
+                        <td className="px-5 py-4">
+                          <div className="flex justify-end gap-2">
+                            <button
+                              type="button"
+                              onClick={() => openEditModal(tipoPlan)}
+                              className="
+                                rounded-lg
+                                border
+                                border-stone-200
+                                px-3
+                                py-2
+                                text-xs
+                                font-semibold
+                                text-stone-600
+                                transition
+                                hover:border-amber-300
+                                hover:bg-amber-50
+                                hover:text-amber-700
+                              "
+                            >
+                              Editar
+                            </button>
+
+                            {tipoPlan.activo && (
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  handleDeactivate(tipoPlan.id)
+                                }
+                                className="
+                                  rounded-lg
+                                  border
+                                  border-red-100
+                                  px-3
+                                  py-2
+                                  text-xs
+                                  font-semibold
+                                  text-red-500
+                                  transition
+                                  hover:bg-red-50
+                                "
+                              >
+                                Desactivar
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
 
           <Pagination

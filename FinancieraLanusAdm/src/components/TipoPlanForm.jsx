@@ -67,11 +67,32 @@ export default function TipoPlanForm({
     })
   }
 
+  const inputClass = `
+    w-full
+    rounded-xl
+    border
+    border-stone-200
+    bg-stone-50
+    px-3.5
+    py-2.5
+    text-sm
+    text-stone-900
+    outline-none
+    transition
+    placeholder:text-stone-400
+    focus:border-amber-400
+    focus:bg-white
+    focus:ring-4
+    focus:ring-amber-100
+    disabled:cursor-not-allowed
+    disabled:opacity-60
+  `
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
 
       <div>
-        <label className="block text-sm font-medium mb-1">
+        <label className="mb-1.5 block text-sm font-medium text-stone-700">
           Descripción
         </label>
 
@@ -81,22 +102,19 @@ export default function TipoPlanForm({
           value={formData.descripcion}
           onChange={handleChange}
           disabled={isLoading}
-          className={`w-full p-2 border rounded bg-white dark:bg-gray-700 ${
-            errors.descripcion
-              ? 'border-red-500'
-              : 'dark:border-gray-600'
-          }`}
+          placeholder="Ej: Plan semanal 12 cuotas"
+          className={inputClass}
         />
 
         {errors.descripcion && (
-          <p className="text-red-500 text-xs mt-1">
+          <p className="mt-1.5 text-xs font-medium text-red-500">
             {errors.descripcion}
           </p>
         )}
       </div>
 
       <div>
-        <label className="block text-sm font-medium mb-1">
+        <label className="mb-1.5 block text-sm font-medium text-stone-700">
           Días
         </label>
 
@@ -107,15 +125,12 @@ export default function TipoPlanForm({
           value={formData.dias}
           onChange={handleChange}
           disabled={isLoading}
-          className={`w-full p-2 border rounded bg-white dark:bg-gray-700 ${
-            errors.dias
-              ? 'border-red-500'
-              : 'dark:border-gray-600'
-          }`}
+          placeholder="Ej: 7"
+          className={inputClass}
         />
 
         {errors.dias && (
-          <p className="text-red-500 text-xs mt-1">
+          <p className="mt-1.5 text-xs font-medium text-red-500">
             {errors.dias}
           </p>
         )}
@@ -124,7 +139,26 @@ export default function TipoPlanForm({
       <button
         type="submit"
         disabled={isLoading}
-        className="w-full py-2 bg-cyan-500 hover:bg-cyan-600 text-white rounded font-medium disabled:opacity-50"
+        className="
+          inline-flex
+          w-full
+          min-h-[42px]
+          items-center
+          justify-center
+          gap-2
+          rounded-xl
+          bg-stone-900
+          px-6
+          py-2.5
+          text-sm
+          font-semibold
+          text-white
+          shadow-sm
+          transition
+          hover:bg-stone-800
+          disabled:cursor-not-allowed
+          disabled:opacity-50
+        "
       >
         {isLoading ? 'Guardando...' : 'Guardar'}
       </button>

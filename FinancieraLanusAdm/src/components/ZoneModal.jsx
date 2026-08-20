@@ -1,3 +1,5 @@
+import { useEffect } from 'react'
+
 import ZoneForm
   from './ZoneForm'
 
@@ -10,6 +12,37 @@ export default function ZoneModal({
   isLoading
 }) {
 
+  useEffect(() => {
+
+    if (!isOpen) return
+
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+
+    return () => {
+      document.body.style.overflow = previousOverflow
+    }
+
+  }, [isOpen])
+
+  useEffect(() => {
+
+    if (!isOpen) return
+
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape' && !isLoading) {
+        onClose()
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+    }
+
+  }, [isOpen, isLoading, onClose])
+
   if (!isOpen)
     return null
 
@@ -19,46 +52,103 @@ export default function ZoneModal({
       className="
         fixed
         inset-0
-        bg-black/50
-        flex
-        items-center
-        justify-center
         z-50
+        flex
+        items-end
+        justify-center
+        bg-stone-950/50
+        backdrop-blur-sm
+        sm:items-center
+        sm:p-4
       "
+      onMouseDown={(e) => {
+        if (e.target === e.currentTarget && !isLoading) {
+          onClose()
+        }
+      }}
     >
 
       <div
         className="
-          bg-white
-          rounded
-          shadow
+          flex
+          max-h-[96dvh]
           w-full
-          max-w-lg
+          flex-col
+          overflow-hidden
+          rounded-t-3xl
+          border
+          border-stone-200
+          bg-white
+          shadow-2xl
+          sm:max-h-[92vh]
+          sm:max-w-lg
+          sm:rounded-3xl
         "
       >
 
         <div
           className="
-            p-4
-            border-b
             flex
+            shrink-0
+            items-center
             justify-between
+            gap-4
+            border-b
+            border-stone-200
+            bg-white
+            px-5
+            py-4
+            sm:px-6
           "
         >
 
-          <h2>
-            {title}
-          </h2>
+          <div>
+            <p
+              className="
+                text-xs
+                font-semibold
+                uppercase
+                tracking-wider
+                text-amber-600
+              "
+            >
+              Zona
+            </p>
+
+            <h2 className="mt-0.5 text-lg font-bold text-stone-900 sm:text-xl">
+              {title}
+            </h2>
+          </div>
 
           <button
+            type="button"
             onClick={onClose}
+            disabled={isLoading}
+            className="
+              flex
+              h-10
+              w-10
+              shrink-0
+              items-center
+              justify-center
+              rounded-xl
+              bg-stone-100
+              text-xl
+              text-stone-500
+              transition
+              hover:bg-stone-200
+              hover:text-stone-800
+              disabled:cursor-not-allowed
+              disabled:opacity-50
+            "
+            aria-label="Cerrar"
           >
-            ✕
+            ×
           </button>
 
         </div>
 
-        <div className="p-4">
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-5">
 
           <ZoneForm
             initialData={initialData}

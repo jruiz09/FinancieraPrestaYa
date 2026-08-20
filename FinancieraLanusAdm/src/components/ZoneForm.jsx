@@ -141,6 +141,28 @@ export default function ZoneForm({
 
   }
 
+  const inputClass = `
+    w-full
+    rounded-xl
+    border
+    border-stone-200
+    bg-stone-50
+    px-3.5
+    py-2.5
+    text-sm
+    text-stone-900
+    outline-none
+    transition
+    placeholder:text-stone-400
+    focus:border-amber-400
+    focus:bg-white
+    focus:ring-4
+    focus:ring-amber-100
+  `
+
+  const labelClass =
+    'mb-1.5 block text-sm font-medium text-stone-700'
+
   return (
 
     <form
@@ -148,40 +170,38 @@ export default function ZoneForm({
       className="space-y-4"
     >
 
-      <input
-        name="nombre"
-        placeholder="Nombre"
-        value={formData.nombre}
-        onChange={handleChange}
-        className="
-          w-full
-          p-2
-          border
-          rounded
-        "
-      />
+      <div>
+        <label className={labelClass}>
+          Nombre
+        </label>
 
-      <input
-        name="descripcion"
-        placeholder="Descripción"
-        value={formData.descripcion}
-        onChange={handleChange}
-        className="
-          w-full
-          p-2
-          border
-          rounded
-        "
-      />
+        <input
+          name="nombre"
+          placeholder="Nombre de la zona"
+          value={formData.nombre}
+          onChange={handleChange}
+          className={inputClass}
+        />
+      </div>
+
+      <div>
+        <label className={labelClass}>
+          Descripción
+        </label>
+
+        <input
+          name="descripcion"
+          placeholder="Descripción"
+          value={formData.descripcion}
+          onChange={handleChange}
+          className={inputClass}
+        />
+      </div>
 
       <div>
 
         <label
-          className="
-            block
-            text-sm
-            mb-2
-          "
+          className={labelClass}
         >
           Color
         </label>
@@ -192,39 +212,60 @@ export default function ZoneForm({
           value={formData.color}
           onChange={handleChange}
           className="
-            w-full
             h-12
+            w-full
+            cursor-pointer
+            rounded-xl
+            border
+            border-stone-200
+            bg-stone-50
+            p-1
           "
         />
 
       </div>
 
-      <input
-        name="direccionCentro"
-        placeholder="Dirección centro"
-        value={
-          formData.direccionCentro
-        }
-        onChange={handleChange}
-        className="
-          w-full
-          p-2
-          border
-          rounded
-        "
-      />
+      <div>
+        <label className={labelClass}>
+          Dirección centro
+        </label>
+
+        <input
+          name="direccionCentro"
+          placeholder="Dirección centro"
+          value={
+            formData.direccionCentro
+          }
+          onChange={handleChange}
+          className={inputClass}
+        />
+      </div>
 
       <button
         type="button"
         onClick={buscarUbicacion}
         disabled={buscando}
         className="
+          inline-flex
           w-full
-          bg-cyan-500
-          hover:bg-cyan-600
-          text-white
-          rounded
-          py-2
+          min-h-[42px]
+          items-center
+          justify-center
+          gap-2
+          rounded-xl
+          border
+          border-stone-200
+          px-5
+          py-2.5
+          text-sm
+          font-semibold
+          text-stone-700
+          transition
+          hover:border-amber-300
+          hover:bg-amber-50
+          hover:text-amber-700
+          disabled:cursor-not-allowed
+          disabled:opacity-60
         "
       >
         {
@@ -237,11 +278,7 @@ export default function ZoneForm({
       <div>
 
         <label
-          className="
-            block
-            text-sm
-            mb-1
-          "
+          className={labelClass}
         >
           Radio (metros)
         </label>
@@ -253,12 +290,7 @@ export default function ZoneForm({
             formData.radioMetros
           }
           onChange={handleChange}
-          className="
-            w-full
-            p-2
-            border
-            rounded
-          "
+          className={inputClass}
         />
 
       </div>
@@ -267,20 +299,21 @@ export default function ZoneForm({
 
         <div
           className="
+            rounded-xl
             border
-            rounded
+            border-stone-200
+            bg-stone-50
             p-3
-            bg-gray-50
           "
         >
 
-          <p>
+          <p className="text-sm text-stone-600">
             Latitud:
             {' '}
             {ubicacion.latitud}
           </p>
 
-          <p>
+          <p className="text-sm text-stone-600">
             Longitud:
             {' '}
             {ubicacion.longitud}
@@ -299,7 +332,8 @@ export default function ZoneForm({
             style={{
               height: '300px',
               width: '100%',
-              marginTop: '15px'
+              marginTop: '15px',
+              borderRadius: '0.75rem'
             }}
           >
 
@@ -349,12 +383,24 @@ export default function ZoneForm({
         type="submit"
         disabled={isLoading}
         className="
+          inline-flex
           w-full
-          bg-cyan-500
-          hover:bg-cyan-600
+          min-h-[42px]
+          items-center
+          justify-center
+          gap-2
+          rounded-xl
+          bg-stone-900
+          px-6
+          py-2.5
+          text-sm
+          font-semibold
           text-white
-          rounded
-          py-2
+          shadow-sm
+          transition
+          hover:bg-stone-800
+          disabled:cursor-not-allowed
+          disabled:opacity-50
         "
       >
         {

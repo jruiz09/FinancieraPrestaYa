@@ -169,7 +169,21 @@ motivoRechazo
 
 return data.data
 
-}
+},
+
+vales:
+  async () => {
+
+    const {
+      data
+    } =
+      await api.get(
+        '/mobile/vales'
+      )
+
+    return data.data
+
+  }
 
 }
 

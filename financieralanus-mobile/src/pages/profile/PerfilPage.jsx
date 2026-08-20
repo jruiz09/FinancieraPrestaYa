@@ -6,14 +6,19 @@ import {
   Clock3,
   AlertTriangle,
   CheckCircle2,
-  TrendingUp
+  TrendingUp,
+  Wallet,
+  ChevronRight
 } from 'lucide-react'
+
+import { useNavigate } from 'react-router-dom'
 
 import { useAuthStore } from '../../store/useAuthStore'
 import { mobileService } from '../../services/mobileService'
 import Money from '../../components/Money'
 
 export default function PerfilPage() {
+  const navigate = useNavigate()
   const logout = useAuthStore((state) => state.logout)
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -120,6 +125,17 @@ export default function PerfilPage() {
         <p className="text-sm text-slate-400">Pendiente de cobrar</p>
         <Money value={data.pendienteCobro} className="mt-3 text-3xl font-bold" />
       </div>
+
+      <button
+        onClick={() => navigate('/vales')}
+        className="w-full bg-slate-900 rounded-2xl p-5 flex justify-between items-center"
+      >
+        <div className="flex items-center gap-3">
+          <Wallet className="text-cyan-400" />
+          <span className="font-semibold">Mis Vales</span>
+        </div>
+        <ChevronRight className="text-slate-500" />
+      </button>
 
       <button
         onClick={cerrarSesion}

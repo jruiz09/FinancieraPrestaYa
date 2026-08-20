@@ -24,7 +24,8 @@ import {
   ayudasMobile,
   crearAyudaMobile,
   aceptarAyudaMobile,
-  rechazarAyudaMobile
+  rechazarAyudaMobile,
+  valesMobile
 
 }
 from '../controllers/mobileController.js'
@@ -97,6 +98,11 @@ router.put(
 router.put(
   '/ayudas/:id/rechazar',
   rechazarAyudaMobile
+)
+
+router.get(
+  '/vales',
+  valesMobile
 )
 
 export default router

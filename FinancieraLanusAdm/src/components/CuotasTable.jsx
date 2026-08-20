@@ -7,15 +7,12 @@ import {
 } from 'react-router-dom'
 
 import {
-  AlertTriangle,
   ArrowRight,
   CalendarDays,
-  CheckCircle2,
   CreditCard,
   Eye,
   HandCoins,
   Loader2,
-  ReceiptText,
   UserRound,
   WalletCards
 } from 'lucide-react'

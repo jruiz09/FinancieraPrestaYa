@@ -8,8 +8,7 @@ import {
   Menu,
   PanelLeftClose,
   PanelLeftOpen,
-  LogOut,
-  User
+  LogOut
 } from 'lucide-react'
 
 import {

@@ -13,25 +13,21 @@ import toast from 'react-hot-toast'
 
 import {
   ArrowLeft,
-  Banknote,
   CalendarDays,
   CheckCircle2,
   CircleDollarSign,
   Clock3,
   Copy,
   CreditCard,
-  ExternalLink,
   HandCoins,
   Loader2,
   MessageCircle,
-  Phone,
   ReceiptText,
   UserRound,
   Wallet,
   AlertTriangle,
   CalendarCheck,
   TrendingUp,
-  Hash,
   BadgeDollarSign
 } from 'lucide-react'
 
@@ -171,15 +167,6 @@ export default function CreditoDetallePage() {
         'es-AR'
       )
 
-
-  const obtenerUrlPublica = () => {
-
-  return (
-    import.meta.env.VITE_PUBLIC_CLIENT_URL ||
-    window.location.origin
-  )
-
-}
 
 const obtenerLinkConsulta = () => {
 

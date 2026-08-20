@@ -3,10 +3,6 @@ import React, {
   useState,
 } from "react";
 
-import {
-  useNavigate,
-} from "react-router-dom";
-
 import Pagination from "../components/Pagination";
 import ErrorAlert from "../components/ErrorAlert";
 import ClientModal from "../components/ClientModal";
@@ -24,12 +20,6 @@ import {
 } from "../store/useAuthStore";
 
 export default function ClientsPage() {
-  const navigate = useNavigate();
-
-  const user = useAuthStore(
-    (state) => state.user,
-  );
-
   const ownerId = useAuthStore(
     (state) => state.ownerId,
   );
@@ -203,7 +193,7 @@ export default function ClientsPage() {
         );
 
         await fetchClients();
-      } catch (err) {
+      } catch {
         setError(
           "Error al desactivar cliente",
         );

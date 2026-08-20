@@ -1,6 +1,5 @@
 import React, {
   useEffect,
-  useMemo,
   useState
 } from 'react'
 
@@ -8,7 +7,6 @@ import {
   Banknote,
   CalendarDays,
   ChevronDown,
-  CircleDollarSign,
   CreditCard,
   HandCoins,
   Loader2,
@@ -16,8 +14,7 @@ import {
   Search,
   TrendingDown,
   TrendingUp,
-  UserRound,
-  Wallet
+  UserRound
 } from 'lucide-react'
 
 import {
@@ -260,27 +257,6 @@ export default function ResumenRecaudacionPage() {
       fechaHoy
     )
   }
-
-
-  /*
-  =====================================================
-  COBRADOR SELECCIONADO
-  =====================================================
-  */
-
-  const cobradorSeleccionado =
-    useMemo(
-      () =>
-        cobradores.find(
-          item =>
-            item.id ===
-            cobradorId
-        ),
-      [
-        cobradores,
-        cobradorId
-      ]
-    )
 
 
   /*

@@ -224,11 +224,11 @@ export default function RoleForm({
       className="space-y-6"
     >
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
 
         <div>
 
-          <label className="block text-sm font-medium mb-1">
+          <label className="mb-1.5 block text-sm font-medium text-stone-700">
 
             Nombre
 
@@ -245,23 +245,24 @@ export default function RoleForm({
             disabled={isLoading}
 
             className={`
-
               w-full
-
-              rounded
-
+              rounded-xl
               border
-
-              p-2
-
-              bg-white
-
-              dark:bg-gray-700
-
-              ${errors.name
-                ? 'border-red-500'
-                : 'dark:border-gray-600'}
-
+              ${errors.name ? 'border-red-300' : 'border-stone-200'}
+              bg-stone-50
+              px-3.5
+              py-2.5
+              text-sm
+              text-stone-900
+              outline-none
+              transition
+              placeholder:text-stone-400
+              focus:border-amber-400
+              focus:bg-white
+              focus:ring-4
+              focus:ring-amber-100
+              disabled:cursor-not-allowed
+              disabled:opacity-60
             `}
           />
 
@@ -269,7 +270,7 @@ export default function RoleForm({
 
             errors.name &&
 
-            <p className="text-xs text-red-500 mt-1">
+            <p className="mt-1.5 text-xs font-medium text-red-500">
 
               {errors.name}
 
@@ -281,7 +282,7 @@ export default function RoleForm({
 
         <div>
 
-          <label className="block text-sm font-medium mb-1">
+          <label className="mb-1.5 block text-sm font-medium text-stone-700">
 
             Descripción
 
@@ -298,21 +299,24 @@ export default function RoleForm({
             disabled={isLoading}
 
             className="
-
               w-full
-
-              rounded
-
+              rounded-xl
               border
-
-              p-2
-
-              bg-white
-
-              dark:bg-gray-700
-
-              dark:border-gray-600
-
+              border-stone-200
+              bg-stone-50
+              px-3.5
+              py-2.5
+              text-sm
+              text-stone-900
+              outline-none
+              transition
+              placeholder:text-stone-400
+              focus:border-amber-400
+              focus:bg-white
+              focus:ring-4
+              focus:ring-amber-100
+              disabled:cursor-not-allowed
+              disabled:opacity-60
             "
 
           />
@@ -321,23 +325,33 @@ export default function RoleForm({
 
       </div>
 
-      <div className="flex justify-between items-center">
+      <div className="flex items-center justify-between">
 
-        <h3 className="text-lg font-semibold">
+        <h3 className="font-bold text-stone-900">
 
           Permisos
 
         </h3>
 
-        <span className="text-sm text-gray-500">
+        <span
+          className="
+            rounded-full
+            bg-stone-100
+            px-3
+            py-1
+            text-xs
+            font-bold
+            text-stone-600
+          "
+        >
 
-          {formData.permissions.length} permisos seleccionados
+          {formData.permissions.length} seleccionados
 
         </span>
 
       </div>
 
-      <div className="grid grid-cols-2 gap-5">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
 
         {
 
@@ -363,13 +377,13 @@ export default function RoleForm({
 
                   key={module}
 
-                  className="border rounded-lg p-4 dark:border-gray-700"
+                  className="rounded-2xl border border-stone-200 bg-white p-4 shadow-sm"
 
                 >
 
-                  <div className="flex justify-between items-center mb-4">
+                  <div className="mb-3 flex items-center justify-between">
 
-                    <h4 className="font-semibold">
+                    <h4 className="font-semibold text-stone-800">
 
                       {module}
 
@@ -385,7 +399,7 @@ export default function RoleForm({
 
                       }
 
-                      className="text-xs text-cyan-500 hover:underline"
+                      className="text-xs font-semibold text-amber-700 hover:text-amber-800"
 
                     >
 
@@ -413,7 +427,7 @@ export default function RoleForm({
 
                           key={permission.codigo}
 
-                          className="flex items-center gap-2 cursor-pointer"
+                          className="flex cursor-pointer items-center gap-2 text-sm text-stone-700"
 
                         >
 
@@ -440,6 +454,8 @@ export default function RoleForm({
                               )
 
                             }
+
+                            className="h-4 w-4 rounded border-stone-300 text-amber-600 focus:ring-amber-500"
 
                           />
 
@@ -475,7 +491,25 @@ export default function RoleForm({
 
           disabled={isLoading}
 
-          className="px-6 py-2 rounded bg-cyan-500 hover:bg-cyan-600 text-white"
+          className="
+            inline-flex
+            min-h-[42px]
+            items-center
+            justify-center
+            gap-2
+            rounded-xl
+            bg-stone-900
+            px-6
+            py-2.5
+            text-sm
+            font-semibold
+            text-white
+            shadow-sm
+            transition
+            hover:bg-stone-800
+            disabled:cursor-not-allowed
+            disabled:opacity-50
+          "
 
         >
 

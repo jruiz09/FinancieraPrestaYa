@@ -178,33 +178,60 @@ export default function InformeDiarioPage() {
 
   const inputClass = `
     w-24
+    rounded-lg
     border
-    rounded
-    p-1
+    border-stone-200
+    bg-stone-50
+    p-1.5
     text-right
+    text-sm
+    outline-none
+    transition
+    focus:border-amber-400
+    focus:bg-white
+    focus:ring-4
+    focus:ring-amber-100
   `
 
   return (
 
-    <div className="p-6">
+    <div className="space-y-6 pb-10">
 
       <div
         className="
           flex
-          justify-between
-          items-center
-          mb-6
+          flex-col
+          gap-4
+          sm:flex-row
+          sm:items-center
+          sm:justify-between
         "
       >
 
-        <h1
-          className="
-            text-2xl
-            font-bold
-          "
-        >
-          Informe diario por zona
-        </h1>
+        <div>
+          <h1
+            className="
+              text-2xl
+              font-bold
+              tracking-tight
+              text-stone-900
+              md:text-3xl
+            "
+          >
+            Informe diario por zona
+          </h1>
+
+          <p
+            className="
+              mt-1
+              text-sm
+              text-stone-500
+            "
+          >
+            Reemplaza el cierre de caja
+            manual por zona.
+          </p>
+        </div>
 
         <input
           type="date"
@@ -213,9 +240,19 @@ export default function InformeDiarioPage() {
             setFecha(e.target.value)
           }
           className="
+            rounded-xl
             border
-            rounded
-            p-2
+            border-stone-200
+            bg-white
+            px-3.5
+            py-2.5
+            text-sm
+            text-stone-900
+            outline-none
+            transition
+            focus:border-amber-400
+            focus:ring-4
+            focus:ring-amber-100
           "
         />
 
@@ -230,21 +267,45 @@ export default function InformeDiarioPage() {
 
       {loading ? (
 
-        <div>
-          Cargando...
+        <div
+          className="
+            rounded-2xl
+            border
+            border-stone-200
+            bg-white
+            p-6
+            shadow-sm
+          "
+        >
+          <div className="space-y-4">
+            {[1, 2, 3].map((item) => (
+              <div
+                key={item}
+                className="
+                  h-14
+                  animate-pulse
+                  rounded-xl
+                  bg-stone-100
+                "
+              />
+            ))}
+          </div>
         </div>
 
       ) : (
 
         <div
           className="
+            overflow-hidden
+            rounded-2xl
+            border
+            border-stone-200
             bg-white
-            rounded
-            shadow
-            overflow-x-auto
+            shadow-sm
           "
         >
 
+          <div className="overflow-x-auto">
           <table
             className="
               w-full
@@ -252,35 +313,40 @@ export default function InformeDiarioPage() {
             "
           >
 
-            <thead
-              className="
-                bg-gray-100
-              "
-            >
+            <thead className="bg-stone-50/80">
 
-              <tr>
+              <tr
+                className="
+                  border-b
+                  border-stone-200
+                  text-xs
+                  uppercase
+                  tracking-wide
+                  text-stone-500
+                "
+              >
 
-                <th className="p-3 text-left">Zona</th>
-                <th className="p-3 text-right">A Recaudar</th>
-                <th className="p-3 text-right">% Cobranza</th>
-                <th className="p-3 text-right">Recaudado</th>
-                <th className="p-3 text-right">Entregas</th>
-                <th className="p-3 text-right">Ayuda</th>
-                <th className="p-3 text-right">Ayuda A</th>
-                <th className="p-3 text-right">Vale</th>
-                <th className="p-3 text-right">Vale Sup.</th>
-                <th className="p-3 text-right">PR</th>
-                <th className="p-3 text-right">MP</th>
-                <th className="p-3 text-right">Deja</th>
-                <th className="p-3 text-right">ECU</th>
-                <th className="p-3 text-right">Recaudación Día Sig.</th>
-                <th className="p-3 text-left">Acciones</th>
+                <th className="px-5 py-3 text-left">Zona</th>
+                <th className="px-4 py-3 text-right">A Recaudar</th>
+                <th className="px-4 py-3 text-right">% Cobranza</th>
+                <th className="px-4 py-3 text-right">Recaudado</th>
+                <th className="px-4 py-3 text-right">Entregas</th>
+                <th className="px-4 py-3 text-right">Ayuda</th>
+                <th className="px-4 py-3 text-right">Ayuda A</th>
+                <th className="px-4 py-3 text-right">Vale</th>
+                <th className="px-4 py-3 text-right">Vale Sup.</th>
+                <th className="px-4 py-3 text-right">PR</th>
+                <th className="px-4 py-3 text-right">MP</th>
+                <th className="px-4 py-3 text-right">Deja</th>
+                <th className="px-4 py-3 text-right">ECU</th>
+                <th className="px-4 py-3 text-right">Recaudación Día Sig.</th>
+                <th className="px-5 py-3 text-left">Acciones</th>
 
               </tr>
 
             </thead>
 
-            <tbody>
+            <tbody className="divide-y divide-stone-100">
 
               {zonas.map((zona) => {
 
@@ -290,18 +356,18 @@ export default function InformeDiarioPage() {
 
                   <tr
                     key={zona.zoneId}
-                    className="border-t"
+                    className="transition hover:bg-amber-50/40"
                   >
 
-                    <td className="p-3 font-medium">
+                    <td className="px-5 py-4 font-semibold text-stone-800">
                       {zona.zona}
                     </td>
 
-                    <td className="p-3 text-right">
+                    <td className="px-4 py-4 text-right text-stone-600">
                       {money(zona.aRecaudar)}
                     </td>
 
-                    <td className="p-3 text-right">
+                    <td className="px-4 py-4 text-right text-stone-600">
                       {
                         zona.porcentajeCobranza == null
                           ? '-'
@@ -309,11 +375,11 @@ export default function InformeDiarioPage() {
                       }
                     </td>
 
-                    <td className="p-3 text-right">
+                    <td className="px-4 py-4 text-right text-stone-600">
                       {money(zona.recaudado)}
                     </td>
 
-                    <td className="p-3 text-right">
+                    <td className="px-4 py-4 text-right text-stone-600">
 
                       <input
                         type="number"
@@ -330,23 +396,23 @@ export default function InformeDiarioPage() {
 
                     </td>
 
-                    <td className="p-3 text-right">
+                    <td className="px-4 py-4 text-right text-stone-600">
                       {money(zona.ayuda)}
                     </td>
 
-                    <td className="p-3 text-right">
+                    <td className="px-4 py-4 text-right text-stone-600">
                       {money(zona.ayudaA)}
                     </td>
 
-                    <td className="p-3 text-right">
+                    <td className="px-4 py-4 text-right text-stone-600">
                       {money(zona.vale)}
                     </td>
 
-                    <td className="p-3 text-right">
+                    <td className="px-4 py-4 text-right text-stone-600">
                       {money(zona.valeSup)}
                     </td>
 
-                    <td className="p-3 text-right">
+                    <td className="px-4 py-4 text-right text-stone-600">
 
                       <input
                         type="number"
@@ -363,7 +429,7 @@ export default function InformeDiarioPage() {
 
                     </td>
 
-                    <td className="p-3 text-right">
+                    <td className="px-4 py-4 text-right text-stone-600">
 
                       <input
                         type="number"
@@ -382,15 +448,17 @@ export default function InformeDiarioPage() {
 
                     <td
                       className="
-                        p-3
+                        px-4
+                        py-4
                         text-right
                         font-bold
+                        text-stone-900
                       "
                     >
                       {money(zona.deja)}
                     </td>
 
-                    <td className="p-3 text-right">
+                    <td className="px-4 py-4 text-right text-stone-600">
 
                       <input
                         type="number"
@@ -407,7 +475,7 @@ export default function InformeDiarioPage() {
 
                     </td>
 
-                    <td className="p-3">
+                    <td className="px-4 py-4">
 
                       <div
                         className="
@@ -449,7 +517,7 @@ export default function InformeDiarioPage() {
                               ${
                                 zona.recaudacionDiaSigEsOverride
                                   ? 'bg-amber-100 text-amber-700'
-                                  : 'bg-gray-100 text-gray-500'
+                                  : 'bg-stone-100 text-stone-500'
                               }
                             `}
                           >
@@ -473,8 +541,9 @@ export default function InformeDiarioPage() {
                               }
                               className="
                                 text-[10px]
-                                text-cyan-600
-                                hover:text-cyan-800
+                                font-semibold
+                                text-amber-700
+                                hover:text-amber-800
                                 underline
                               "
                             >
@@ -489,9 +558,10 @@ export default function InformeDiarioPage() {
 
                     </td>
 
-                    <td className="p-3">
+                    <td className="px-5 py-4">
 
                       <button
+                        type="button"
                         onClick={() =>
                           handleGuardar(zona)
                         }
@@ -499,13 +569,17 @@ export default function InformeDiarioPage() {
                           guardandoZona === zona.zoneId
                         }
                         className="
-                          bg-cyan-500
-                          hover:bg-cyan-600
-                          disabled:bg-gray-300
-                          text-white
+                          rounded-lg
+                          bg-stone-900
                           px-3
-                          py-1.5
-                          rounded
+                          py-2
+                          text-xs
+                          font-semibold
+                          text-white
+                          transition
+                          hover:bg-stone-800
+                          disabled:cursor-not-allowed
+                          disabled:opacity-50
                         "
                       >
                         {
@@ -526,6 +600,7 @@ export default function InformeDiarioPage() {
             </tbody>
 
           </table>
+          </div>
 
         </div>
 

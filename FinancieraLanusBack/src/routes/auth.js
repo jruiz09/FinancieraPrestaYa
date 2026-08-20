@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { body } from 'express-validator';
-import { register, login, me } from '../controllers/authController.js';
+import { register, login, me, switchOwner } from '../controllers/authController.js';
 import { authenticate } from '../middleware/authMiddleware.js';
 import { validateRequest } from '../middleware/validationMiddleware.js';
 
@@ -21,10 +21,19 @@ router.post(
   '/login',
   body('username').notEmpty().withMessage('Username es requerido'),
   body('password').notEmpty().withMessage('Password es requerido'),
+  body('ownerId').optional().isUUID().withMessage('ownerId inválido'),
   validateRequest,
   login
 );
 
 router.get('/me', authenticate, me);
+
+router.post(
+  '/switch-owner',
+  authenticate,
+  body('ownerId').isUUID().withMessage('ownerId inválido'),
+  validateRequest,
+  switchOwner
+);
 
 export default router;

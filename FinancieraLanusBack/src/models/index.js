@@ -15,6 +15,7 @@ import { SupervisorModel } from './supervisor.js';
 import { ZoneModel } from './zonas.js';
 import { PermissionModel } from './permission.js';
 import { RolePermissionModel } from './rolePermission.js';
+import { UserOwnerModel } from './userOwner.js';
 import { ValeModel } from './vale.js';
 import {
   PagoCuotaModel
@@ -36,6 +37,7 @@ const PagoCuota = PagoCuotaModel(sequelize, DataTypes);
 const Supervisor = SupervisorModel(sequelize, DataTypes);
 const Permission = PermissionModel(sequelize, DataTypes);
 const RolePermission = RolePermissionModel(sequelize, DataTypes);
+const UserOwner = UserOwnerModel(sequelize, DataTypes);
 const Vale = ValeModel(sequelize, DataTypes);
 
 
@@ -135,6 +137,23 @@ Owner.hasMany(User, {
 User.belongsTo(Owner, {
   foreignKey: 'ownerId',
   as: 'owner',
+});
+
+//
+// OWNERS <-> USERS (multiempresa: un User puede pertenecer a varios Owners)
+//
+User.belongsToMany(Owner, {
+  through: UserOwner,
+  foreignKey: 'userId',
+  otherKey: 'ownerId',
+  as: 'ownersList',
+});
+
+Owner.belongsToMany(User, {
+  through: UserOwner,
+  foreignKey: 'ownerId',
+  otherKey: 'userId',
+  as: 'usersList',
 });
 
 
@@ -445,5 +464,6 @@ export {
   Zone,
   Permission,
   RolePermission,
+  UserOwner,
   Vale,
 };

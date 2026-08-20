@@ -17,6 +17,8 @@ router.post(
   body('email').isEmail(),
   body('password').isLength({ min: 6 }),
   body('roleId').notEmpty(),
+  body('ownerIds').optional().isArray().withMessage('ownerIds debe ser un array'),
+  body('ownerIds.*').isUUID().withMessage('ownerIds debe contener UUIDs válidos'),
   validateRequest,
   createUser
 );
@@ -27,6 +29,8 @@ router.put(
   body('email').optional().isEmail(),
   body('password').optional().isLength({ min: 6 }),
   body('roleId').optional().notEmpty(),
+  body('ownerIds').optional().isArray().withMessage('ownerIds debe ser un array'),
+  body('ownerIds.*').isUUID().withMessage('ownerIds debe contener UUIDs válidos'),
   validateRequest,
   updateUser
 );

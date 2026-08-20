@@ -20,7 +20,8 @@ import {
   Landmark,
   HandCoins,
   ChartNoAxesCombined,
-  Wallet
+  Wallet,
+  ClipboardList
 } from 'lucide-react'
 
 import {
@@ -441,6 +442,15 @@ export default function Sidebar({
     onClick={onMobileClose}
   >
     Recaudación
+  </SidebarLink>
+
+  <SidebarLink
+    to="/informe-diario"
+    icon={ClipboardList}
+    collapsed={collapsed}
+    onClick={onMobileClose}
+  >
+    Informe diario
   </SidebarLink>
 
 </SidebarSection>

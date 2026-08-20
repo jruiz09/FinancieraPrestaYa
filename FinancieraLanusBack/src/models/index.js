@@ -16,6 +16,7 @@ import { ZoneModel } from './zonas.js';
 import { PermissionModel } from './permission.js';
 import { RolePermissionModel } from './rolePermission.js';
 import { ValeModel } from './vale.js';
+import { RegistroDiarioZonaModel } from './registroDiarioZona.js';
 import {
   PagoCuotaModel
 } from './pagoCuota.js';
@@ -37,6 +38,7 @@ const Supervisor = SupervisorModel(sequelize, DataTypes);
 const Permission = PermissionModel(sequelize, DataTypes);
 const RolePermission = RolePermissionModel(sequelize, DataTypes);
 const Vale = ValeModel(sequelize, DataTypes);
+const RegistroDiarioZona = RegistroDiarioZonaModel(sequelize, DataTypes);
 
 
   Owner.hasMany(Zone, {
@@ -428,6 +430,32 @@ Vale.belongsTo(User, {
   as: 'usuarioRecepcion',
 });
 
+Owner.hasMany(RegistroDiarioZona, {
+  foreignKey: {
+    name: 'ownerId',
+    allowNull: false,
+  },
+  as: 'registrosDiariosZona',
+});
+
+RegistroDiarioZona.belongsTo(Owner, {
+  foreignKey: 'ownerId',
+  as: 'owner',
+});
+
+Zone.hasMany(RegistroDiarioZona, {
+  foreignKey: {
+    name: 'zoneId',
+    allowNull: false,
+  },
+  as: 'registrosDiarios',
+});
+
+RegistroDiarioZona.belongsTo(Zone, {
+  foreignKey: 'zoneId',
+  as: 'zone',
+});
+
 export {
   sequelize,
   Role,
@@ -446,4 +474,5 @@ export {
   Permission,
   RolePermission,
   Vale,
+  RegistroDiarioZona,
 };

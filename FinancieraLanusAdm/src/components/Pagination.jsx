@@ -1,26 +1,33 @@
 import React from 'react'
 
 export default function Pagination({ page, total, limit, onPageChange }) {
-  const totalPages = Math.ceil(total / limit)
+  const totalPages = Math.max(1, Math.ceil(total / limit))
 
   return (
-    <div className="flex items-center justify-between mt-4">
-      <span className="text-sm text-gray-600 dark:text-gray-400">
+    <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+      <span className="text-sm text-stone-500">
         Mostrando {(page - 1) * limit + 1} a {Math.min(page * limit, total)} de {total}
       </span>
-      <div className="flex gap-2">
+
+      <div className="flex items-center gap-2">
         <button
+          type="button"
           onClick={() => onPageChange(page - 1)}
           disabled={page === 1}
-          className="px-3 py-1 border rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100 dark:hover:bg-gray-700"
+          className="px-3 py-2 border border-stone-200 rounded-xl text-sm font-semibold text-stone-600 hover:bg-stone-50 hover:text-stone-900 disabled:opacity-40 disabled:cursor-not-allowed transition"
         >
           Anterior
         </button>
-        <span className="px-3 py-1 text-sm">Página {page} de {totalPages}</span>
+
+        <span className="px-3 py-1.5 rounded-full bg-stone-100 text-sm font-bold text-stone-700">
+          {page} / {totalPages}
+        </span>
+
         <button
+          type="button"
           onClick={() => onPageChange(page + 1)}
           disabled={page >= totalPages}
-          className="px-3 py-1 border rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100 dark:hover:bg-gray-700"
+          className="px-3 py-2 border border-stone-200 rounded-xl text-sm font-semibold text-stone-600 hover:bg-stone-50 hover:text-stone-900 disabled:opacity-40 disabled:cursor-not-allowed transition"
         >
           Siguiente
         </button>

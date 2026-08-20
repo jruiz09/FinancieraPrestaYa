@@ -2,7 +2,7 @@ import { Router } from 'express'
 import { body, param } from 'express-validator'
 
 import {
-  authorize
+  authenticate
 } from '../middleware/authMiddleware.js'
 
 import {
@@ -26,6 +26,8 @@ import {
 } from '../controllers/roleController.js'
 
 const router = Router()
+
+router.use(authenticate)
 
 router.get(
   '/',

@@ -375,185 +375,271 @@ export default function Sidebar({
 
           {/* PRINCIPAL */}
 
-          <SidebarSection
-            title="Principal"
-            collapsed={collapsed}
-          >
+          {permissions.includes('DASHBOARD_VIEW') && (
 
-            <SidebarLink
-              to="/dashboard"
-              icon={LayoutDashboard}
+            <SidebarSection
+              title="Principal"
               collapsed={collapsed}
-              onClick={onMobileClose}
             >
-              Dashboard
-            </SidebarLink>
 
-          </SidebarSection>
+              <SidebarLink
+                to="/dashboard"
+                icon={LayoutDashboard}
+                collapsed={collapsed}
+                onClick={onMobileClose}
+              >
+                Dashboard
+              </SidebarLink>
+
+            </SidebarSection>
+
+          )}
 
 
          {/* OPERACION */}
+
+{(
+  permissions.includes('CLIENTS_VIEW') ||
+  permissions.includes('CREDITS_VIEW') ||
+  permissions.includes('CREDITS_CREATE') ||
+  permissions.includes('DASHBOARD_VIEW')
+) && (
 
 <SidebarSection
   title="Operación"
   collapsed={collapsed}
 >
 
-  <SidebarLink
-    to="/clients"
-    icon={Users}
-    collapsed={collapsed}
-    onClick={onMobileClose}
-  >
-    Clientes
-  </SidebarLink>
+  {permissions.includes('CLIENTS_VIEW') && (
 
-  <SidebarLink
-    to="/creditos"
-    icon={CreditCard}
-    collapsed={collapsed}
-    onClick={onMobileClose}
-  >
-    Créditos
-  </SidebarLink>
+    <SidebarLink
+      to="/clients"
+      icon={Users}
+      collapsed={collapsed}
+      onClick={onMobileClose}
+    >
+      Clientes
+    </SidebarLink>
 
-  <SidebarLink
-    to="/nuevocredito"
-    icon={CirclePlus}
-    collapsed={collapsed}
-    onClick={onMobileClose}
-  >
-    Nuevo crédito
-  </SidebarLink>
+  )}
 
-  <SidebarLink
-    to="/cuotas"
-    icon={HandCoins}
-    collapsed={collapsed}
-    onClick={onMobileClose}
-  >
-    Cuotas
-  </SidebarLink>
+  {permissions.includes('CREDITS_VIEW') && (
 
-  <SidebarLink
-    to="/recaudacion"
-    icon={ChartNoAxesCombined}
-    collapsed={collapsed}
-    onClick={onMobileClose}
-  >
-    Recaudación
-  </SidebarLink>
+    <SidebarLink
+      to="/creditos"
+      icon={CreditCard}
+      collapsed={collapsed}
+      onClick={onMobileClose}
+    >
+      Créditos
+    </SidebarLink>
 
-  <SidebarLink
-    to="/informe-diario"
-    icon={ClipboardList}
-    collapsed={collapsed}
-    onClick={onMobileClose}
-  >
-    Informe diario
-  </SidebarLink>
+  )}
+
+  {permissions.includes('CREDITS_CREATE') && (
+
+    <SidebarLink
+      to="/nuevocredito"
+      icon={CirclePlus}
+      collapsed={collapsed}
+      onClick={onMobileClose}
+    >
+      Nuevo crédito
+    </SidebarLink>
+
+  )}
+
+  {permissions.includes('CREDITS_VIEW') && (
+
+    <SidebarLink
+      to="/cuotas"
+      icon={HandCoins}
+      collapsed={collapsed}
+      onClick={onMobileClose}
+    >
+      Cuotas
+    </SidebarLink>
+
+  )}
+
+  {permissions.includes('CREDITS_VIEW') && (
+
+    <SidebarLink
+      to="/recaudacion"
+      icon={ChartNoAxesCombined}
+      collapsed={collapsed}
+      onClick={onMobileClose}
+    >
+      Recaudación
+    </SidebarLink>
+
+  )}
+
+  {permissions.includes('DASHBOARD_VIEW') && (
+
+    <SidebarLink
+      to="/informe-diario"
+      icon={ClipboardList}
+      collapsed={collapsed}
+      onClick={onMobileClose}
+    >
+      Informe diario
+    </SidebarLink>
+
+  )}
 
 </SidebarSection>
 
+)}
+
 
           {/* GESTION */}
+
+          {(
+            permissions.includes('SUPERVISORS_VIEW') ||
+            permissions.includes('COLLECTORS_VIEW') ||
+            permissions.includes('ZONES_VIEW') ||
+            permissions.includes('CLIENTS_VIEW') ||
+            permissions.includes('AYUDAS_VIEW') ||
+            permissions.includes('VALES_VIEW')
+          ) && (
 
           <SidebarSection
             title="Gestión"
             collapsed={collapsed}
           >
 
-            <SidebarLink
-              to="/supervisores"
-              icon={UserRound}
-              collapsed={collapsed}
-              onClick={onMobileClose}
-            >
-              Supervisores
-            </SidebarLink>
+            {permissions.includes('SUPERVISORS_VIEW') && (
 
-            <SidebarLink
-              to="/collectors"
-              icon={ReceiptText}
-              collapsed={collapsed}
-              onClick={onMobileClose}
-            >
-              Cobradores
-            </SidebarLink>
+              <SidebarLink
+                to="/supervisores"
+                icon={UserRound}
+                collapsed={collapsed}
+                onClick={onMobileClose}
+              >
+                Supervisores
+              </SidebarLink>
 
-            <SidebarLink
-              to="/zonas"
-              icon={MapPinned}
-              collapsed={collapsed}
-              onClick={onMobileClose}
-            >
-              Zonas
-            </SidebarLink>
+            )}
 
-            <SidebarLink
-              to="/clientes-mapa"
-              icon={Map}
-              collapsed={collapsed}
-              onClick={onMobileClose}
-            >
-              Clientes en el mapa
-            </SidebarLink>
+            {permissions.includes('COLLECTORS_VIEW') && (
 
-                       <SidebarLink
-              to="/ayudas"
-              icon={CircleHelp}
-              collapsed={collapsed}
-              onClick={onMobileClose}
-            >
-              Ayudas
-            </SidebarLink>
+              <SidebarLink
+                to="/collectors"
+                icon={ReceiptText}
+                collapsed={collapsed}
+                onClick={onMobileClose}
+              >
+                Cobradores
+              </SidebarLink>
 
-            <SidebarLink
-              to="/vales"
-              icon={Wallet}
-              collapsed={collapsed}
-              onClick={onMobileClose}
-            >
-              Vales
-            </SidebarLink>
+            )}
+
+            {permissions.includes('ZONES_VIEW') && (
+
+              <SidebarLink
+                to="/zonas"
+                icon={MapPinned}
+                collapsed={collapsed}
+                onClick={onMobileClose}
+              >
+                Zonas
+              </SidebarLink>
+
+            )}
+
+            {permissions.includes('CLIENTS_VIEW') && (
+
+              <SidebarLink
+                to="/clientes-mapa"
+                icon={Map}
+                collapsed={collapsed}
+                onClick={onMobileClose}
+              >
+                Clientes en el mapa
+              </SidebarLink>
+
+            )}
+
+            {permissions.includes('AYUDAS_VIEW') && (
+
+              <SidebarLink
+                to="/ayudas"
+                icon={CircleHelp}
+                collapsed={collapsed}
+                onClick={onMobileClose}
+              >
+                Ayudas
+              </SidebarLink>
+
+            )}
+
+            {permissions.includes('VALES_VIEW') && (
+
+              <SidebarLink
+                to="/vales"
+                icon={Wallet}
+                collapsed={collapsed}
+                onClick={onMobileClose}
+              >
+                Vales
+              </SidebarLink>
+
+            )}
 
           </SidebarSection>
 
+          )}
+
 
           {/* CONFIGURACION */}
+
+          {(
+            permissions.includes('PLAN_TYPES_VIEW') ||
+            permissions.includes('HOLIDAYS_VIEW')
+          ) && (
 
           <SidebarSection
             title="Configuración"
             collapsed={collapsed}
           >
 
-            <SidebarLink
-              to="/tipoplan"
-              icon={ReceiptText}
-              collapsed={collapsed}
-              onClick={onMobileClose}
-            >
-              Planes
-            </SidebarLink>
+            {permissions.includes('PLAN_TYPES_VIEW') && (
 
-            <SidebarLink
-              to="/dias-no-laborables"
-              icon={CalendarDays}
-              collapsed={collapsed}
-              onClick={onMobileClose}
-            >
-              Días no laborables
-            </SidebarLink>
+              <SidebarLink
+                to="/tipoplan"
+                icon={ReceiptText}
+                collapsed={collapsed}
+                onClick={onMobileClose}
+              >
+                Planes
+              </SidebarLink>
 
- 
+            )}
+
+            {permissions.includes('HOLIDAYS_VIEW') && (
+
+              <SidebarLink
+                to="/dias-no-laborables"
+                icon={CalendarDays}
+                collapsed={collapsed}
+                onClick={onMobileClose}
+              >
+                Días no laborables
+              </SidebarLink>
+
+            )}
 
           </SidebarSection>
+
+          )}
 
 
           {/* ADMINISTRACION */}
 
-          {permissions.includes(
-            'USERS_VIEW'
+          {(
+            permissions.includes('USERS_VIEW') ||
+            permissions.includes('ROLES_VIEW')
           ) && (
 
             <SidebarSection
@@ -561,23 +647,31 @@ export default function Sidebar({
               collapsed={collapsed}
             >
 
-              <SidebarLink
-                to="/users"
-                icon={Users}
-                collapsed={collapsed}
-                onClick={onMobileClose}
-              >
-                Usuarios
-              </SidebarLink>
+              {permissions.includes('USERS_VIEW') && (
 
-              <SidebarLink
-                to="/roles"
-                icon={ShieldCheck}
-                collapsed={collapsed}
-                onClick={onMobileClose}
-              >
-                Roles
-              </SidebarLink>
+                <SidebarLink
+                  to="/users"
+                  icon={Users}
+                  collapsed={collapsed}
+                  onClick={onMobileClose}
+                >
+                  Usuarios
+                </SidebarLink>
+
+              )}
+
+              {permissions.includes('ROLES_VIEW') && (
+
+                <SidebarLink
+                  to="/roles"
+                  icon={ShieldCheck}
+                  collapsed={collapsed}
+                  onClick={onMobileClose}
+                >
+                  Roles
+                </SidebarLink>
+
+              )}
 
             </SidebarSection>
 

@@ -86,26 +86,44 @@ export default function AppRoutes() {
 
         <Route
           path="dashboard"
-          element={<DashboardPage />}
+          element={
+            <ProtectedRoute requiredPermissions={['DASHBOARD_VIEW']}>
+              <DashboardPage />
+            </ProtectedRoute>
+          }
         />
 <Route
   path="supervisores"
   element={
-    <SupervisoresPage />
+    <ProtectedRoute requiredPermissions={['SUPERVISORS_VIEW']}>
+      <SupervisoresPage />
+    </ProtectedRoute>
   }
 />
 <Route
   path= "/clientes-mapa"
-  element= {<ClientesMapaPage />}
+  element= {
+    <ProtectedRoute requiredPermissions={['CLIENTS_VIEW']}>
+      <ClientesMapaPage />
+    </ProtectedRoute>
+  }
 />
 <Route
   path= "/zonas"
-  element= {<ZonesPage />}
+  element= {
+    <ProtectedRoute requiredPermissions={['ZONES_VIEW']}>
+      <ZonesPage />
+    </ProtectedRoute>
+  }
 />
 
 <Route
   path= "/ayudas"
-  element= {<AyudasPage />}
+  element= {
+    <ProtectedRoute requiredPermissions={['AYUDAS_VIEW']}>
+      <AyudasPage />
+    </ProtectedRoute>
+  }
 />
 <Route
   path= "/vales"
@@ -117,16 +135,28 @@ export default function AppRoutes() {
 />
         <Route
           path="collectors"
-          element={<CollectorsPage />}
+          element={
+            <ProtectedRoute requiredPermissions={['COLLECTORS_VIEW']}>
+              <CollectorsPage />
+            </ProtectedRoute>
+          }
         />
 
         <Route
           path="clients"
-          element={<ClientsPage />}
+          element={
+            <ProtectedRoute requiredPermissions={['CLIENTS_VIEW']}>
+              <ClientsPage />
+            </ProtectedRoute>
+          }
         />
 <Route
   path="/roles"
-  element={<RolesPage />}
+  element={
+    <ProtectedRoute requiredPermissions={['ROLES_VIEW']}>
+      <RolesPage />
+    </ProtectedRoute>
+  }
 />
         <Route
           path="users"
@@ -139,24 +169,36 @@ export default function AppRoutes() {
 
         <Route
           path="tipoplan"
-          element={<TipoPlanPage />}
+          element={
+            <ProtectedRoute requiredPermissions={['PLAN_TYPES_VIEW']}>
+              <TipoPlanPage />
+            </ProtectedRoute>
+          }
         />
 
         <Route
           path="nuevocredito"
-          element={<NuevoCreditoPage />}
+          element={
+            <ProtectedRoute requiredPermissions={['CREDITS_CREATE']}>
+              <NuevoCreditoPage />
+            </ProtectedRoute>
+          }
         />
         <Route
   path="recaudacion"
   element={
-    <ResumenRecaudacionPage />
+    <ProtectedRoute requiredPermissions={['CREDITS_VIEW']}>
+      <ResumenRecaudacionPage />
+    </ProtectedRoute>
   }
 />
 
 <Route
   path="informe-diario"
   element={
-    <InformeDiarioPage />
+    <ProtectedRoute requiredPermissions={['DASHBOARD_VIEW']}>
+      <InformeDiarioPage />
+    </ProtectedRoute>
   }
 />
 
@@ -164,22 +206,36 @@ export default function AppRoutes() {
 <Route
   path="dias-no-laborables"
   element={
-    <DiasNoLaborablesPage />
+    <ProtectedRoute requiredPermissions={['HOLIDAYS_VIEW']}>
+      <DiasNoLaborablesPage />
+    </ProtectedRoute>
   }
 />
         <Route
           path="creditos"
-          element={<CreditosPage />}
+          element={
+            <ProtectedRoute requiredPermissions={['CREDITS_VIEW']}>
+              <CreditosPage />
+            </ProtectedRoute>
+          }
         />
 
         <Route
           path="creditos/:id"
-          element={<CreditoDetallePage />}
+          element={
+            <ProtectedRoute requiredPermissions={['CREDITS_VIEW']}>
+              <CreditoDetallePage />
+            </ProtectedRoute>
+          }
         />
 
         <Route
           path="cuotas"
-          element={<CuotasPage />}
+          element={
+            <ProtectedRoute requiredPermissions={['CREDITS_VIEW']}>
+              <CuotasPage />
+            </ProtectedRoute>
+          }
         />
 
       </Route>

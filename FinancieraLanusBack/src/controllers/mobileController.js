@@ -7,6 +7,7 @@ import {
   CreditoDetalle,
   Client,
   Ayuda,
+  Vale,
   Zone
 } from '../models/index.js'
 
@@ -1672,6 +1673,93 @@ async (
   }
 
   catch(error){
+
+    next(error)
+
+  }
+
+}
+
+
+export const valesMobile =
+async (
+  req,
+  res,
+  next
+) => {
+
+  try {
+
+    const where = {
+      activo: true
+    }
+
+    if (esSupervisor(req.user)) {
+
+      const supervisor =
+        await obtenerSupervisor(
+          req.user.id
+        )
+
+      if (!supervisor) {
+
+        return res.status(404).json({
+
+          success: false,
+
+          message: 'Supervisor no encontrado'
+
+        })
+
+      }
+
+      where.supervisorId =
+        supervisor.id
+
+    } else {
+
+      const collector =
+        await obtenerCollector(
+          req.user.id
+        )
+
+      if (!collector) {
+
+        return res.status(404).json({
+
+          success: false,
+
+          message: 'Cobrador no encontrado'
+
+        })
+
+      }
+
+      where.collectorId =
+        collector.id
+
+    }
+
+    const vales =
+      await Vale.findAll({
+
+        where,
+
+        order: [
+          ['fecha', 'DESC']
+        ]
+
+      })
+
+    return res.json({
+
+      success: true,
+
+      data: vales
+
+    })
+
+  } catch (error) {
 
     next(error)
 

@@ -19,7 +19,8 @@ import {
   X,
   Landmark,
   HandCoins,
-  ChartNoAxesCombined
+  ChartNoAxesCombined,
+  Wallet
 } from 'lucide-react'
 
 import {
@@ -495,6 +496,15 @@ export default function Sidebar({
               onClick={onMobileClose}
             >
               Ayudas
+            </SidebarLink>
+
+            <SidebarLink
+              to="/vales"
+              icon={Wallet}
+              collapsed={collapsed}
+              onClick={onMobileClose}
+            >
+              Vales
             </SidebarLink>
 
           </SidebarSection>

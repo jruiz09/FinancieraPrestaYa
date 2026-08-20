@@ -50,8 +50,6 @@ export const seedRolePermissions = async () => {
 
       'VALES_VIEW',
 
-      'VALES_CREATE',
-
       'AYUDAS_VIEW',
 
       'AYUDAS_CREATE'

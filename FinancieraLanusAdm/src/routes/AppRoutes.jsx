@@ -27,6 +27,7 @@ from '../pages/ResumenRecaudacionPage';
 import ProtectedRoute from "./ProtectedRoute";
 import ZonesPage from "../pages/ZonesPage";
 import AyudasPage from "../pages/AyudasPage";
+import ValesPage from "../pages/ValesPage";
 import RolesPage from "../pages/RolePage";
 
 export default function AppRoutes() {
@@ -103,6 +104,14 @@ export default function AppRoutes() {
 <Route
   path= "/ayudas"
   element= {<AyudasPage />}
+/>
+<Route
+  path= "/vales"
+  element= {
+    <ProtectedRoute requiredPermissions={['VALES_VIEW']}>
+      <ValesPage />
+    </ProtectedRoute>
+  }
 />
         <Route
           path="collectors"

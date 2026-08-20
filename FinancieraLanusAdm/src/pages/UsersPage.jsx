@@ -5,13 +5,11 @@ import ErrorAlert from '../components/ErrorAlert'
 import UserModal from '../components/UserModal'
 import { userService } from '../services/userService'
 import { roleService } from '../services/roleService'
-import { useAuthStore } from '../store/useAuthStore'
 import Permission from '../components/Permission'
 import usePermissions from '../hooks/usePermissions'
 import { PERMISSIONS } from '../constants/permissions'
 
 export default function UsersPage() {
-  const user = useAuthStore((state) => state.user)
   const { can } = usePermissions()
   const [users, setUsers] = useState([])
   const [roles, setRoles] = useState([])
@@ -360,7 +358,7 @@ export default function UsersPage() {
                             <Permission permission={PERMISSIONS.USERS_EDIT}>
                               <button
                                 type="button"
-                                onClick={() => openEditModal(user)}
+                                onClick={() => openEditModal(u)}
                                 className="
                                   rounded-lg
                                   border
@@ -383,7 +381,7 @@ export default function UsersPage() {
                             <Permission permission={PERMISSIONS.USERS_DELETE}>
                               <button
                                 type="button"
-                                onClick={() => handleDelete(user.id)}
+                                onClick={() => handleDelete(u.id)}
                                 className="
                                   rounded-lg
                                   border

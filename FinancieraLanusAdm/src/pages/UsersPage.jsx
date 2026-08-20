@@ -107,88 +107,307 @@ export default function UsersPage() {
   }
 
   return (
-    <div>
-      <div className="mb-4 flex justify-between items-center">
-        <h2 className="text-2xl font-semibold">Usuarios</h2>
-<Permission permission={PERMISSIONS.USERS_CREATE}>
-  <button
-    onClick={openCreateModal}
-    className="px-4 py-2 bg-cyan-500 hover:bg-cyan-600 text-white rounded font-medium"
-  >
-    + Nuevo
-  </button>
-</Permission>
-      </div>
+    <div className="space-y-6 pb-10">
+
+      {/* HEADER */}
+      <section
+        className="
+          relative
+          overflow-hidden
+          rounded-3xl
+          border
+          border-stone-200
+          bg-gradient-to-br
+          from-stone-50
+          via-white
+          to-amber-50
+          px-5
+          py-6
+          shadow-sm
+          sm:px-7
+          sm:py-7
+        "
+      >
+        <div
+          className="
+            pointer-events-none
+            absolute
+            -right-16
+            -top-16
+            h-48
+            w-48
+            rounded-full
+            bg-amber-200/30
+            blur-3xl
+          "
+        />
+
+        <div
+          className="
+            relative
+            flex
+            flex-col
+            gap-5
+            sm:flex-row
+            sm:items-center
+            sm:justify-between
+          "
+        >
+          <div>
+            <div
+              className="
+                mb-2
+                inline-flex
+                items-center
+                gap-2
+                rounded-full
+                border
+                border-amber-200
+                bg-amber-50
+                px-3
+                py-1
+                text-xs
+                font-semibold
+                text-amber-700
+              "
+            >
+              <span className="h-2 w-2 rounded-full bg-amber-500" />
+              Accesos al sistema
+            </div>
+
+            <h1
+              className="
+                text-2xl
+                font-bold
+                tracking-tight
+                text-stone-900
+                sm:text-3xl
+              "
+            >
+              Usuarios
+            </h1>
+
+            <p
+              className="
+                mt-1
+                text-sm
+                text-stone-500
+                sm:text-base
+              "
+            >
+              Administrá los usuarios con
+              acceso al panel.
+            </p>
+          </div>
+
+          <Permission permission={PERMISSIONS.USERS_CREATE}>
+            <button
+              type="button"
+              onClick={openCreateModal}
+              className="
+                inline-flex
+                min-h-[46px]
+                items-center
+                justify-center
+                gap-2
+                rounded-xl
+                bg-stone-900
+                px-5
+                py-3
+                text-sm
+                font-semibold
+                text-white
+                shadow-sm
+                transition
+                hover:-translate-y-0.5
+                hover:bg-stone-800
+                hover:shadow-md
+              "
+            >
+              <span className="text-xl leading-none">+</span>
+              Nuevo usuario
+            </button>
+          </Permission>
+        </div>
+      </section>
 
       <ErrorAlert message={error} onDismiss={() => setError('')} />
 
-      <SearchBar placeholder="Buscar por nombre, username o email..." value={search} onChange={setSearch} />
+      {/* BUSCADOR */}
+      <section
+        className="
+          rounded-2xl
+          border
+          border-stone-200
+          bg-white
+          p-4
+          shadow-sm
+          sm:p-5
+        "
+      >
+        <SearchBar
+          placeholder="Buscar por nombre, username o email..."
+          value={search}
+          onChange={setSearch}
+        />
+      </section>
 
       {isLoading ? (
-        <div className="text-center py-8">Cargando...</div>
+
+        <div
+          className="
+            rounded-2xl
+            border
+            border-stone-200
+            bg-white
+            p-6
+            shadow-sm
+          "
+        >
+          <div className="space-y-4">
+            {[1, 2, 3].map((item) => (
+              <div
+                key={item}
+                className="
+                  h-14
+                  animate-pulse
+                  rounded-xl
+                  bg-stone-100
+                "
+              />
+            ))}
+          </div>
+        </div>
+
       ) : (
         <>
-          <div className="overflow-x-auto bg-white dark:bg-gray-800 rounded shadow">
-            <table className="w-full text-sm">
-              <thead className="bg-gray-100 dark:bg-gray-700 border-b dark:border-gray-600">
-                <tr>
-                  <th className="px-4 py-3 text-left font-semibold">Nombre</th>
-                  <th className="px-4 py-3 text-left font-semibold">Username</th>
-                  <th className="px-4 py-3 text-left font-semibold">Email</th>
-                  <th className="px-4 py-3 text-left font-semibold">Rol</th>
-                  {
-  can(PERMISSIONS.USERS_EDIT) ||
-  can(PERMISSIONS.USERS_DELETE)
-    ? (
-      <th className="px-4 py-3 text-left font-semibold">
-        Acciones
-      </th>
-    )
-    : null
-}
-                </tr>
-              </thead>
-              <tbody>
-                {users.length === 0 ? (
-                  <tr>
-                    <td colSpan="5" className="px-4 py-8 text-center text-gray-500">
-                      Sin usuarios
-                    </td>
+          <div
+            className="
+              overflow-hidden
+              rounded-2xl
+              border
+              border-stone-200
+              bg-white
+              shadow-sm
+            "
+          >
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-stone-50/80">
+                  <tr
+                    className="
+                      border-b
+                      border-stone-200
+                      text-xs
+                      uppercase
+                      tracking-wide
+                      text-stone-500
+                    "
+                  >
+                    <th className="px-5 py-3 text-left">Nombre</th>
+                    <th className="px-4 py-3 text-left">Username</th>
+                    <th className="px-4 py-3 text-left">Email</th>
+                    <th className="px-4 py-3 text-left">Rol</th>
+                    {
+                      can(PERMISSIONS.USERS_EDIT) ||
+                      can(PERMISSIONS.USERS_DELETE)
+                        ? (
+                          <th className="px-5 py-3 text-right">
+                            Acciones
+                          </th>
+                        )
+                        : null
+                    }
                   </tr>
-                ) : (
-                  users.map((u) => (
-                    <tr key={u.id} className="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700">
-                      <td className="px-4 py-3">{u.name}</td>
-                      <td className="px-4 py-3">{u.username}</td>
-                      <td className="px-4 py-3 text-sm">{u.email}</td>
-                      <td className="px-4 py-3">
-                        <span className="px-2 py-1 rounded text-xs font-medium bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-100">
-                          {getRoleName(u.roleId)}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 flex gap-2">
-                     <Permission permission={PERMISSIONS.USERS_EDIT}>
-  <button
-    onClick={() => openEditModal(user)}
-    className="px-2 py-1 text-xs bg-blue-500 hover:bg-blue-600 text-white rounded"
-  >
-    Editar
-  </button>
-</Permission>
-                        <Permission permission={PERMISSIONS.USERS_DELETE}>
-  <button
-    onClick={() => handleDelete(user.id)}
-    className="px-2 py-1 text-xs bg-red-500 hover:bg-red-600 text-white rounded"
-  >
-    Eliminar
-  </button>
-</Permission>
+                </thead>
+                <tbody className="divide-y divide-stone-100">
+                  {users.length === 0 ? (
+                    <tr>
+                      <td colSpan="5" className="px-5 py-12 text-center text-stone-400">
+                        No se encontraron usuarios.
                       </td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+                  ) : (
+                    users.map((u) => (
+                      <tr key={u.id} className="transition hover:bg-amber-50/40">
+                        <td className="px-5 py-4 font-semibold text-stone-800">
+                          {u.name}
+                        </td>
+                        <td className="px-4 py-4 text-stone-600">
+                          {u.username}
+                        </td>
+                        <td className="px-4 py-4 text-stone-600">
+                          {u.email}
+                        </td>
+                        <td className="px-4 py-4">
+                          <span
+                            className="
+                              inline-flex
+                              rounded-full
+                              bg-blue-50
+                              px-2.5
+                              py-1
+                              text-xs
+                              font-bold
+                              text-blue-700
+                            "
+                          >
+                            {getRoleName(u.roleId)}
+                          </span>
+                        </td>
+                        <td className="px-5 py-4">
+                          <div className="flex justify-end gap-2">
+                            <Permission permission={PERMISSIONS.USERS_EDIT}>
+                              <button
+                                type="button"
+                                onClick={() => openEditModal(user)}
+                                className="
+                                  rounded-lg
+                                  border
+                                  border-stone-200
+                                  px-3
+                                  py-2
+                                  text-xs
+                                  font-semibold
+                                  text-stone-600
+                                  transition
+                                  hover:border-amber-300
+                                  hover:bg-amber-50
+                                  hover:text-amber-700
+                                "
+                              >
+                                Editar
+                              </button>
+                            </Permission>
+
+                            <Permission permission={PERMISSIONS.USERS_DELETE}>
+                              <button
+                                type="button"
+                                onClick={() => handleDelete(user.id)}
+                                className="
+                                  rounded-lg
+                                  border
+                                  border-red-100
+                                  px-3
+                                  py-2
+                                  text-xs
+                                  font-semibold
+                                  text-red-500
+                                  transition
+                                  hover:bg-red-50
+                                "
+                              >
+                                Eliminar
+                              </button>
+                            </Permission>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
 
           <Pagination

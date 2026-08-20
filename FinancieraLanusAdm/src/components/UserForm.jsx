@@ -50,77 +50,96 @@ export default function UserForm({ initialData = {}, roles = [], onSubmit, isLoa
     onSubmit({ name, username, email, password, roleId })
   }
 
+  const inputClass = (hasError) => `
+    w-full
+    rounded-xl
+    border
+    ${hasError ? 'border-red-300' : 'border-stone-200'}
+    bg-stone-50
+    px-3.5
+    py-2.5
+    text-sm
+    text-stone-900
+    outline-none
+    transition
+    placeholder:text-stone-400
+    focus:border-amber-400
+    focus:bg-white
+    focus:ring-4
+    focus:ring-amber-100
+    disabled:cursor-not-allowed
+    disabled:opacity-60
+  `
+
+  const labelClass =
+    'mb-1.5 block text-sm font-medium text-stone-700'
+
+  const errorClass =
+    'mt-1.5 text-xs font-medium text-red-500'
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <label className="block text-sm font-medium mb-1">Nombre</label>
+        <label className={labelClass}>Nombre</label>
         <input
           type="text"
           name="name"
           value={formData.name}
           onChange={handleChange}
-          className={`w-full p-2 border rounded bg-white dark:bg-gray-700 ${
-            errors.name ? 'border-red-500' : 'dark:border-gray-600'
-          }`}
+          className={inputClass(errors.name)}
           disabled={isLoading}
         />
-        {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
+        {errors.name && <p className={errorClass}>{errors.name}</p>}
       </div>
 
       <div>
-        <label className="block text-sm font-medium mb-1">Username</label>
+        <label className={labelClass}>Username</label>
         <input
           type="text"
           name="username"
           value={formData.username}
           onChange={handleChange}
-          className={`w-full p-2 border rounded bg-white dark:bg-gray-700 ${
-            errors.username ? 'border-red-500' : 'dark:border-gray-600'
-          }`}
+          className={inputClass(errors.username)}
           disabled={isLoading || !!initialData.id}
         />
-        {errors.username && <p className="text-red-500 text-xs mt-1">{errors.username}</p>}
+        {errors.username && <p className={errorClass}>{errors.username}</p>}
       </div>
 
       <div>
-        <label className="block text-sm font-medium mb-1">Email</label>
+        <label className={labelClass}>Email</label>
         <input
           type="email"
           name="email"
           value={formData.email}
           onChange={handleChange}
-          className={`w-full p-2 border rounded bg-white dark:bg-gray-700 ${
-            errors.email ? 'border-red-500' : 'dark:border-gray-600'
-          }`}
+          className={inputClass(errors.email)}
           disabled={isLoading}
         />
-        {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
+        {errors.email && <p className={errorClass}>{errors.email}</p>}
       </div>
 
       <div>
-        <label className="block text-sm font-medium mb-1">Contraseña {initialData.id && '(dejar vacío para no cambiar)'}</label>
+        <label className={labelClass}>
+          Contraseña {initialData.id && '(dejar vacío para no cambiar)'}
+        </label>
         <input
           type="password"
           name="password"
           value={formData.password}
           onChange={handleChange}
-          className={`w-full p-2 border rounded bg-white dark:bg-gray-700 ${
-            errors.password ? 'border-red-500' : 'dark:border-gray-600'
-          }`}
+          className={inputClass(errors.password)}
           disabled={isLoading}
         />
-        {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password}</p>}
+        {errors.password && <p className={errorClass}>{errors.password}</p>}
       </div>
 
       <div>
-        <label className="block text-sm font-medium mb-1">Rol</label>
+        <label className={labelClass}>Rol</label>
         <select
           name="roleId"
           value={formData.roleId}
           onChange={handleChange}
-          className={`w-full p-2 border rounded bg-white dark:bg-gray-700 ${
-            errors.roleId ? 'border-red-500' : 'dark:border-gray-600'
-          }`}
+          className={inputClass(errors.roleId)}
           disabled={isLoading}
         >
           <option value="">Seleccionar rol...</option>
@@ -128,13 +147,32 @@ export default function UserForm({ initialData = {}, roles = [], onSubmit, isLoa
             <option key={r.id} value={r.id}>{r.name}</option>
           ))}
         </select>
-        {errors.roleId && <p className="text-red-500 text-xs mt-1">{errors.roleId}</p>}
+        {errors.roleId && <p className={errorClass}>{errors.roleId}</p>}
       </div>
 
       <button
         type="submit"
         disabled={isLoading}
-        className="w-full py-2 bg-cyan-500 hover:bg-cyan-600 text-white rounded font-medium disabled:opacity-50"
+        className="
+          inline-flex
+          w-full
+          min-h-[42px]
+          items-center
+          justify-center
+          gap-2
+          rounded-xl
+          bg-stone-900
+          px-6
+          py-2.5
+          text-sm
+          font-semibold
+          text-white
+          shadow-sm
+          transition
+          hover:bg-stone-800
+          disabled:cursor-not-allowed
+          disabled:opacity-50
+        "
       >
         {isLoading ? 'Guardando...' : 'Guardar'}
       </button>

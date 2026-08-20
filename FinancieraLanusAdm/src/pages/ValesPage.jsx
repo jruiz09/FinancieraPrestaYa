@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
 
+import { Wallet } from 'lucide-react'
+
 import ErrorAlert
   from '../components/ErrorAlert'
 
@@ -213,8 +215,8 @@ export default function ValesPage() {
 
         case 'RENDIDO':
           return `
-            bg-green-100
-            text-green-700
+            bg-emerald-100
+            text-emerald-700
           `
 
         case 'ANULADO':
@@ -225,8 +227,8 @@ export default function ValesPage() {
 
         default:
           return `
-            bg-yellow-100
-            text-yellow-700
+            bg-amber-100
+            text-amber-700
           `
       }
 
@@ -234,43 +236,130 @@ export default function ValesPage() {
 
   return (
 
-    <div className="p-6">
+    <div className="space-y-6 pb-10">
 
-      <div
+      {/* HEADER */}
+      <section
         className="
-          flex
-          justify-between
-          items-center
-          mb-6
+          relative
+          overflow-hidden
+          rounded-3xl
+          border
+          border-stone-200
+          bg-gradient-to-br
+          from-stone-50
+          via-white
+          to-amber-50
+          px-5
+          py-6
+          shadow-sm
+          sm:px-7
+          sm:py-7
         "
       >
-
-        <h1
+        <div
           className="
-            text-2xl
-            font-bold
+            pointer-events-none
+            absolute
+            -right-16
+            -top-16
+            h-48
+            w-48
+            rounded-full
+            bg-amber-200/30
+            blur-3xl
+          "
+        />
+
+        <div
+          className="
+            relative
+            flex
+            flex-col
+            gap-5
+            sm:flex-row
+            sm:items-center
+            sm:justify-between
           "
         >
-          Vales
-        </h1>
+          <div>
+            <div
+              className="
+                mb-2
+                inline-flex
+                items-center
+                gap-2
+                rounded-full
+                border
+                border-amber-200
+                bg-amber-50
+                px-3
+                py-1
+                text-xs
+                font-semibold
+                text-amber-700
+              "
+            >
+              <span className="h-2 w-2 rounded-full bg-amber-500" />
+              Equipo de cobranza
+            </div>
 
-        <button
-          onClick={() =>
-            setModalOpen(true)
-          }
-          className="
-            bg-cyan-500
-            hover:bg-cyan-600
-            text-white
-            px-4
-            py-2
-            rounded
-          "
-        >
-          + Nuevo Vale
-        </button>
+            <h1
+              className="
+                text-2xl
+                font-bold
+                tracking-tight
+                text-stone-900
+                sm:text-3xl
+              "
+            >
+              Vales
+            </h1>
 
-      </div>
+            <p
+              className="
+                mt-1
+                text-sm
+                text-stone-500
+                sm:text-base
+              "
+            >
+              Adelantos otorgados a
+              cobradores y supervisores.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={() =>
+              setModalOpen(true)
+            }
+            className="
+              inline-flex
+              min-h-[46px]
+              items-center
+              justify-center
+              gap-2
+              rounded-xl
+              bg-stone-900
+              px-5
+              py-3
+              text-sm
+              font-semibold
+              text-white
+              shadow-sm
+              transition
+              hover:-translate-y-0.5
+              hover:bg-stone-800
+              hover:shadow-md
+            "
+          >
+            <span className="text-xl leading-none">+</span>
+            Nuevo vale
+          </button>
+
+        </div>
+      </section>
 
       <ErrorAlert
         message={error}
@@ -279,218 +368,278 @@ export default function ValesPage() {
         }
       />
 
-      <div
+      {/* MÉTRICAS */}
+      <section
         className="
           grid
           grid-cols-2
-          gap-4
-          mb-6
+          gap-3
+          lg:gap-4
         "
       >
 
-        <div
-          className="
-            bg-white
-            rounded
-            shadow
-            p-4
-          "
-        >
-          <p>Total de vales</p>
+        <MetricCard
+          label="Total de vales"
+          value={vales.length}
+          variant="stone"
+        />
 
-          <p
-            className="
-              text-2xl
-              font-bold
-            "
-          >
-            {vales.length}
-          </p>
-        </div>
+        <MetricCard
+          label="Monto total vigente"
+          value={`$ ${totalMonto.toLocaleString('es-AR')}`}
+          variant="amber"
+        />
 
-        <div
-          className="
-            bg-cyan-50
-            rounded
-            shadow
-            p-4
-          "
-        >
-          <p>Monto total vigente</p>
-
-          <p
-            className="
-              text-xl
-              font-bold
-            "
-          >
-            $
-            {totalMonto.toLocaleString(
-              'es-AR'
-            )}
-          </p>
-        </div>
-
-      </div>
+      </section>
 
       {loading ? (
 
-        <div>
-          Cargando...
+        <div
+          className="
+            rounded-2xl
+            border
+            border-stone-200
+            bg-white
+            p-6
+            shadow-sm
+          "
+        >
+          <div className="space-y-4">
+            {[1, 2, 3].map((item) => (
+              <div
+                key={item}
+                className="
+                  h-14
+                  animate-pulse
+                  rounded-xl
+                  bg-stone-100
+                "
+              />
+            ))}
+          </div>
+        </div>
+
+      ) : vales.length === 0 ? (
+
+        <div
+          className="
+            rounded-2xl
+            border
+            border-dashed
+            border-stone-300
+            bg-white
+            px-5
+            py-12
+            text-center
+          "
+        >
+          <div
+            className="
+              mx-auto
+              flex
+              h-12
+              w-12
+              items-center
+              justify-center
+              rounded-full
+              bg-stone-100
+            "
+          >
+            <Wallet className="h-5 w-5 text-stone-500" />
+          </div>
+
+          <p className="mt-3 font-semibold text-stone-700">
+            No hay vales registrados
+          </p>
         </div>
 
       ) : (
 
         <div
           className="
+            overflow-hidden
+            rounded-2xl
+            border
+            border-stone-200
             bg-white
-            rounded
-            shadow
-            overflow-x-auto
+            shadow-sm
           "
         >
 
-          <table
-            className="
-              w-full
-              text-sm
-            "
-          >
-
-            <thead
+          <div className="overflow-x-auto">
+            <table
               className="
-                bg-gray-100
+                w-full
+                text-sm
               "
             >
 
-              <tr>
+              <thead className="bg-stone-50/80">
 
-                <th className="p-3 text-left">
-                  Nº
-                </th>
+                <tr
+                  className="
+                    border-b
+                    border-stone-200
+                    text-xs
+                    uppercase
+                    tracking-wide
+                    text-stone-500
+                  "
+                >
 
-                <th className="p-3 text-left">
-                  Fecha
-                </th>
+                  <th className="px-5 py-3 text-left">
+                    Nº
+                  </th>
 
-                <th className="p-3 text-left">
-                  Destino
-                </th>
+                  <th className="px-4 py-3 text-left">
+                    Fecha
+                  </th>
 
-                <th className="p-3 text-left">
-                  Tipo
-                </th>
+                  <th className="px-4 py-3 text-left">
+                    Destino
+                  </th>
 
-                <th className="p-3 text-left">
-                  Monto
-                </th>
+                  <th className="px-4 py-3 text-left">
+                    Tipo
+                  </th>
 
-                <th className="p-3 text-left">
-                  Estado
-                </th>
+                  <th className="px-4 py-3 text-left">
+                    Monto
+                  </th>
 
-                <th className="p-3 text-left">
-                  Acciones
-                </th>
+                  <th className="px-4 py-3 text-left">
+                    Estado
+                  </th>
 
-              </tr>
+                  <th className="px-5 py-3 text-right">
+                    Acciones
+                  </th>
 
-            </thead>
+                </tr>
 
-            <tbody>
+              </thead>
 
-              {vales.map(
-                (vale) => (
+              <tbody className="divide-y divide-stone-100">
 
-                  <tr
-                    key={vale.id}
-                    className="
-                      border-t
-                    "
-                  >
+                {vales.map(
+                  (vale) => (
 
-                    <td className="p-3">
-                      {vale.numero}
-                    </td>
+                    <tr
+                      key={vale.id}
+                      className="transition hover:bg-amber-50/40"
+                    >
 
-                    <td className="p-3">
-                      {vale.fecha}
-                    </td>
+                      <td className="px-5 py-4 font-semibold text-stone-800">
+                        {vale.numero}
+                      </td>
 
-                    <td className="p-3">
-                      {
-                        obtenerDestino(
-                          vale
-                        )
-                      }
-                    </td>
+                      <td className="px-4 py-4 text-stone-600">
+                        {vale.fecha}
+                      </td>
 
-                    <td className="p-3">
-                      {
-                        TIPO_LABEL[vale.tipo] ||
-                        vale.tipo
-                      }
-                    </td>
-
-                    <td className="p-3">
-                      $
-                      {Number(
-                        vale.monto
-                      ).toLocaleString(
-                        'es-AR'
-                      )}
-                    </td>
-
-                    <td className="p-3">
-
-                      <span
-                        className={`
-                          px-2
-                          py-1
-                          rounded
-                          text-xs
-                          font-medium
-                          ${badgeEstado(
-                            vale.estado
-                          )}
-                        `}
-                      >
+                      <td className="px-4 py-4 text-stone-600">
                         {
-                          vale.estado
+                          obtenerDestino(
+                            vale
+                          )
                         }
-                      </span>
+                      </td>
 
-                    </td>
-
-                    <td className="p-3">
-
-                      {vale.estado === 'PENDIENTE' && (
-
-                        <button
-                          onClick={() =>
-                            handleAnular(
-                              vale.id
-                            )
-                          }
+                      <td className="px-4 py-4">
+                        <span
                           className="
-                            text-red-600
+                            inline-flex
+                            rounded-full
+                            bg-stone-100
+                            px-2.5
+                            py-1
+                            text-xs
+                            font-medium
+                            text-stone-600
                           "
                         >
-                          Anular
-                        </button>
+                          {
+                            TIPO_LABEL[vale.tipo] ||
+                            vale.tipo
+                          }
+                        </span>
+                      </td>
 
-                      )}
+                      <td className="px-4 py-4 font-semibold text-stone-800">
+                        $
+                        {Number(
+                          vale.monto
+                        ).toLocaleString(
+                          'es-AR'
+                        )}
+                      </td>
 
-                    </td>
+                      <td className="px-4 py-4">
 
-                  </tr>
+                        <span
+                          className={`
+                            inline-flex
+                            rounded-full
+                            px-2.5
+                            py-1
+                            text-xs
+                            font-bold
+                            ${badgeEstado(
+                              vale.estado
+                            )}
+                          `}
+                        >
+                          {
+                            vale.estado
+                          }
+                        </span>
 
-                )
-              )}
+                      </td>
 
-            </tbody>
+                      <td className="px-5 py-4">
 
-          </table>
+                        <div className="flex justify-end">
+
+                          {vale.estado === 'PENDIENTE' && (
+
+                            <button
+                              type="button"
+                              onClick={() =>
+                                handleAnular(
+                                  vale.id
+                                )
+                              }
+                              className="
+                                rounded-lg
+                                border
+                                border-red-100
+                                px-3
+                                py-2
+                                text-xs
+                                font-semibold
+                                text-red-500
+                                transition
+                                hover:bg-red-50
+                              "
+                            >
+                              Anular
+                            </button>
+
+                          )}
+
+                        </div>
+
+                      </td>
+
+                    </tr>
+
+                  )
+                )}
+
+              </tbody>
+
+            </table>
+          </div>
 
         </div>
 
@@ -514,6 +663,71 @@ export default function ValesPage() {
           modalLoading
         }
       />
+
+    </div>
+
+  )
+
+}
+
+function MetricCard({
+  label,
+  value,
+  variant
+}) {
+
+  const colors = {
+
+    stone: {
+      value: 'text-stone-900'
+    },
+
+    amber: {
+      value: 'text-amber-600'
+    }
+
+  }
+
+  const current =
+    colors[variant] || colors.stone
+
+  return (
+
+    <div
+      className="
+        rounded-2xl
+        border
+        border-stone-200
+        bg-white
+        p-4
+        shadow-sm
+        sm:p-5
+      "
+    >
+
+      <p
+        className="
+          text-xs
+          font-medium
+          text-stone-500
+          sm:text-sm
+        "
+      >
+        {label}
+      </p>
+
+      <p
+        className={`
+          mt-1
+          text-2xl
+          font-bold
+          tracking-tight
+          sm:text-3xl
+          ${current.value}
+        `}
+      >
+        {value}
+      </p>
 
     </div>
 

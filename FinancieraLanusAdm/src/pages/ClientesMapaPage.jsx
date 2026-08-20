@@ -205,66 +205,184 @@ const distanciaMetros =
   if (loading) {
 
     return (
-      <div className="p-6">
-        Cargando mapa...
+      <div
+        className="
+          rounded-2xl
+          border
+          border-stone-200
+          bg-white
+          p-6
+          shadow-sm
+        "
+      >
+        <div className="space-y-4">
+          {[1, 2, 3].map((item) => (
+            <div
+              key={item}
+              className="
+                h-14
+                animate-pulse
+                rounded-xl
+                bg-stone-100
+              "
+            />
+          ))}
+        </div>
       </div>
     )
 
   }
 
   return (
-    <div className="p-6">
+    <div className="space-y-6 pb-10">
 
-      <div className="flex justify-between items-center mb-4">
-
-        <h1 className="text-2xl font-bold">
-          Mapa de Clientes
-        </h1>
-
-        <select
-          value={cobradorId}
-          onChange={(e) =>
-            setCobradorId(
-              e.target.value
-            )
-          }
+      {/* HEADER */}
+      <section
+        className="
+          relative
+          overflow-hidden
+          rounded-3xl
+          border
+          border-stone-200
+          bg-gradient-to-br
+          from-stone-50
+          via-white
+          to-amber-50
+          px-5
+          py-6
+          shadow-sm
+          sm:px-7
+          sm:py-7
+        "
+      >
+        <div
           className="
-            border
-            rounded
-            px-3
-            py-2
+            pointer-events-none
+            absolute
+            -right-16
+            -top-16
+            h-48
+            w-48
+            rounded-full
+            bg-amber-200/30
+            blur-3xl
+          "
+        />
+
+        <div
+          className="
+            relative
+            flex
+            flex-col
+            gap-5
+            sm:flex-row
+            sm:items-center
+            sm:justify-between
           "
         >
-          <option value="">
-            Todos los cobradores
-          </option>
+          <div>
+            <div
+              className="
+                mb-2
+                inline-flex
+                items-center
+                gap-2
+                rounded-full
+                border
+                border-amber-200
+                bg-amber-50
+                px-3
+                py-1
+                text-xs
+                font-semibold
+                text-amber-700
+              "
+            >
+              <span className="h-2 w-2 rounded-full bg-amber-500" />
+              Territorio
+            </div>
 
-          {cobradores.map(
-            (cobrador) => (
-              <option
-                key={cobrador.id}
-                value={cobrador.id}
-              >
-                {cobrador.apellido}
-                {', '}
-                {cobrador.nombre}
-              </option>
-            )
-          )}
-        </select>
+            <h1
+              className="
+                text-2xl
+                font-bold
+                tracking-tight
+                text-stone-900
+                sm:text-3xl
+              "
+            >
+              Mapa de clientes
+            </h1>
 
-      </div>
+            <p
+              className="
+                mt-1
+                text-sm
+                text-stone-500
+                sm:text-base
+              "
+            >
+              Ubicación de clientes por
+              zona y cobrador.
+            </p>
+          </div>
 
-      <div className="mb-4">
+          <select
+            value={cobradorId}
+            onChange={(e) =>
+              setCobradorId(
+                e.target.value
+              )
+            }
+            className="
+              rounded-xl
+              border
+              border-stone-200
+              bg-white
+              px-3.5
+              py-2.5
+              text-sm
+              text-stone-900
+              outline-none
+              transition
+              focus:border-amber-400
+              focus:ring-4
+              focus:ring-amber-100
+            "
+          >
+            <option value="">
+              Todos los cobradores
+            </option>
+
+            {cobradores.map(
+              (cobrador) => (
+                <option
+                  key={cobrador.id}
+                  value={cobrador.id}
+                >
+                  {cobrador.apellido}
+                  {', '}
+                  {cobrador.nombre}
+                </option>
+              )
+            )}
+          </select>
+
+        </div>
+      </section>
+
+      <div>
 
         <span
           className="
-            bg-cyan-100
-            text-cyan-700
-            px-3
-            py-1
+            inline-flex
             rounded-full
+            bg-amber-50
+            px-3
+            py-1.5
             text-sm
+            font-semibold
+            text-amber-700
           "
         >
           {clientesConCoordenadas.length}
@@ -273,6 +391,16 @@ const distanciaMetros =
         </span>
 
       </div>
+
+      <div
+        className="
+          overflow-hidden
+          rounded-2xl
+          border
+          border-stone-200
+          shadow-sm
+        "
+      >
 
       <MapContainer
         center={centroMapa}
@@ -424,7 +552,7 @@ const distanciaMetros =
                     target="_blank"
                     rel="noreferrer"
                     className="
-                      text-cyan-600
+                      text-amber-700
                       font-medium
                     "
                   >
@@ -441,6 +569,8 @@ const distanciaMetros =
         )}
 
       </MapContainer>
+
+      </div>
 
     </div>
   )

@@ -6,6 +6,10 @@ import React,
 from 'react'
 
 import {
+  CalendarX2
+} from 'lucide-react'
+
+import {
   diaNoLaborableService
 }
 from '../services/diaNoLaborableService'
@@ -78,151 +82,334 @@ export default function DiasNoLaborablesPage() {
 
   return (
 
-    <div className="space-y-6">
+    <div className="space-y-6 pb-10">
 
-      <div
+      {/* HEADER */}
+      <section
         className="
-          flex
-          justify-between
-          items-center
+          relative
+          overflow-hidden
+          rounded-3xl
+          border
+          border-stone-200
+          bg-gradient-to-br
+          from-stone-50
+          via-white
+          to-amber-50
+          px-5
+          py-6
+          shadow-sm
+          sm:px-7
+          sm:py-7
         "
       >
-
-        <div>
-
-          <h1 className="text-3xl font-bold">
-            Días No Laborables
-          </h1>
-
-          <p className="text-gray-500">
-            Configuración de feriados
-          </p>
-
-        </div>
-
-        <button
-          onClick={() => {
-
-            setDiaEditar(null)
-
-            setOpenModal(true)
-
-          }}
+        <div
           className="
-            bg-cyan-500
-            hover:bg-cyan-600
-            text-white
-            px-4
-            py-2
-            rounded
+            pointer-events-none
+            absolute
+            -right-16
+            -top-16
+            h-48
+            w-48
+            rounded-full
+            bg-amber-200/30
+            blur-3xl
+          "
+        />
+
+        <div
+          className="
+            relative
+            flex
+            flex-col
+            gap-5
+            sm:flex-row
+            sm:items-center
+            sm:justify-between
           "
         >
-          + Nuevo
-        </button>
+          <div>
+            <div
+              className="
+                mb-2
+                inline-flex
+                items-center
+                gap-2
+                rounded-full
+                border
+                border-amber-200
+                bg-amber-50
+                px-3
+                py-1
+                text-xs
+                font-semibold
+                text-amber-700
+              "
+            >
+              <span className="h-2 w-2 rounded-full bg-amber-500" />
+              Configuración
+            </div>
 
-      </div>
+            <h1
+              className="
+                text-2xl
+                font-bold
+                tracking-tight
+                text-stone-900
+                sm:text-3xl
+              "
+            >
+              Días no laborables
+            </h1>
 
-      <div
-        className="
-          bg-white
-          rounded
-          shadow
-          overflow-hidden
-        "
-      >
+            <p
+              className="
+                mt-1
+                text-sm
+                text-stone-500
+                sm:text-base
+              "
+            >
+              Feriados y días en que no
+              se agendan vencimientos.
+            </p>
+          </div>
 
-        <table className="w-full">
+          <button
+            type="button"
+            onClick={() => {
 
-          <thead>
+              setDiaEditar(null)
 
-            <tr>
+              setOpenModal(true)
 
-              <th className="p-3 text-left">
-                Fecha
-              </th>
+            }}
+            className="
+              inline-flex
+              min-h-[46px]
+              items-center
+              justify-center
+              gap-2
+              rounded-xl
+              bg-stone-900
+              px-5
+              py-3
+              text-sm
+              font-semibold
+              text-white
+              shadow-sm
+              transition
+              hover:-translate-y-0.5
+              hover:bg-stone-800
+              hover:shadow-md
+            "
+          >
+            <span className="text-xl leading-none">+</span>
+            Nuevo día
+          </button>
+        </div>
+      </section>
 
-              <th className="p-3 text-left">
-                Descripción
-              </th>
+      {/* LISTADO */}
+      {loading ? (
 
-              <th className="p-3 text-center">
-                Acciones
-              </th>
-
-            </tr>
-
-          </thead>
-
-          <tbody>
-
-            {dias.map((dia) => (
-
-              <tr
-                key={dia.id}
-                className="border-t"
-              >
-
-                <td className="p-3">
-                {
-  dia.fecha
-    .split('-')
-    .reverse()
-    .join('/')
-}
-                </td>
-
-                <td className="p-3">
-                  {dia.descripcion}
-                </td>
-
-                <td className="p-3 text-center">
-
-                  <button
-                    onClick={() => {
-
-                      setDiaEditar(dia)
-
-                      setOpenModal(true)
-
-                    }}
-                    className="
-                      bg-blue-500
-                      text-white
-                      px-3
-                      py-1
-                      rounded
-                      mr-2
-                    "
-                  >
-                    Editar
-                  </button>
-
-                  <button
-                    onClick={() =>
-                      eliminar(dia.id)
-                    }
-                    className="
-                      bg-red-500
-                      text-white
-                      px-3
-                      py-1
-                      rounded
-                    "
-                  >
-                    Eliminar
-                  </button>
-
-                </td>
-
-              </tr>
-
+        <div
+          className="
+            rounded-2xl
+            border
+            border-stone-200
+            bg-white
+            p-6
+            shadow-sm
+          "
+        >
+          <div className="space-y-4">
+            {[1, 2, 3].map((item) => (
+              <div
+                key={item}
+                className="
+                  h-14
+                  animate-pulse
+                  rounded-xl
+                  bg-stone-100
+                "
+              />
             ))}
+          </div>
+        </div>
 
-          </tbody>
+      ) : dias.length === 0 ? (
 
-        </table>
+        <div
+          className="
+            rounded-2xl
+            border
+            border-dashed
+            border-stone-300
+            bg-white
+            px-5
+            py-12
+            text-center
+          "
+        >
+          <div
+            className="
+              mx-auto
+              flex
+              h-12
+              w-12
+              items-center
+              justify-center
+              rounded-full
+              bg-stone-100
+            "
+          >
+            <CalendarX2 className="h-5 w-5 text-stone-500" />
+          </div>
 
-      </div>
+          <p className="mt-3 font-semibold text-stone-700">
+            No hay días no laborables cargados
+          </p>
+
+          <p className="mt-1 text-sm text-stone-400">
+            Agregá feriados para que no se
+            programen vencimientos esos días.
+          </p>
+        </div>
+
+      ) : (
+
+        <div
+          className="
+            overflow-hidden
+            rounded-2xl
+            border
+            border-stone-200
+            bg-white
+            shadow-sm
+          "
+        >
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+
+              <thead className="bg-stone-50/80">
+
+                <tr
+                  className="
+                    border-b
+                    border-stone-200
+                    text-xs
+                    uppercase
+                    tracking-wide
+                    text-stone-500
+                  "
+                >
+
+                  <th className="px-5 py-3 text-left">
+                    Fecha
+                  </th>
+
+                  <th className="px-4 py-3 text-left">
+                    Descripción
+                  </th>
+
+                  <th className="px-5 py-3 text-right">
+                    Acciones
+                  </th>
+
+                </tr>
+
+              </thead>
+
+              <tbody className="divide-y divide-stone-100">
+
+                {dias.map((dia) => (
+
+                  <tr
+                    key={dia.id}
+                    className="transition hover:bg-amber-50/40"
+                  >
+
+                    <td className="px-5 py-4 font-semibold text-stone-800">
+                      {
+                        dia.fecha
+                          .split('-')
+                          .reverse()
+                          .join('/')
+                      }
+                    </td>
+
+                    <td className="px-4 py-4 text-stone-600">
+                      {dia.descripcion}
+                    </td>
+
+                    <td className="px-5 py-4">
+
+                      <div className="flex justify-end gap-2">
+
+                        <button
+                          type="button"
+                          onClick={() => {
+
+                            setDiaEditar(dia)
+
+                            setOpenModal(true)
+
+                          }}
+                          className="
+                            rounded-lg
+                            border
+                            border-stone-200
+                            px-3
+                            py-2
+                            text-xs
+                            font-semibold
+                            text-stone-600
+                            transition
+                            hover:border-amber-300
+                            hover:bg-amber-50
+                            hover:text-amber-700
+                          "
+                        >
+                          Editar
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() =>
+                            eliminar(dia.id)
+                          }
+                          className="
+                            rounded-lg
+                            border
+                            border-red-100
+                            px-3
+                            py-2
+                            text-xs
+                            font-semibold
+                            text-red-500
+                            transition
+                            hover:bg-red-50
+                          "
+                        >
+                          Eliminar
+                        </button>
+
+                      </div>
+
+                    </td>
+
+                  </tr>
+
+                ))}
+
+              </tbody>
+
+            </table>
+          </div>
+        </div>
+
+      )}
 
       <DiaNoLaborableModal
         open={openModal}

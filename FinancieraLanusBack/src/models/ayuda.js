@@ -90,6 +90,13 @@ motivoRechazo: {
         defaultValue: true
       }
 
+    },
+    {
+      indexes: [
+        {
+          fields: ['fecha']
+        }
+      ]
     }
   )
 }

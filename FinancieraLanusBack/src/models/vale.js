@@ -56,5 +56,11 @@ export const ValeModel = (sequelize, DataTypes) => {
       allowNull: false,
       defaultValue: true,
     },
+  }, {
+    indexes: [
+      {
+        fields: ['fecha'],
+      },
+    ],
   });
 };

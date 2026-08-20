@@ -23,6 +23,8 @@ import ClientesMapaPage
   from '../pages/ClientesMapaPage';
   import ResumenRecaudacionPage
 from '../pages/ResumenRecaudacionPage';
+import InformeDiarioPage
+from '../pages/InformeDiarioPage';
 
 import ProtectedRoute from "./ProtectedRoute";
 import ZonesPage from "../pages/ZonesPage";
@@ -139,6 +141,13 @@ export default function AppRoutes() {
   path="recaudacion"
   element={
     <ResumenRecaudacionPage />
+  }
+/>
+
+<Route
+  path="informe-diario"
+  element={
+    <InformeDiarioPage />
   }
 />
 

@@ -57,11 +57,7 @@ export default function PagoModal({
 
       if (
 
-        montoPago <= 0 ||
-
-        montoPago >
-
-        Number(cuota.saldo)
+        montoPago <= 0
 
       ) {
 
@@ -160,6 +156,32 @@ export default function PagoModal({
               >
 
                 ✔ La cuota quedará cancelada
+
+              </span>
+
+            }
+
+            {
+
+              saldoRestante < 0 &&
+
+              <span
+                className="
+                  text-green-400
+                  font-medium
+                "
+              >
+
+                ✔ La cuota quedará cancelada
+                {' — el excedente de '}
+
+                <Money
+                  value={
+                    -saldoRestante
+                  }
+                />
+
+                {' se aplica a otras cuotas'}
 
               </span>
 
@@ -399,11 +421,7 @@ export default function PagoModal({
 
           disabled={
 
-            montoPago <= 0 ||
-
-            montoPago >
-
-            Number(cuota.saldo)
+            montoPago <= 0
 
           }
 
@@ -421,11 +439,7 @@ export default function PagoModal({
 
             ${
 
-              montoPago <= 0 ||
-
-              montoPago >
-
-              Number(cuota.saldo)
+              montoPago <= 0
 
                 ?
 

@@ -42,6 +42,9 @@ import {
 import PagoCuotaModal
   from '../components/PagoCuotaModal'
 
+import ConfirmCascadaModal
+  from '../components/ConfirmCascadaModal'
+
 
 export default function CreditoDetallePage() {
 
@@ -80,6 +83,11 @@ export default function CreditoDetallePage() {
     loadingPago,
     setLoadingPago
   ] = useState(false)
+
+  const [
+    confirmacionPendiente,
+    setConfirmacionPendiente
+  ] = useState(null)
 
 
   /* ===================================================== */
@@ -272,6 +280,16 @@ const copiarLinkEstado = async () => {
     ).length
 
 
+  const notasSaldoAFavor =
+    (credito?.observaciones || '')
+      .split('\n')
+      .filter(linea =>
+        linea
+          .toLowerCase()
+          .includes('saldo a favor')
+      )
+
+
   const porcentaje =
     cuotasOrdenadas.length
       ? Math.round(
@@ -407,12 +425,69 @@ ${url}`
 
         setLoadingPago(true)
 
+        const respuesta =
+          await creditoService
+            .registrarPago(
+              cuotaSeleccionada.id,
+              data
+            )
+
+        if (respuesta.requiereConfirmacion) {
+
+          setConfirmacionPendiente({
+            formData: data,
+            ...respuesta.data
+          })
+
+          return
+        }
+
+        setModalPagoOpen(false)
+        setCuotaSeleccionada(null)
+
+        toast.success(
+          'Pago registrado correctamente'
+        )
+
+        await cargarCredito()
+
+      } catch (error) {
+
+        console.error(error)
+
+        toast.error(
+          error?.response
+            ?.data
+            ?.message ||
+          'No se pudo registrar el pago'
+        )
+
+      } finally {
+
+        setLoadingPago(false)
+
+      }
+
+    }
+
+
+  const confirmarCascada =
+    async () => {
+
+      try {
+
+        setLoadingPago(true)
+
         await creditoService
           .registrarPago(
             cuotaSeleccionada.id,
-            data
+            {
+              ...confirmacionPendiente.formData,
+              confirmado: true
+            }
           )
 
+        setConfirmacionPendiente(null)
         setModalPagoOpen(false)
         setCuotaSeleccionada(null)
 
@@ -927,6 +1002,86 @@ ${url}`
                   : 'cuotas vencidas'
                 }.
               </p>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      )}
+
+
+      {/* ================================================= */}
+      {/* ALERTA SALDO A FAVOR */}
+      {/* ================================================= */}
+
+      {notasSaldoAFavor.length > 0 && (
+
+        <div className="
+          flex
+          flex-col
+          sm:flex-row
+          sm:items-center
+          justify-between
+          gap-3
+          bg-emerald-50
+          border
+          border-emerald-200
+          rounded-xl
+          px-4
+          py-3
+        ">
+
+          <div className="
+            flex
+            items-center
+            gap-3
+          ">
+
+            <div className="
+              w-9
+              h-9
+              rounded-lg
+              bg-emerald-100
+              text-emerald-600
+              flex
+              items-center
+              justify-center
+              shrink-0
+            ">
+
+              <BadgeDollarSign
+                className="w-5 h-5"
+              />
+
+            </div>
+
+            <div>
+
+              <p className="
+                text-sm
+                font-bold
+                text-emerald-800
+              ">
+                El cliente tiene saldo a favor
+              </p>
+
+              {notasSaldoAFavor.map(
+                (nota, i) => (
+
+                  <p
+                    key={i}
+                    className="
+                      text-sm
+                      text-emerald-700
+                    "
+                  >
+                    {nota}
+                  </p>
+
+                )
+              )}
 
             </div>
 
@@ -2015,7 +2170,8 @@ ${url}`
 
       <PagoCuotaModal
         isOpen={
-          modalPagoOpen
+          modalPagoOpen &&
+          !confirmacionPendiente
         }
         cuota={
           cuotaSeleccionada
@@ -2028,6 +2184,31 @@ ${url}`
         }}
         onConfirm={
           registrarPago
+        }
+        isLoading={
+          loadingPago
+        }
+      />
+
+      <ConfirmCascadaModal
+        isOpen={
+          !!confirmacionPendiente
+        }
+        cuotasAfectadas={
+          confirmacionPendiente
+            ?.cuotasAfectadas ||
+          []
+        }
+        saldoAFavor={
+          confirmacionPendiente
+            ?.saldoAFavor ||
+          0
+        }
+        onCancel={() =>
+          setConfirmacionPendiente(null)
+        }
+        onConfirm={
+          confirmarCascada
         }
         isLoading={
           loadingPago

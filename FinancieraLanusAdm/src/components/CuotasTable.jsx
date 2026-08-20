@@ -27,6 +27,9 @@ import {
 import PagoCuotaModal
   from './PagoCuotaModal'
 
+import ConfirmCascadaModal
+  from './ConfirmCascadaModal'
+
 import api
   from '../api/axios'
 
@@ -54,6 +57,11 @@ export default function CuotasTable({
     guardando,
     setGuardando
   ] = useState(false)
+
+  const [
+    confirmacionPendiente,
+    setConfirmacionPendiente
+  ] = useState(null)
 
 
   /* ===================================================== */
@@ -124,6 +132,10 @@ export default function CuotasTable({
         null
       )
 
+      setConfirmacionPendiente(
+        null
+      )
+
     }
 
 
@@ -138,9 +150,52 @@ export default function CuotasTable({
 
         setGuardando(true)
 
+        const { data } =
+          await api.post(
+            `/creditos/cuotas/${cuotaSeleccionada.id}/pago`,
+            formData
+          )
+
+        if (data.requiereConfirmacion) {
+
+          setConfirmacionPendiente({
+            formData,
+            ...data.data
+          })
+
+          return
+        }
+
+        cerrarModal()
+
+        await onReload()
+
+      } catch (error) {
+
+        console.error(error)
+
+      } finally {
+
+        setGuardando(false)
+
+      }
+
+    }
+
+
+  const confirmarCascada =
+    async () => {
+
+      try {
+
+        setGuardando(true)
+
         await api.post(
           `/creditos/cuotas/${cuotaSeleccionada.id}/pago`,
-          formData
+          {
+            ...confirmacionPendiente.formData,
+            confirmado: true
+          }
         )
 
         cerrarModal()
@@ -1250,7 +1305,8 @@ export default function CuotasTable({
 
       <PagoCuotaModal
         isOpen={
-          showModal
+          showModal &&
+          !confirmacionPendiente
         }
         cuota={
           cuotaSeleccionada
@@ -1260,6 +1316,29 @@ export default function CuotasTable({
         }
         onConfirm={
           registrarPago
+        }
+        isLoading={
+          guardando
+        }
+      />
+
+      <ConfirmCascadaModal
+        isOpen={
+          !!confirmacionPendiente
+        }
+        cuotasAfectadas={
+          confirmacionPendiente?.cuotasAfectadas ||
+          []
+        }
+        saldoAFavor={
+          confirmacionPendiente?.saldoAFavor ||
+          0
+        }
+        onCancel={() =>
+          setConfirmacionPendiente(null)
+        }
+        onConfirm={
+          confirmarCascada
         }
         isLoading={
           guardando

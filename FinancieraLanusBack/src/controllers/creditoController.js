@@ -11,6 +11,8 @@ import crypto from 'crypto';
 
 import { Op } from 'sequelize';
 
+import { calcularCuotasAfectadas } from '../services/pagoCuotaService.js';
+
 
 export const actualizarCuotasVencidas =
   async () => {
@@ -777,20 +779,6 @@ export const registrarPagoCuota = async (
       });
     }
 
-    if (
-      montoIngresado >
-      saldoPendiente
-    ) {
-
-      await transaction.rollback();
-
-      return res.status(400).json({
-        success: false,
-        message:
-          `El pago supera el saldo pendiente de $${saldoPendiente.toLocaleString('es-AR')}`
-      });
-    }
-
     /*
     =====================================================
     FECHA DEL PAGO
@@ -805,88 +793,124 @@ export const registrarPagoCuota = async (
 
     /*
     =====================================================
-    CREAR MOVIMIENTO DE PAGO
+    CALCULAR CASCADA (cuotas afectadas por el pago)
     =====================================================
     */
 
-    const pago =
-      await PagoCuota.create(
-        {
-          cuotaId:
-            cuota.id,
-
-          fecha:
-            fechaMovimiento,
-
-          monto:
-            montoIngresado,
-
-          tipoTransaccion:
-            tipoPago,
-
-          observaciones:
-            observaciones || null,
-
-          activo:
-            true
-        },
-        {
-          transaction
-        }
-      );
-
-    /*
-    =====================================================
-    ACTUALIZAR ACUMULADO DE LA CUOTA
-    =====================================================
-    */
-
-    const nuevoMontoPago =
-      montoPagadoActual +
-      montoIngresado;
-
-    cuota.montoPago =
-      nuevoMontoPago;
-
-    /*
-    Estos campos quedan por compatibilidad
-    con el sistema actual.
-
-    Representan el ULTIMO pago realizado.
-    */
-
-    cuota.tipoTransaccion =
-      tipoPago;
-
-    cuota.observaciones =
-      observaciones || null;
-
-    cuota.fechaPago =
-      fechaMovimiento;
-
-    /*
-    =====================================================
-    ESTADO DE LA CUOTA
-    =====================================================
-    */
-
-    if (
-      nuevoMontoPago >=
-      montoCuota
-    ) {
-
-      cuota.estado =
-        'PAGADA';
-
-    } else {
-
-      cuota.estado =
-        'PARCIAL';
-    }
-
-    await cuota.save({
+    const {
+      cuotasObjetivo,
+      saldoAFavor
+    } = await calcularCuotasAfectadas({
+      cuota,
+      montoIngresado,
       transaction
     });
+
+    const afectaVariasCuotas =
+      cuotasObjetivo.length > 1;
+
+    if (
+      afectaVariasCuotas &&
+      !req.body.confirmado
+    ) {
+
+      await transaction.rollback();
+
+      return res.json({
+        success: true,
+        requiereConfirmacion: true,
+        message:
+          `Este pago afecta ${cuotasObjetivo.length} cuotas. Confirmá para continuar.`,
+        data: {
+          cuotasAfectadas:
+            cuotasObjetivo.map(
+              ({ cuota: c, aPagar }) => ({
+                id: c.id,
+                numeroCuota: c.numeroCuota,
+                monto: aPagar
+              })
+            ),
+          saldoAFavor
+        }
+      });
+    }
+
+    /*
+    =====================================================
+    CREAR MOVIMIENTOS DE PAGO Y ACTUALIZAR CUOTAS
+    (una cuota puede quedar PAGADA o PARCIAL; puede haber
+    más de una cuota involucrada por la cascada)
+    =====================================================
+    */
+
+    const pagosCreados = [];
+
+    for (const { cuota: c, aPagar } of cuotasObjetivo) {
+
+      const pagoCuota =
+        await PagoCuota.create(
+          {
+            cuotaId:
+              c.id,
+
+            fecha:
+              fechaMovimiento,
+
+            monto:
+              aPagar,
+
+            tipoTransaccion:
+              tipoPago,
+
+            observaciones:
+              observaciones || null,
+
+            activo:
+              true
+          },
+          {
+            transaction
+          }
+        );
+
+      pagosCreados.push(pagoCuota);
+
+      const nuevoMontoPago =
+        Number(c.montoPago || 0) +
+        aPagar;
+
+      c.montoPago =
+        nuevoMontoPago;
+
+      /*
+      Estos campos quedan por compatibilidad
+      con el sistema actual.
+
+      Representan el ULTIMO pago realizado.
+      */
+
+      c.tipoTransaccion =
+        tipoPago;
+
+      c.observaciones =
+        observaciones || null;
+
+      c.fechaPago =
+        fechaMovimiento;
+
+      c.estado =
+        nuevoMontoPago >=
+        Number(c.monto)
+          ? 'PAGADA'
+          : 'PARCIAL';
+
+      await c.save({
+        transaction
+      });
+    }
+
+    const pago =
+      pagosCreados[0];
 
     /*
     =====================================================
@@ -913,6 +937,25 @@ export const registrarPagoCuota = async (
         message:
           'Crédito no encontrado.'
       });
+    }
+
+    /*
+    =====================================================
+    SALDO A FAVOR
+    (sobra monto después de cubrir todas las cuotas
+    del crédito: se deja una nota en Credito.observaciones)
+    =====================================================
+    */
+
+    if (saldoAFavor > 0) {
+
+      const notaSaldoAFavor =
+        `[${fechaMovimiento}] Pago registrado con saldo a favor del cliente de $${saldoAFavor.toLocaleString('es-AR')} (excedente sobre el total de cuotas del crédito).`;
+
+      credito.observaciones =
+        credito.observaciones
+          ? `${credito.observaciones}\n${notaSaldoAFavor}`
+          : notaSaldoAFavor;
     }
 
     const totalCuotas =
@@ -963,7 +1006,9 @@ export const registrarPagoCuota = async (
       success: true,
 
       message:
-        'Pago registrado correctamente.',
+        afectaVariasCuotas
+          ? `Pago registrado correctamente. Se aplicó a ${cuotasObjetivo.length} cuotas.`
+          : 'Pago registrado correctamente.',
 
       data: {
 
@@ -999,12 +1044,27 @@ export const registrarPagoCuota = async (
             Number(cuota.montoPago)
         },
 
+        cuotasAfectadas:
+          cuotasObjetivo.map(
+            ({ cuota: c, aPagar }) => ({
+              id: c.id,
+              numeroCuota: c.numeroCuota,
+              monto: aPagar,
+              estado: c.estado
+            })
+          ),
+
+        saldoAFavor,
+
         credito: {
           id:
             credito.id,
 
           estado:
-            credito.estado
+            credito.estado,
+
+          observaciones:
+            credito.observaciones
         }
       }
     });

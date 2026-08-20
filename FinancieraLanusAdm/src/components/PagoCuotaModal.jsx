@@ -87,12 +87,12 @@ export default function PagoCuotaModal({
           Number(value);
 
         if (
-          monto >
-          saldoPendiente
+          !Number.isFinite(monto) ||
+          monto <= 0
         ) {
 
           setError(
-            `El saldo pendiente es $${saldoPendiente.toLocaleString('es-AR')}`
+            'Debe ingresar un importe válido.'
           );
 
         } else {
@@ -113,6 +113,7 @@ export default function PagoCuotaModal({
         );
 
       if (
+        !Number.isFinite(monto) ||
         monto <= 0
       ) {
 
@@ -123,20 +124,23 @@ export default function PagoCuotaModal({
         return;
       }
 
-      if (
-        monto >
-        saldoPendiente
-      ) {
-
-        setError(
-          `El saldo pendiente es $${saldoPendiente.toLocaleString('es-AR')}`
-        );
-
-        return;
-      }
-
       onConfirm(formData);
     };
+
+  const excedente =
+    useMemo(() => {
+
+      const monto =
+        Number(formData.montoPago);
+
+      return monto > saldoPendiente
+        ? monto - saldoPendiente
+        : 0;
+
+    }, [
+      formData.montoPago,
+      saldoPendiente
+    ]);
 
   return (
 
@@ -296,6 +300,22 @@ export default function PagoCuotaModal({
                 rounded
               "
             />
+
+            {excedente > 0 && (
+
+              <p className="
+                text-sm
+                text-amber-700
+                mt-1
+              ">
+                El excedente de $
+                {excedente.toLocaleString('es-AR')}
+                {' '}
+                se aplicará automáticamente
+                a otras cuotas del crédito.
+              </p>
+
+            )}
 
           </div>
 

@@ -9,6 +9,9 @@ import Toast
 import PagoModal
   from '../../components/PagoModal'
 
+import ConfirmDialog
+  from '../../components/ConfirmDialog'
+
 import SectionTitle
   from '../../components/SectionTitle'
 
@@ -46,6 +49,14 @@ export default function CobrosPage() {
   const [cuotaSeleccionada,
     setCuotaSeleccionada] =
       useState(null)
+
+  const [confirmacionPendiente,
+    setConfirmacionPendiente] =
+      useState(null)
+
+  const [confirmando,
+    setConfirmando] =
+      useState(false)
 
   useEffect(() => {
 
@@ -87,13 +98,25 @@ export default function CobrosPage() {
 
       try {
 
-        await mobileService.pagarCuota(
+        const respuesta =
+          await mobileService.pagarCuota(
 
-          cuotaSeleccionada.id,
+            cuotaSeleccionada.id,
 
-          payload
+            payload
 
-        )
+          )
+
+        if (respuesta.requiereConfirmacion) {
+
+          setConfirmacionPendiente({
+            cuotaId: cuotaSeleccionada.id,
+            payload,
+            ...respuesta.data
+          })
+
+          return
+        }
 
         mostrarToast(
 
@@ -118,6 +141,58 @@ export default function CobrosPage() {
           'error'
 
         )
+
+      }
+
+    }
+
+  const confirmarCascada =
+    async () => {
+
+      try {
+
+        setConfirmando(true)
+
+        await mobileService.pagarCuota(
+
+          confirmacionPendiente.cuotaId,
+
+          {
+            ...confirmacionPendiente.payload,
+            confirmado: true
+          }
+
+        )
+
+        mostrarToast(
+
+          '✅ Pago registrado correctamente',
+
+          'success'
+
+        )
+
+        setConfirmacionPendiente(null)
+
+        setCuotaSeleccionada(null)
+
+        await cargar()
+
+      } catch (error) {
+
+        mostrarToast(
+
+          error.response?.data?.message ||
+
+          '❌ Error al registrar pago',
+
+          'error'
+
+        )
+
+      } finally {
+
+        setConfirmando(false)
 
       }
 
@@ -409,7 +484,8 @@ export default function CobrosPage() {
 
         {
 
-          cuotaSeleccionada && (
+          cuotaSeleccionada &&
+          !confirmacionPendiente && (
 
             <PagoModal
 
@@ -430,6 +506,40 @@ export default function CobrosPage() {
                 registrarPago
 
               }
+
+            />
+
+          )
+
+        }
+
+        {
+
+          confirmacionPendiente && (
+
+            <ConfirmDialog
+
+              title="Confirmar cobro"
+
+              message={
+                `Este pago afecta ${confirmacionPendiente.cuotasAfectadas.length} cuotas.`
+              }
+
+              cuotasAfectadas={
+                confirmacionPendiente.cuotasAfectadas
+              }
+
+              saldoAFavor={
+                confirmacionPendiente.saldoAFavor
+              }
+
+              isLoading={confirmando}
+
+              onCancel={() =>
+                setConfirmacionPendiente(null)
+              }
+
+              onConfirm={confirmarCascada}
 
             />
 

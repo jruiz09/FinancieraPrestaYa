@@ -26,6 +26,9 @@ import ClienteAvatar
 import PagoModal
   from '../../components/PagoModal'
 
+import ConfirmDialog
+  from '../../components/ConfirmDialog'
+
 import {
   mobileService
 } from '../../services/mobileService'
@@ -54,6 +57,14 @@ export default function RecorridoPage() {
   const [cuotaSeleccionada,
     setCuotaSeleccionada] =
       useState(null)
+
+  const [confirmacionPendiente,
+    setConfirmacionPendiente] =
+      useState(null)
+
+  const [confirmando,
+    setConfirmando] =
+      useState(false)
 
   useEffect(() => {
 
@@ -144,47 +155,66 @@ export default function RecorridoPage() {
 
     }
 
+  const avanzarDespuesDePago =
+    async () => {
+
+      setCuotaSeleccionada(
+        null
+      )
+
+      const siguiente =
+        indice + 1
+
+      if (
+        siguiente >=
+        clientes.length
+      ) {
+
+        setIndice(-2)
+
+        return
+
+      }
+
+      setIndice(
+        siguiente
+      )
+
+      await cargar()
+
+    }
+
   const registrarPago =
     async (payload) => {
 
       try {
 
-        await mobileService
-          .pagarCuota(
+        const respuesta =
+          await mobileService
+            .pagarCuota(
 
-            cuotaSeleccionada.id,
+              cuotaSeleccionada.id,
 
-            payload
+              payload
 
-          )
+            )
+
+        if (respuesta.requiereConfirmacion) {
+
+          setConfirmacionPendiente({
+            cuotaId: cuotaSeleccionada.id,
+            payload,
+            ...respuesta.data
+          })
+
+          return
+        }
 
         mostrarToast(
           'Cobro registrado'
         )
 
-        setCuotaSeleccionada(
-          null
-        )
-
-        const siguiente =
-          indice + 1
-
-        if (
-          siguiente >=
-          clientes.length
-        ) {
-
-          setIndice(-2)
-
-          return
-
-        }
-
-        setIndice(
-          siguiente
-        )
-
-        await cargar()
+        await avanzarDespuesDePago()
 
       } catch (error) {
 
@@ -197,6 +227,53 @@ export default function RecorridoPage() {
           'error'
 
         )
+
+      }
+
+    }
+
+  const confirmarCascada =
+    async () => {
+
+      try {
+
+        setConfirmando(true)
+
+        await mobileService
+          .pagarCuota(
+
+            confirmacionPendiente.cuotaId,
+
+            {
+              ...confirmacionPendiente.payload,
+              confirmado: true
+            }
+
+          )
+
+        mostrarToast(
+          'Cobro registrado'
+        )
+
+        setConfirmacionPendiente(null)
+
+        await avanzarDespuesDePago()
+
+      } catch (error) {
+
+        mostrarToast(
+
+          error.response?.data?.message ||
+
+          'Error al registrar pago',
+
+          'error'
+
+        )
+
+      } finally {
+
+        setConfirmando(false)
 
       }
 
@@ -725,6 +802,7 @@ export default function RecorridoPage() {
       {
 
         cuotaSeleccionada &&
+        !confirmacionPendiente &&
 
         <PagoModal
 
@@ -750,6 +828,38 @@ export default function RecorridoPage() {
           onConfirm={
             registrarPago
           }
+
+        />
+
+      }
+
+      {
+
+        confirmacionPendiente &&
+
+        <ConfirmDialog
+
+          title="Confirmar cobro"
+
+          message={
+            `Este pago afecta ${confirmacionPendiente.cuotasAfectadas.length} cuotas.`
+          }
+
+          cuotasAfectadas={
+            confirmacionPendiente.cuotasAfectadas
+          }
+
+          saldoAFavor={
+            confirmacionPendiente.saldoAFavor
+          }
+
+          isLoading={confirmando}
+
+          onCancel={() =>
+            setConfirmacionPendiente(null)
+          }
+
+          onConfirm={confirmarCascada}
 
         />
 

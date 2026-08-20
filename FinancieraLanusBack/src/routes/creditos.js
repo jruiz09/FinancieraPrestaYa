@@ -99,6 +99,10 @@ router.post(
   body('tipoTransaccion')
     .notEmpty(),
 
+  body('confirmado')
+    .optional()
+    .isBoolean(),
+
   validateRequest,
 
   registrarPagoCuota

@@ -6,6 +6,53 @@ import {
 const canViewAllOwners = (user) => user.permissions?.includes('OWNERS_VIEW');
 const canSetOwner = (user) => user.permissions?.includes('OWNERS_EDIT');
 
+/*
+=====================================================
+Si el frontend ya nos manda coordenadas (via el boton
+"Buscar ubicacion", que pega contra /clients/geolocalizar)
+confiamos en ellas en vez de volver a geocodificar la
+misma direccion desde el backend. Evita depender dos veces
+del servicio externo para la misma operacion.
+=====================================================
+*/
+
+const resolverCoordenadas = async ({
+  latitud,
+  longitud,
+  mapsUrl,
+  direccion
+}) => {
+
+  if (latitud != null && longitud != null) {
+
+    return {
+      latitud: Number(latitud),
+      longitud: Number(longitud),
+      direccion
+    };
+
+  }
+
+  const ubicacion =
+    await resolverUbicacion(
+      mapsUrl?.trim()
+        ? mapsUrl
+        : direccion
+    );
+
+  return {
+    latitud:
+      ubicacion?.latitud || null,
+
+    longitud:
+      ubicacion?.longitud || null,
+
+    direccion:
+      ubicacion?.direccion || direccion
+  };
+
+};
+
 export const listClients = async (req, res, next) => {
   try {
     const page = Math.max(parseInt(req.query.page) || 1, 1);
@@ -96,7 +143,9 @@ export const createClient = async (req, res, next) => {
       mapsUrl,
       foto,
       ownerId,
-      cobradorId
+      cobradorId,
+      latitud,
+      longitud
     } = req.body;
 
     let finalOwnerId = ownerId;
@@ -144,11 +193,12 @@ export const createClient = async (req, res, next) => {
     }
 
     const ubicacion =
-      await resolverUbicacion(
-        mapsUrl?.trim()
-          ? mapsUrl
-          : direccion
-      );
+      await resolverCoordenadas({
+        latitud,
+        longitud,
+        mapsUrl,
+        direccion
+      });
 
     const client = await Client.create({
 
@@ -158,17 +208,17 @@ export const createClient = async (req, res, next) => {
       celular,
 
       direccion:
-        ubicacion?.direccion || direccion,
+        ubicacion.direccion,
 
       mapsUrl,
 
       foto,
 
       latitud:
-        ubicacion?.latitud || null,
+        ubicacion.latitud,
 
       longitud:
-        ubicacion?.longitud || null,
+        ubicacion.longitud,
 
       ownerId: finalOwnerId,
 
@@ -221,7 +271,9 @@ export const updateClient = async (req, res, next) => {
       direccion,
       mapsUrl,
       foto,
-      cobradorId
+      cobradorId,
+      latitud,
+      longitud
     } = req.body;
 
     if (cobradorId) {
@@ -264,28 +316,30 @@ export const updateClient = async (req, res, next) => {
 
     if (
       direccion !== undefined ||
-      mapsUrl !== undefined
+      mapsUrl !== undefined ||
+      latitud !== undefined ||
+      longitud !== undefined
     ) {
 
       const ubicacion =
-        await resolverUbicacion(
-          mapsUrl?.trim()
-            ? mapsUrl
-            : direccion
-        );
+        await resolverCoordenadas({
+          latitud,
+          longitud,
+          mapsUrl,
+          direccion
+        });
 
       client.direccion =
-        ubicacion?.direccion ||
-        direccion;
+        ubicacion.direccion;
 
       client.mapsUrl =
         mapsUrl;
 
       client.latitud =
-        ubicacion?.latitud || null;
+        ubicacion.latitud;
 
       client.longitud =
-        ubicacion?.longitud || null;
+        ubicacion.longitud;
 
     }
 

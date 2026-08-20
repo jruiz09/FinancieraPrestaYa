@@ -33,8 +33,12 @@ router.post(
   body('dni').notEmpty().withMessage('DNI es requerido'),
   body('celular').optional().isMobilePhone('any'),
   body('direccion').optional().isString(),
-  body('latitud').optional().isFloat(),
-  body('longitud').optional().isFloat(),
+  body('latitud')
+    .optional({ nullable: true })
+    .isFloat({ min: -90, max: 90 }),
+  body('longitud')
+    .optional({ nullable: true })
+    .isFloat({ min: -180, max: 180 }),
   body('foto').optional().isString(),
   body('ownerId').optional().isUUID(),
   body('cobradorId').optional().isUUID(),
@@ -42,7 +46,18 @@ router.post(
   createClient
 );
 
-router.put('/:id', param('id').isUUID(), validateRequest, updateClient);
+router.put(
+  '/:id',
+  param('id').isUUID(),
+  body('latitud')
+    .optional({ nullable: true })
+    .isFloat({ min: -90, max: 90 }),
+  body('longitud')
+    .optional({ nullable: true })
+    .isFloat({ min: -180, max: 180 }),
+  validateRequest,
+  updateClient
+);
 
 router.delete('/:id', param('id').isUUID(), validateRequest, deleteClient);
 

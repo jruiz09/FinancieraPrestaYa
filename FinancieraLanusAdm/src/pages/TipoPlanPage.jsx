@@ -3,6 +3,8 @@ import SearchBar from '../components/SearchBar'
 import Pagination from '../components/Pagination'
 import ErrorAlert from '../components/ErrorAlert'
 import TipoPlanModal from '../components/TipoPlanModal'
+import Permission from '../components/Permission'
+import { PERMISSIONS } from '../constants/permissions'
 import { tipoPlanService } from '../services/tipoPlanService'
 import { ReceiptText } from 'lucide-react'
 
@@ -203,32 +205,34 @@ export default function TiposPlanPage() {
             </p>
           </div>
 
-          <button
-            type="button"
-            onClick={openCreateModal}
-            className="
-              inline-flex
-              min-h-[46px]
-              items-center
-              justify-center
-              gap-2
-              rounded-xl
-              bg-stone-900
-              px-5
-              py-3
-              text-sm
-              font-semibold
-              text-white
-              shadow-sm
-              transition
-              hover:-translate-y-0.5
-              hover:bg-stone-800
-              hover:shadow-md
-            "
-          >
-            <span className="text-xl leading-none">+</span>
-            Nuevo tipo de plan
-          </button>
+          <Permission permission={PERMISSIONS.PLAN_TYPES_CREATE}>
+            <button
+              type="button"
+              onClick={openCreateModal}
+              className="
+                inline-flex
+                min-h-[46px]
+                items-center
+                justify-center
+                gap-2
+                rounded-xl
+                bg-stone-900
+                px-5
+                py-3
+                text-sm
+                font-semibold
+                text-white
+                shadow-sm
+                transition
+                hover:-translate-y-0.5
+                hover:bg-stone-800
+                hover:shadow-md
+              "
+            >
+              <span className="text-xl leading-none">+</span>
+              Nuevo tipo de plan
+            </button>
+          </Permission>
         </div>
       </section>
 
@@ -394,48 +398,52 @@ export default function TiposPlanPage() {
 
                         <td className="px-5 py-4">
                           <div className="flex justify-end gap-2">
-                            <button
-                              type="button"
-                              onClick={() => openEditModal(tipoPlan)}
-                              className="
-                                rounded-lg
-                                border
-                                border-stone-200
-                                px-3
-                                py-2
-                                text-xs
-                                font-semibold
-                                text-stone-600
-                                transition
-                                hover:border-amber-300
-                                hover:bg-amber-50
-                                hover:text-amber-700
-                              "
-                            >
-                              Editar
-                            </button>
-
-                            {tipoPlan.activo && (
+                            <Permission permission={PERMISSIONS.PLAN_TYPES_EDIT}>
                               <button
                                 type="button"
-                                onClick={() =>
-                                  handleDeactivate(tipoPlan.id)
-                                }
+                                onClick={() => openEditModal(tipoPlan)}
                                 className="
                                   rounded-lg
                                   border
-                                  border-red-100
+                                  border-stone-200
                                   px-3
                                   py-2
                                   text-xs
                                   font-semibold
-                                  text-red-500
+                                  text-stone-600
                                   transition
-                                  hover:bg-red-50
+                                  hover:border-amber-300
+                                  hover:bg-amber-50
+                                  hover:text-amber-700
                                 "
                               >
-                                Desactivar
+                                Editar
                               </button>
+                            </Permission>
+
+                            {tipoPlan.activo && (
+                              <Permission permission={PERMISSIONS.PLAN_TYPES_DELETE}>
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    handleDeactivate(tipoPlan.id)
+                                  }
+                                  className="
+                                    rounded-lg
+                                    border
+                                    border-red-100
+                                    px-3
+                                    py-2
+                                    text-xs
+                                    font-semibold
+                                    text-red-500
+                                    transition
+                                    hover:bg-red-50
+                                  "
+                                >
+                                  Desactivar
+                                </button>
+                              </Permission>
                             )}
                           </div>
                         </td>

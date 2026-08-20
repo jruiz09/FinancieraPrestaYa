@@ -7,6 +7,8 @@ import React, {
 import { useNavigate } from "react-router-dom";
 
 import CreditosTable from "../components/CreditosTable";
+import Permission from "../components/Permission";
+import { PERMISSIONS } from "../constants/permissions";
 
 import {
   creditoService,
@@ -202,42 +204,44 @@ export default function CreditosPage() {
             </p>
           </div>
 
-          <button
-            type="button"
-            onClick={() =>
-              navigate("/nuevocredito")
-            }
-            className="
-              inline-flex
-              min-h-[46px]
-              items-center
-              justify-center
-              gap-2
-              rounded-xl
-              bg-stone-900
-              px-5
-              py-3
-              text-sm
-              font-semibold
-              text-white
-              shadow-sm
-              transition
-              duration-200
-              hover:-translate-y-0.5
-              hover:bg-stone-800
-              hover:shadow-md
-              active:translate-y-0
-              dark:bg-amber-500
-              dark:text-stone-950
-              dark:hover:bg-amber-400
-            "
-          >
-            <span className="text-xl leading-none">
-              +
-            </span>
+          <Permission permission={PERMISSIONS.CREDITS_CREATE}>
+            <button
+              type="button"
+              onClick={() =>
+                navigate("/nuevocredito")
+              }
+              className="
+                inline-flex
+                min-h-[46px]
+                items-center
+                justify-center
+                gap-2
+                rounded-xl
+                bg-stone-900
+                px-5
+                py-3
+                text-sm
+                font-semibold
+                text-white
+                shadow-sm
+                transition
+                duration-200
+                hover:-translate-y-0.5
+                hover:bg-stone-800
+                hover:shadow-md
+                active:translate-y-0
+                dark:bg-amber-500
+                dark:text-stone-950
+                dark:hover:bg-amber-400
+              "
+            >
+              <span className="text-xl leading-none">
+                +
+              </span>
 
-            Nuevo crédito
-          </button>
+              Nuevo crédito
+            </button>
+          </Permission>
         </div>
       </section>
 

@@ -31,12 +31,19 @@ import ZonesPage from "../pages/ZonesPage";
 import AyudasPage from "../pages/AyudasPage";
 import ValesPage from "../pages/ValesPage";
 import RolesPage from "../pages/RolePage";
+import SinAccesoPage from "../pages/SinAccesoPage";
+import { obtenerPrimeraRutaAccesible } from "../utils/permissionRoutes";
 
 export default function AppRoutes() {
 
   const token =
     useAuthStore(
       (state) => state.token
+    );
+
+  const permissions =
+    useAuthStore(
+      (state) => state.user?.permissions || []
     );
 
   return (
@@ -49,7 +56,7 @@ export default function AppRoutes() {
         path="/login"
         element={
           token
-            ? <Navigate to="/dashboard" replace />
+            ? <Navigate to={obtenerPrimeraRutaAccesible(permissions)} replace />
             : <LoginPage />
         }
       />
@@ -78,10 +85,15 @@ export default function AppRoutes() {
           index
           element={
             <Navigate
-              to="/dashboard"
+              to={obtenerPrimeraRutaAccesible(permissions)}
               replace
             />
           }
+        />
+
+        <Route
+          path="sin-acceso"
+          element={<SinAccesoPage />}
         />
 
         <Route
@@ -246,7 +258,7 @@ export default function AppRoutes() {
           <Navigate
             to={
               token
-                ? "/dashboard"
+                ? obtenerPrimeraRutaAccesible(permissions)
                 : "/login"
             }
             replace

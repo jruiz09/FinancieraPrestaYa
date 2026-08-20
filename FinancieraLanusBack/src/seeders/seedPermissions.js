@@ -36,6 +36,9 @@ const MODULES = {
 
   ROLES: [
     'VIEW',
+    'CREATE',
+    'EDIT',
+    'DELETE',
     'ASSIGN_PERMISSIONS'
   ],
 

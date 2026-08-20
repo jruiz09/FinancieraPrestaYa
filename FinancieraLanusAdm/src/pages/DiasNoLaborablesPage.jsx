@@ -17,6 +17,12 @@ from '../services/diaNoLaborableService'
 import DiaNoLaborableModal
 from '../components/DiaNoLaborableModal'
 
+import Permission
+from '../components/Permission'
+
+import { PERMISSIONS }
+from '../constants/permissions'
+
 export default function DiasNoLaborablesPage() {
 
   const [dias,
@@ -175,38 +181,40 @@ export default function DiasNoLaborablesPage() {
             </p>
           </div>
 
-          <button
-            type="button"
-            onClick={() => {
+          <Permission permission={PERMISSIONS.HOLIDAYS_CREATE}>
+            <button
+              type="button"
+              onClick={() => {
 
-              setDiaEditar(null)
+                setDiaEditar(null)
 
-              setOpenModal(true)
+                setOpenModal(true)
 
-            }}
-            className="
-              inline-flex
-              min-h-[46px]
-              items-center
-              justify-center
-              gap-2
-              rounded-xl
-              bg-stone-900
-              px-5
-              py-3
-              text-sm
-              font-semibold
-              text-white
-              shadow-sm
-              transition
-              hover:-translate-y-0.5
-              hover:bg-stone-800
-              hover:shadow-md
-            "
-          >
-            <span className="text-xl leading-none">+</span>
-            Nuevo día
-          </button>
+              }}
+              className="
+                inline-flex
+                min-h-[46px]
+                items-center
+                justify-center
+                gap-2
+                rounded-xl
+                bg-stone-900
+                px-5
+                py-3
+                text-sm
+                font-semibold
+                text-white
+                shadow-sm
+                transition
+                hover:-translate-y-0.5
+                hover:bg-stone-800
+                hover:shadow-md
+              "
+            >
+              <span className="text-xl leading-none">+</span>
+              Nuevo día
+            </button>
+          </Permission>
         </div>
       </section>
 
@@ -347,53 +355,57 @@ export default function DiasNoLaborablesPage() {
 
                       <div className="flex justify-end gap-2">
 
-                        <button
-                          type="button"
-                          onClick={() => {
+                        <Permission permission={PERMISSIONS.HOLIDAYS_EDIT}>
+                          <button
+                            type="button"
+                            onClick={() => {
 
-                            setDiaEditar(dia)
+                              setDiaEditar(dia)
 
-                            setOpenModal(true)
+                              setOpenModal(true)
 
-                          }}
-                          className="
-                            rounded-lg
-                            border
-                            border-stone-200
-                            px-3
-                            py-2
-                            text-xs
-                            font-semibold
-                            text-stone-600
-                            transition
-                            hover:border-amber-300
-                            hover:bg-amber-50
-                            hover:text-amber-700
-                          "
-                        >
-                          Editar
-                        </button>
+                            }}
+                            className="
+                              rounded-lg
+                              border
+                              border-stone-200
+                              px-3
+                              py-2
+                              text-xs
+                              font-semibold
+                              text-stone-600
+                              transition
+                              hover:border-amber-300
+                              hover:bg-amber-50
+                              hover:text-amber-700
+                            "
+                          >
+                            Editar
+                          </button>
+                        </Permission>
 
-                        <button
-                          type="button"
-                          onClick={() =>
-                            eliminar(dia.id)
-                          }
-                          className="
-                            rounded-lg
-                            border
-                            border-red-100
-                            px-3
-                            py-2
-                            text-xs
-                            font-semibold
-                            text-red-500
-                            transition
-                            hover:bg-red-50
-                          "
-                        >
-                          Eliminar
-                        </button>
+                        <Permission permission={PERMISSIONS.HOLIDAYS_DELETE}>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              eliminar(dia.id)
+                            }
+                            className="
+                              rounded-lg
+                              border
+                              border-red-100
+                              px-3
+                              py-2
+                              text-xs
+                              font-semibold
+                              text-red-500
+                              transition
+                              hover:bg-red-50
+                            "
+                          >
+                            Eliminar
+                          </button>
+                        </Permission>
 
                       </div>
 

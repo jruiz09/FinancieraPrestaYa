@@ -1,6 +1,7 @@
 import React from 'react'
 import { Navigate } from 'react-router-dom'
 import { useAuthStore } from '../store/useAuthStore'
+import { obtenerPrimeraRutaAccesible } from '../utils/permissionRoutes'
 
 export default function ProtectedRoute({ children, requiredPermissions = [] }) {
   const token = useAuthStore((state) => state.token)
@@ -15,7 +16,7 @@ export default function ProtectedRoute({ children, requiredPermissions = [] }) {
   )
 
   if (!hasPermissions) {
-    return <Navigate to="/login" replace />
+    return <Navigate to={obtenerPrimeraRutaAccesible(permissions)} replace />
   }
 
   return children

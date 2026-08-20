@@ -7,6 +7,8 @@ import React, {
 import Pagination from "../components/Pagination";
 import ErrorAlert from "../components/ErrorAlert";
 import CollectorModal from "../components/CollectorModal";
+import Permission from "../components/Permission";
+import { PERMISSIONS } from "../constants/permissions";
 
 import {
   collectorService,
@@ -347,40 +349,42 @@ export default function CollectorsPage() {
             </p>
           </div>
 
-          <button
-            type="button"
-            onClick={
-              openCreateModal
-            }
-            className="
-              inline-flex
-              min-h-[46px]
-              items-center
-              justify-center
-              gap-2
-              rounded-xl
-              bg-stone-900
-              px-5
-              py-3
-              text-sm
-              font-semibold
-              text-white
-              shadow-sm
-              transition
-              hover:-translate-y-0.5
-              hover:bg-stone-800
-              hover:shadow-md
-              dark:bg-amber-500
-              dark:text-stone-950
-              dark:hover:bg-amber-400
-            "
-          >
-            <span className="text-xl">
-              +
-            </span>
+          <Permission permission={PERMISSIONS.COLLECTORS_CREATE}>
+            <button
+              type="button"
+              onClick={
+                openCreateModal
+              }
+              className="
+                inline-flex
+                min-h-[46px]
+                items-center
+                justify-center
+                gap-2
+                rounded-xl
+                bg-stone-900
+                px-5
+                py-3
+                text-sm
+                font-semibold
+                text-white
+                shadow-sm
+                transition
+                hover:-translate-y-0.5
+                hover:bg-stone-800
+                hover:shadow-md
+                dark:bg-amber-500
+                dark:text-stone-950
+                dark:hover:bg-amber-400
+              "
+            >
+              <span className="text-xl">
+                +
+              </span>
 
-            Nuevo cobrador
-          </button>
+              Nuevo cobrador
+            </button>
+          </Permission>
         </div>
       </section>
 
@@ -894,60 +898,64 @@ export default function CollectorsPage() {
                                 gap-2
                               "
                             >
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  openEditModal(
-                                    collector,
-                                  )
-                                }
-                                className="
-                                  rounded-lg
-                                  border
-                                  border-stone-200
-                                  bg-white
-                                  px-3
-                                  py-2
-                                  text-xs
-                                  font-semibold
-                                  text-stone-600
-                                  transition
-                                  hover:border-amber-300
-                                  hover:bg-amber-50
-                                  hover:text-amber-700
-                                  dark:border-stone-700
-                                  dark:bg-stone-800
-                                  dark:text-stone-300
-                                "
-                              >
-                                Editar
-                              </button>
-
-                              {collector.activo && (
+                              <Permission permission={PERMISSIONS.COLLECTORS_EDIT}>
                                 <button
                                   type="button"
                                   onClick={() =>
-                                    handleDeactivate(
-                                      collector.id,
+                                    openEditModal(
+                                      collector,
                                     )
                                   }
                                   className="
                                     rounded-lg
                                     border
-                                    border-red-100
+                                    border-stone-200
+                                    bg-white
                                     px-3
                                     py-2
                                     text-xs
                                     font-semibold
-                                    text-red-500
+                                    text-stone-600
                                     transition
-                                    hover:bg-red-50
-                                    dark:border-red-900/50
-                                    dark:hover:bg-red-950/30
+                                    hover:border-amber-300
+                                    hover:bg-amber-50
+                                    hover:text-amber-700
+                                    dark:border-stone-700
+                                    dark:bg-stone-800
+                                    dark:text-stone-300
                                   "
                                 >
-                                  Desactivar
+                                  Editar
                                 </button>
+                              </Permission>
+
+                              {collector.activo && (
+                                <Permission permission={PERMISSIONS.COLLECTORS_DELETE}>
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      handleDeactivate(
+                                        collector.id,
+                                      )
+                                    }
+                                    className="
+                                      rounded-lg
+                                      border
+                                      border-red-100
+                                      px-3
+                                      py-2
+                                      text-xs
+                                      font-semibold
+                                      text-red-500
+                                      transition
+                                      hover:bg-red-50
+                                      dark:border-red-900/50
+                                      dark:hover:bg-red-950/30
+                                    "
+                                  >
+                                    Desactivar
+                                  </button>
+                                </Permission>
                               )}
                             </div>
                           </td>
@@ -1268,49 +1276,53 @@ function CollectorCard({
           gap-2
         "
       >
-        <button
-          type="button"
-          onClick={() =>
-            onEdit(collector)
-          }
-          className="
-            flex-1
-            rounded-xl
-            border
-            border-stone-200
-            py-2.5
-            text-sm
-            font-semibold
-            text-stone-700
-            dark:border-stone-700
-            dark:text-stone-200
-          "
-        >
-          Editar
-        </button>
-
-        {collector.activo && (
+        <Permission permission={PERMISSIONS.COLLECTORS_EDIT}>
           <button
             type="button"
             onClick={() =>
-              onDeactivate(
-                collector.id,
-              )
+              onEdit(collector)
             }
             className="
+              flex-1
               rounded-xl
               border
-              border-red-100
-              px-4
+              border-stone-200
               py-2.5
               text-sm
               font-semibold
-              text-red-500
-              dark:border-red-900/50
+              text-stone-700
+              dark:border-stone-700
+              dark:text-stone-200
             "
           >
-            Desactivar
+            Editar
           </button>
+        </Permission>
+
+        {collector.activo && (
+          <Permission permission={PERMISSIONS.COLLECTORS_DELETE}>
+            <button
+              type="button"
+              onClick={() =>
+                onDeactivate(
+                  collector.id,
+                )
+              }
+              className="
+                rounded-xl
+                border
+                border-red-100
+                px-4
+                py-2.5
+                text-sm
+                font-semibold
+                text-red-500
+                dark:border-red-900/50
+              "
+            >
+              Desactivar
+            </button>
+          </Permission>
         )}
       </div>
     </article>

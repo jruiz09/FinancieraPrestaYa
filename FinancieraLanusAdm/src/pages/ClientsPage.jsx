@@ -6,6 +6,8 @@ import React, {
 import Pagination from "../components/Pagination";
 import ErrorAlert from "../components/ErrorAlert";
 import ClientModal from "../components/ClientModal";
+import Permission from "../components/Permission";
+import { PERMISSIONS } from "../constants/permissions";
 
 import {
   clientService,
@@ -337,40 +339,42 @@ export default function ClientsPage() {
             </p>
           </div>
 
-          <button
-            type="button"
-            onClick={
-              openCreateModal
-            }
-            className="
-              inline-flex
-              min-h-[46px]
-              items-center
-              justify-center
-              gap-2
-              rounded-xl
-              bg-stone-900
-              px-5
-              py-3
-              text-sm
-              font-semibold
-              text-white
-              shadow-sm
-              transition
-              hover:-translate-y-0.5
-              hover:bg-stone-800
-              hover:shadow-md
-              dark:bg-amber-500
-              dark:text-stone-950
-              dark:hover:bg-amber-400
-            "
-          >
-            <span className="text-xl">
-              +
-            </span>
+          <Permission permission={PERMISSIONS.CLIENTS_CREATE}>
+            <button
+              type="button"
+              onClick={
+                openCreateModal
+              }
+              className="
+                inline-flex
+                min-h-[46px]
+                items-center
+                justify-center
+                gap-2
+                rounded-xl
+                bg-stone-900
+                px-5
+                py-3
+                text-sm
+                font-semibold
+                text-white
+                shadow-sm
+                transition
+                hover:-translate-y-0.5
+                hover:bg-stone-800
+                hover:shadow-md
+                dark:bg-amber-500
+                dark:text-stone-950
+                dark:hover:bg-amber-400
+              "
+            >
+              <span className="text-xl">
+                +
+              </span>
 
-            Nuevo cliente
-          </button>
+              Nuevo cliente
+            </button>
+          </Permission>
         </div>
       </section>
 
@@ -860,57 +864,61 @@ export default function ClientsPage() {
                                 gap-2
                               "
                             >
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  openEditModal(
-                                    client,
-                                  )
-                                }
-                                className="
-                                  rounded-lg
-                                  border
-                                  border-stone-200
-                                  px-3
-                                  py-2
-                                  text-xs
-                                  font-semibold
-                                  text-stone-600
-                                  transition
-                                  hover:border-amber-300
-                                  hover:bg-amber-50
-                                  hover:text-amber-700
-                                  dark:border-stone-700
-                                  dark:text-stone-300
-                                "
-                              >
-                                Editar
-                              </button>
+                              <Permission permission={PERMISSIONS.CLIENTS_EDIT}>
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    openEditModal(
+                                      client,
+                                    )
+                                  }
+                                  className="
+                                    rounded-lg
+                                    border
+                                    border-stone-200
+                                    px-3
+                                    py-2
+                                    text-xs
+                                    font-semibold
+                                    text-stone-600
+                                    transition
+                                    hover:border-amber-300
+                                    hover:bg-amber-50
+                                    hover:text-amber-700
+                                    dark:border-stone-700
+                                    dark:text-stone-300
+                                  "
+                                >
+                                  Editar
+                                </button>
+                              </Permission>
 
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  handleDeactivate(
-                                    client.id,
-                                  )
-                                }
-                                className="
-                                  rounded-lg
-                                  border
-                                  border-red-100
-                                  px-3
-                                  py-2
-                                  text-xs
-                                  font-semibold
-                                  text-red-500
-                                  transition
-                                  hover:bg-red-50
-                                  dark:border-red-900/50
-                                  dark:hover:bg-red-950/30
-                                "
-                              >
-                                Desactivar
-                              </button>
+                              <Permission permission={PERMISSIONS.CLIENTS_DELETE}>
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    handleDeactivate(
+                                      client.id,
+                                    )
+                                  }
+                                  className="
+                                    rounded-lg
+                                    border
+                                    border-red-100
+                                    px-3
+                                    py-2
+                                    text-xs
+                                    font-semibold
+                                    text-red-500
+                                    transition
+                                    hover:bg-red-50
+                                    dark:border-red-900/50
+                                    dark:hover:bg-red-950/30
+                                  "
+                                >
+                                  Desactivar
+                                </button>
+                              </Permission>
                             </div>
                           </td>
                         </tr>
@@ -1104,48 +1112,52 @@ function ClientCard({
           gap-2
         "
       >
-        <button
-          type="button"
-          onClick={() =>
-            onEdit(client)
-          }
-          className="
-            flex-1
-            rounded-xl
-            border
-            border-stone-200
-            py-2.5
-            text-sm
-            font-semibold
-            text-stone-700
-            dark:border-stone-700
-            dark:text-stone-200
-          "
-        >
-          Editar
-        </button>
+        <Permission permission={PERMISSIONS.CLIENTS_EDIT}>
+          <button
+            type="button"
+            onClick={() =>
+              onEdit(client)
+            }
+            className="
+              flex-1
+              rounded-xl
+              border
+              border-stone-200
+              py-2.5
+              text-sm
+              font-semibold
+              text-stone-700
+              dark:border-stone-700
+              dark:text-stone-200
+            "
+          >
+            Editar
+          </button>
+        </Permission>
 
-        <button
-          type="button"
-          onClick={() =>
-            onDeactivate(
-              client.id,
-            )
-          }
-          className="
-            rounded-xl
-            border
-            border-red-100
-            px-4
-            py-2.5
-            text-sm
-            font-semibold
-            text-red-500
-            dark:border-red-900/50
-          "
-        >
-          Desactivar
-        </button>
+        <Permission permission={PERMISSIONS.CLIENTS_DELETE}>
+          <button
+            type="button"
+            onClick={() =>
+              onDeactivate(
+                client.id,
+              )
+            }
+            className="
+              rounded-xl
+              border
+              border-red-100
+              px-4
+              py-2.5
+              text-sm
+              font-semibold
+              text-red-500
+              dark:border-red-900/50
+            "
+          >
+            Desactivar
+          </button>
+        </Permission>
       </div>
     </article>
   );

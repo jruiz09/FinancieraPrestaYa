@@ -10,6 +10,8 @@ import {
 
 import SupervisorModal from "../components/SupervisorModal";
 import ErrorAlert from "../components/ErrorAlert";
+import Permission from "../components/Permission";
+import { PERMISSIONS } from "../constants/permissions";
 
 export default function SupervisoresPage() {
   const [
@@ -313,38 +315,40 @@ export default function SupervisoresPage() {
             </p>
           </div>
 
-          <button
-            type="button"
-            onClick={abrirNuevo}
-            className="
-              inline-flex
-              min-h-[46px]
-              items-center
-              justify-center
-              gap-2
-              rounded-xl
-              bg-stone-900
-              px-5
-              py-3
-              text-sm
-              font-semibold
-              text-white
-              shadow-sm
-              transition
-              hover:-translate-y-0.5
-              hover:bg-stone-800
-              hover:shadow-md
-              dark:bg-amber-500
-              dark:text-stone-950
-              dark:hover:bg-amber-400
-            "
-          >
-            <span className="text-xl">
-              +
-            </span>
+          <Permission permission={PERMISSIONS.SUPERVISORS_CREATE}>
+            <button
+              type="button"
+              onClick={abrirNuevo}
+              className="
+                inline-flex
+                min-h-[46px]
+                items-center
+                justify-center
+                gap-2
+                rounded-xl
+                bg-stone-900
+                px-5
+                py-3
+                text-sm
+                font-semibold
+                text-white
+                shadow-sm
+                transition
+                hover:-translate-y-0.5
+                hover:bg-stone-800
+                hover:shadow-md
+                dark:bg-amber-500
+                dark:text-stone-950
+                dark:hover:bg-amber-400
+              "
+            >
+              <span className="text-xl">
+                +
+              </span>
 
-            Nuevo supervisor
-          </button>
+              Nuevo supervisor
+            </button>
+          </Permission>
         </div>
       </section>
 
@@ -793,57 +797,61 @@ export default function SupervisoresPage() {
                                 gap-2
                               "
                             >
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  abrirEdicion(
-                                    s,
-                                  )
-                                }
-                                className="
-                                  rounded-lg
-                                  border
-                                  border-stone-200
-                                  px-3
-                                  py-2
-                                  text-xs
-                                  font-semibold
-                                  text-stone-600
-                                  transition
-                                  hover:border-amber-300
-                                  hover:bg-amber-50
-                                  hover:text-amber-700
-                                  dark:border-stone-700
-                                  dark:text-stone-300
-                                "
-                              >
-                                Editar
-                              </button>
+                              <Permission permission={PERMISSIONS.SUPERVISORS_EDIT}>
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    abrirEdicion(
+                                      s,
+                                    )
+                                  }
+                                  className="
+                                    rounded-lg
+                                    border
+                                    border-stone-200
+                                    px-3
+                                    py-2
+                                    text-xs
+                                    font-semibold
+                                    text-stone-600
+                                    transition
+                                    hover:border-amber-300
+                                    hover:bg-amber-50
+                                    hover:text-amber-700
+                                    dark:border-stone-700
+                                    dark:text-stone-300
+                                  "
+                                >
+                                  Editar
+                                </button>
+                              </Permission>
 
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  eliminar(
-                                    s.id,
-                                  )
-                                }
-                                className="
-                                  rounded-lg
-                                  border
-                                  border-red-100
-                                  px-3
-                                  py-2
-                                  text-xs
-                                  font-semibold
-                                  text-red-500
-                                  transition
-                                  hover:bg-red-50
-                                  dark:border-red-900/50
-                                  dark:hover:bg-red-950/30
-                                "
-                              >
-                                Eliminar
-                              </button>
+                              <Permission permission={PERMISSIONS.SUPERVISORS_DELETE}>
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    eliminar(
+                                      s.id,
+                                    )
+                                  }
+                                  className="
+                                    rounded-lg
+                                    border
+                                    border-red-100
+                                    px-3
+                                    py-2
+                                    text-xs
+                                    font-semibold
+                                    text-red-500
+                                    transition
+                                    hover:bg-red-50
+                                    dark:border-red-900/50
+                                    dark:hover:bg-red-950/30
+                                  "
+                                >
+                                  Eliminar
+                                </button>
+                              </Permission>
                             </div>
                           </td>
                         </tr>
@@ -1127,48 +1135,52 @@ function SupervisorCard({
           gap-2
         "
       >
-        <button
-          type="button"
-          onClick={() =>
-            onEdit(supervisor)
-          }
-          className="
-            flex-1
-            rounded-xl
-            border
-            border-stone-200
-            py-2.5
-            text-sm
-            font-semibold
-            text-stone-700
-            dark:border-stone-700
-            dark:text-stone-200
-          "
-        >
-          Editar
-        </button>
+        <Permission permission={PERMISSIONS.SUPERVISORS_EDIT}>
+          <button
+            type="button"
+            onClick={() =>
+              onEdit(supervisor)
+            }
+            className="
+              flex-1
+              rounded-xl
+              border
+              border-stone-200
+              py-2.5
+              text-sm
+              font-semibold
+              text-stone-700
+              dark:border-stone-700
+              dark:text-stone-200
+            "
+          >
+            Editar
+          </button>
+        </Permission>
 
-        <button
-          type="button"
-          onClick={() =>
-            onDelete(
-              supervisor.id,
-            )
-          }
-          className="
-            rounded-xl
-            border
-            border-red-100
-            px-4
-            py-2.5
-            text-sm
-            font-semibold
-            text-red-500
-            dark:border-red-900/50
-          "
-        >
-          Eliminar
-        </button>
+        <Permission permission={PERMISSIONS.SUPERVISORS_DELETE}>
+          <button
+            type="button"
+            onClick={() =>
+              onDelete(
+                supervisor.id,
+              )
+            }
+            className="
+              rounded-xl
+              border
+              border-red-100
+              px-4
+              py-2.5
+              text-sm
+              font-semibold
+              text-red-500
+              dark:border-red-900/50
+            "
+          >
+            Eliminar
+          </button>
+        </Permission>
       </div>
     </article>
   );

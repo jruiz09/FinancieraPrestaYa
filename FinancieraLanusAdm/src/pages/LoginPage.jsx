@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import api from "../api/axios";
 import { useAuthStore } from "../store/useAuthStore";
 import ErrorAlert from "../components/ErrorAlert";
+import { obtenerPrimeraRutaAccesible } from "../utils/permissionRoutes";
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -31,7 +32,7 @@ export default function LoginPage() {
 
       login(user, token);
 
-      navigate("/dashboard", {
+      navigate(obtenerPrimeraRutaAccesible(user.permissions), {
         replace: true,
       });
     } catch (err) {

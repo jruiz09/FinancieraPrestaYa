@@ -227,8 +227,8 @@ export default function ClientsPage() {
         ${client.dni || ""}
         ${client.celular || ""}
         ${client.direccion || ""}
-        ${client.cobrador?.nombre || ""}
-        ${client.cobrador?.apellido || ""}
+        ${client.collector?.nombre || ""}
+        ${client.collector?.apellido || ""}
       `.toLowerCase();
 
       return texto.includes(
@@ -813,8 +813,8 @@ export default function ClientsPage() {
                               "
                             >
                               {client
-                                .cobrador
-                                ? `${client.cobrador.apellido || ""}, ${client.cobrador.nombre || ""}`
+                                .collector
+                                ? `${client.collector.apellido || ""}, ${client.collector.nombre || ""}`
                                 : "Sin asignar"}
                             </span>
                           </td>
@@ -1081,8 +1081,8 @@ function ClientCard({
               dark:text-stone-200
             "
           >
-            {client.cobrador
-              ? `${client.cobrador.apellido || ""}, ${client.cobrador.nombre || ""}`
+            {client.collector
+              ? `${client.collector.apellido || ""}, ${client.collector.nombre || ""}`
               : "-"}
           </p>
         </div>

@@ -2,6 +2,8 @@ export const RUTAS_POR_PERMISO = [
 
   { path: '/dashboard', permission: 'DASHBOARD_VIEW' },
 
+  { path: '/informe-semanal', permission: 'INFORME_SEMANAL_VIEW' },
+
   { path: '/clients', permission: 'CLIENTS_VIEW' },
 
   { path: '/creditos', permission: 'CREDITS_VIEW' },

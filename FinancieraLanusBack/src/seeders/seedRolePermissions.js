@@ -25,6 +25,8 @@ export const seedRolePermissions = async () => {
 
       'DASHBOARD_VIEW',
 
+      'INFORME_SEMANAL_VIEW',
+
       'CLIENTS_VIEW',
       'CLIENTS_CREATE',
       'CLIENTS_EDIT',

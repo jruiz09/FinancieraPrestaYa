@@ -6,6 +6,10 @@ const MODULES = {
     'VIEW'
   ],
 
+  INFORME_SEMANAL: [
+    'VIEW'
+  ],
+
   CLIENTS: [
     'VIEW',
     'CREATE',
@@ -116,6 +120,8 @@ const actionName = {
 const moduleName = {
 
   DASHBOARD: 'Dashboard',
+
+  INFORME_SEMANAL: 'Informe Semanal',
 
   CLIENTS: 'Clientes',
 

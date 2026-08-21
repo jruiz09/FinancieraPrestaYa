@@ -25,6 +25,8 @@ import ClientesMapaPage
 from '../pages/ResumenRecaudacionPage';
 import InformeDiarioPage
 from '../pages/InformeDiarioPage';
+import InformeSemanalPage
+from '../pages/InformeSemanalPage';
 
 import ProtectedRoute from "./ProtectedRoute";
 import ZonesPage from "../pages/ZonesPage";
@@ -210,6 +212,15 @@ export default function AppRoutes() {
   element={
     <ProtectedRoute requiredPermissions={['DASHBOARD_VIEW']}>
       <InformeDiarioPage />
+    </ProtectedRoute>
+  }
+/>
+
+<Route
+  path="informe-semanal"
+  element={
+    <ProtectedRoute requiredPermissions={['INFORME_SEMANAL_VIEW']}>
+      <InformeSemanalPage />
     </ProtectedRoute>
   }
 />

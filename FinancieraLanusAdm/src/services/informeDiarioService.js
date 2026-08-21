@@ -24,6 +24,19 @@ export const informeDiarioService = {
       )
 
     return response.data.data
+  },
+
+  obtenerSemanal: async (lunes) => {
+
+    const response =
+      await api.get(
+        '/reportes/informe-semanal',
+        {
+          params: { lunes }
+        }
+      )
+
+    return response.data.data
   }
 
 }

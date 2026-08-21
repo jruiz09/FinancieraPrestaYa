@@ -21,7 +21,8 @@ import {
   HandCoins,
   ChartNoAxesCombined,
   Wallet,
-  ClipboardList
+  ClipboardList,
+  CalendarRange
 } from 'lucide-react'
 
 import {
@@ -484,6 +485,19 @@ export default function Sidebar({
       onClick={onMobileClose}
     >
       Informe diario
+    </SidebarLink>
+
+  )}
+
+  {permissions.includes('INFORME_SEMANAL_VIEW') && (
+
+    <SidebarLink
+      to="/informe-semanal"
+      icon={CalendarRange}
+      collapsed={collapsed}
+      onClick={onMobileClose}
+    >
+      Informe semanal
     </SidebarLink>
 
   )}

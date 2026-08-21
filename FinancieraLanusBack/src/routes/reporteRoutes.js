@@ -9,11 +9,13 @@ import {
 
 import {
   getInformeDiario,
+  getInformeSemanal,
   guardarInformeDiario
 } from '../controllers/informeDiarioController.js';
 
 import {
-  authenticate
+  authenticate,
+  authorize
 }
 from '../middleware/authMiddleware.js';
 
@@ -39,6 +41,16 @@ router.get(
   query('fecha').isDate(),
   validateRequest,
   getInformeDiario
+);
+
+
+router.get(
+  '/informe-semanal',
+  authenticate,
+  authorize('INFORME_SEMANAL_VIEW'),
+  query('lunes').isDate(),
+  validateRequest,
+  getInformeSemanal
 );
 
 

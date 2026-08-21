@@ -13,6 +13,8 @@ import {
 
 import { ROLES } from '../config/auth.js';
 
+import { obtenerProximoDiaHabil } from '../utils/creditoUtils.js';
+
 const ROLES_QUE_EDITAN = [
   ROLES.ADMIN,
   ROLES.ADMINISTRATIVO
@@ -20,30 +22,36 @@ const ROLES_QUE_EDITAN = [
 
 const numero = value => Number(value || 0);
 
-const porcentaje = (recaudado, aRecaudar) => {
-
-  if (!aRecaudar) {
-    return null;
-  }
-
-  return Number(
-    ((recaudado / aRecaudar) * 100).toFixed(2)
-  );
-};
-
-const diaSiguiente = fecha => {
+const parseFechaLocal = fecha => {
 
   const [anio, mes, dia] = fecha.split('-').map(Number);
 
-  const date = new Date(anio, mes - 1, dia);
+  return new Date(anio, mes - 1, dia);
+};
 
-  date.setDate(date.getDate() + 1);
+const formatFechaLocal = date => {
 
   const y = date.getFullYear();
   const m = String(date.getMonth() + 1).padStart(2, '0');
   const d = String(date.getDate()).padStart(2, '0');
 
   return `${y}-${m}-${d}`;
+};
+
+/*
+Próximo día HÁBIL posterior a `fecha` (nunca el mismo día),
+salteando fines de semana y Días no laborables.
+*/
+
+const diaHabilSiguiente = async fecha => {
+
+  const base = parseFechaLocal(fecha);
+
+  base.setDate(base.getDate() + 1);
+
+  const habil = await obtenerProximoDiaHabil(base);
+
+  return formatFechaLocal(habil);
 };
 
 /*
@@ -66,7 +74,7 @@ export const getInformeDiario = async (req, res, next) => {
       });
     }
 
-    const fechaManana = diaSiguiente(fecha);
+    const fechaManana = await diaHabilSiguiente(fecha);
 
     /*
     =================================================
@@ -144,9 +152,10 @@ export const getInformeDiario = async (req, res, next) => {
     const calcularVencimientosPorZona = async fechaObjetivo => {
 
       const porZona = new Map();
+      const cuotasDetalle = [];
 
       if (todosLosCollectorIds.length === 0) {
-        return porZona;
+        return { porZona, cuotasDetalle };
       }
 
       const cuotas = await CreditoDetalle.findAll({
@@ -179,14 +188,161 @@ export const getInformeDiario = async (req, res, next) => {
           zonaId,
           numero(porZona.get(zonaId)) + numero(cuota.monto)
         );
+
+        cuotasDetalle.push({
+          id: cuota.id,
+          monto: numero(cuota.monto),
+          zonaId
+        });
       }
 
-      return porZona;
+      return { porZona, cuotasDetalle };
     };
 
-    const aRecaudarPorZona = await calcularVencimientosPorZona(fecha);
-    const recaudacionDiaSigCalculadaPorZona =
-      await calcularVencimientosPorZona(fechaManana);
+    const {
+      porZona: aRecaudarPorZona,
+      cuotasDetalle: cuotasVencenHoy
+    } = await calcularVencimientosPorZona(fecha);
+
+    const {
+      porZona: recaudacionDiaSigCalculadaPorZona
+    } = await calcularVencimientosPorZona(fechaManana);
+
+    /*
+    =================================================
+    % COBRANZA: promedio por cliente (punto = min(1,
+    pagado_acumulado_a_la_fecha / monto_cuota)), sobre
+    los clientes con cuota venciendo HOY en la zona.
+    =================================================
+    */
+
+    const puntosCobranzaPorZona = new Map();
+    const clientesConCuotaPorZona = new Map();
+
+    if (cuotasVencenHoy.length > 0) {
+
+      const cuotaIds = cuotasVencenHoy.map(c => c.id);
+
+      const pagosDeCuotasHoy = await PagoCuota.findAll({
+        where: {
+          activo: true,
+          cuotaId: cuotaIds,
+          fecha: { [Op.lte]: fecha }
+        },
+        attributes: ['cuotaId', 'monto']
+      });
+
+      const pagadoPorCuota = new Map();
+
+      for (const pago of pagosDeCuotasHoy) {
+
+        pagadoPorCuota.set(
+          pago.cuotaId,
+          numero(pagadoPorCuota.get(pago.cuotaId)) + numero(pago.monto)
+        );
+      }
+
+      for (const cuota of cuotasVencenHoy) {
+
+        const pagado = numero(pagadoPorCuota.get(cuota.id));
+
+        const punto = cuota.monto > 0
+          ? Math.min(1, pagado / cuota.monto)
+          : 1;
+
+        puntosCobranzaPorZona.set(
+          cuota.zonaId,
+          numero(puntosCobranzaPorZona.get(cuota.zonaId)) + punto
+        );
+
+        clientesConCuotaPorZona.set(
+          cuota.zonaId,
+          numero(clientesConCuotaPorZona.get(cuota.zonaId)) + 1
+        );
+      }
+    }
+
+    /*
+    =================================================
+    ENTREGAS (creditos otorgados HOY) / CREDITOS
+    TERMINADOS HOY, ambos por capital otorgado
+    (montoCredito, sin intereses)
+    =================================================
+    */
+
+    const entregasCalculadoPorZona = new Map();
+
+    if (todosLosCollectorIds.length > 0) {
+
+      const creditosOtorgadosHoy = await Credito.findAll({
+        where: {
+          activo: true,
+          fechaOtorgamiento: fecha,
+          cobradorId: todosLosCollectorIds
+        },
+        attributes: ['id', 'cobradorId', 'montoCredito']
+      });
+
+      for (const credito of creditosOtorgadosHoy) {
+
+        const zonaId = collectorZonaMap.get(credito.cobradorId);
+
+        if (!zonaId) continue;
+
+        entregasCalculadoPorZona.set(
+          zonaId,
+          numero(entregasCalculadoPorZona.get(zonaId)) + numero(credito.montoCredito)
+        );
+      }
+    }
+
+    const terminadosCalculadoPorZona = new Map();
+
+    if (todosLosCollectorIds.length > 0) {
+
+      const creditosFinalizados = await Credito.findAll({
+        where: {
+          activo: true,
+          estado: 'FINALIZADO',
+          cobradorId: todosLosCollectorIds
+        },
+        attributes: ['id', 'cobradorId', 'montoCredito', 'cantidadCuotas']
+      });
+
+      if (creditosFinalizados.length > 0) {
+
+        const ultimasCuotasPagadasHoy = await CreditoDetalle.findAll({
+          where: {
+            activo: true,
+            creditoId: creditosFinalizados.map(c => c.id),
+            estado: 'PAGADA',
+            fechaPago: fecha
+          },
+          attributes: ['creditoId', 'numeroCuota']
+        });
+
+        const numeroCuotaPagadaHoyPorCredito = new Map(
+          ultimasCuotasPagadasHoy.map(c => [c.creditoId, c.numeroCuota])
+        );
+
+        for (const credito of creditosFinalizados) {
+
+          const numeroCuotaPagadaHoy =
+            numeroCuotaPagadaHoyPorCredito.get(credito.id);
+
+          if (numeroCuotaPagadaHoy !== credito.cantidadCuotas) continue;
+
+          const zonaId = collectorZonaMap.get(credito.cobradorId);
+
+          if (!zonaId) continue;
+
+          terminadosCalculadoPorZona.set(
+            zonaId,
+            numero(terminadosCalculadoPorZona.get(zonaId)) + numero(credito.montoCredito)
+          );
+        }
+      }
+    }
 
     /*
     =================================================
@@ -396,21 +552,38 @@ export const getInformeDiario = async (req, res, next) => {
       const ayudaA = numero(ayudaAPorZona.get(zona.id));
       const vale = numero(valePorZona.get(zona.id));
       const valeSup = numero(valeSupPorZona.get(zona.id));
-      const entregas = numero(registroHoy?.entregas);
       const pr = numero(registroHoy?.pr);
       const mp = numero(registroHoy?.mp);
-      const ecu = numero(registroHoy?.ecu);
+      const deja = numero(registroHoy?.deja);
 
-      const deja =
-        recaudado + ayuda + pr - entregas - ayudaA - vale - valeSup - mp;
+      const puntos = numero(puntosCobranzaPorZona.get(zona.id));
+      const clientesConCuota = numero(clientesConCuotaPorZona.get(zona.id));
+
+      const porcentajeCobranza = clientesConCuota > 0
+        ? Number(((puntos / clientesConCuota) * 100).toFixed(2))
+        : null;
+
+      const entregasCalculado = numero(entregasCalculadoPorZona.get(zona.id));
+      const entregasTieneOverride = registroHoy?.entregasOverride != null;
+      const entregas = entregasTieneOverride
+        ? numero(registroHoy.entregasOverride)
+        : entregasCalculado;
+
+      const terminadosCalculado = numero(terminadosCalculadoPorZona.get(zona.id));
+      const ecuCalculado = entregasCalculado - terminadosCalculado;
+      const ecuTieneOverride = registroHoy?.ecuOverride != null;
+      const ecu = ecuTieneOverride
+        ? numero(registroHoy.ecuOverride)
+        : ecuCalculado;
 
       return {
         zoneId: zona.id,
         zona: zona.nombre,
         aRecaudar,
-        porcentajeCobranza: porcentaje(recaudado, aRecaudar),
+        porcentajeCobranza,
         recaudado,
         entregas,
+        entregasEsOverride: entregasTieneOverride,
         ayuda,
         ayudaA,
         vale,
@@ -419,6 +592,7 @@ export const getInformeDiario = async (req, res, next) => {
         mp,
         deja,
         ecu,
+        ecuEsOverride: ecuTieneOverride,
         recaudacionDiaSig,
         recaudacionDiaSigEsOverride: tieneOverride
       };
@@ -461,10 +635,11 @@ export const guardarInformeDiario = async (req, res, next) => {
     const {
       zoneId,
       fecha,
-      entregas,
       pr,
       mp,
-      ecu,
+      deja,
+      entregasOverride,
+      ecuOverride,
       recaudacionDiaSigOverride
     } = req.body;
 
@@ -496,10 +671,11 @@ export const guardarInformeDiario = async (req, res, next) => {
     });
 
     const campos = {
-      entregas,
       pr,
       mp,
-      ecu,
+      deja,
+      entregasOverride,
+      ecuOverride,
       recaudacionDiaSigOverride
     };
 

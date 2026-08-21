@@ -47,10 +47,15 @@ router.put(
   authenticate,
   body('zoneId').isUUID(),
   body('fecha').isDate(),
-  body('entregas').optional().isFloat({ min: 0 }),
   body('pr').optional().isFloat({ min: 0 }),
   body('mp').optional().isFloat({ min: 0 }),
-  body('ecu').optional().isFloat({ min: 0 }),
+  body('deja').optional().isFloat(),
+  body('entregasOverride')
+    .optional({ nullable: true })
+    .isFloat({ min: 0 }),
+  body('ecuOverride')
+    .optional({ nullable: true })
+    .isFloat(),
   body('recaudacionDiaSigOverride')
     .optional({ nullable: true })
     .isFloat({ min: 0 }),

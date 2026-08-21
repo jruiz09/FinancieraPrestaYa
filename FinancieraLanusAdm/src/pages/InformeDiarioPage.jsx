@@ -1,10 +1,29 @@
 import { useEffect, useState } from 'react'
 
+import { Download } from 'lucide-react'
+
 import ErrorAlert
   from '../components/ErrorAlert'
 
 import { informeDiarioService }
   from '../services/informeDiarioService'
+
+const COLUMNAS_EXCEL = [
+  { header: 'Zona', key: 'zona', width: 22 },
+  { header: 'A Recaudar', key: 'aRecaudar', width: 14 },
+  { header: '% Cobranza', key: 'porcentajeCobranza', width: 12 },
+  { header: 'Recaudado', key: 'recaudado', width: 14 },
+  { header: 'Entregas', key: 'entregas', width: 14 },
+  { header: 'Ayuda', key: 'ayuda', width: 12 },
+  { header: 'Ayuda A', key: 'ayudaA', width: 12 },
+  { header: 'Vale', key: 'vale', width: 12 },
+  { header: 'Vale Sup.', key: 'valeSup', width: 12 },
+  { header: 'PR', key: 'pr', width: 10 },
+  { header: 'MP', key: 'mp', width: 10 },
+  { header: 'Deja', key: 'deja', width: 12 },
+  { header: 'ECU', key: 'ecu', width: 12 },
+  { header: 'Recaudación Día Sig.', key: 'recaudacionDiaSig', width: 20 }
+]
 
 const hoyString = () => {
 
@@ -28,6 +47,23 @@ const money = value =>
     ? '-'
     : `$ ${Number(value).toLocaleString('es-AR')}`
 
+const inputClass = `
+  w-24
+  rounded-lg
+  border
+  border-stone-200
+  bg-stone-50
+  p-1.5
+  text-right
+  text-sm
+  outline-none
+  transition
+  focus:border-amber-400
+  focus:bg-white
+  focus:ring-4
+  focus:ring-amber-100
+`
+
 export default function InformeDiarioPage() {
 
   const [fecha, setFecha] =
@@ -47,6 +83,9 @@ export default function InformeDiarioPage() {
 
   const [error, setError] =
     useState('')
+
+  const [exportando, setExportando] =
+    useState(false)
 
   useEffect(() => {
 
@@ -74,6 +113,7 @@ export default function InformeDiarioPage() {
             entregas: zona.entregas ?? 0,
             pr: zona.pr ?? 0,
             mp: zona.mp ?? 0,
+            deja: zona.deja ?? 0,
             ecu: zona.ecu ?? 0,
             recaudacionDiaSig: zona.recaudacionDiaSig ?? ''
           }
@@ -117,10 +157,11 @@ export default function InformeDiarioPage() {
         const payload = {
           zoneId: zona.zoneId,
           fecha,
-          entregas: valores.entregas,
           pr: valores.pr,
           mp: valores.mp,
-          ecu: valores.ecu,
+          deja: valores.deja,
+          entregasOverride: valores.entregas,
+          ecuOverride: valores.ecu,
           recaudacionDiaSigOverride:
             valores.recaudacionDiaSig === ''
               ? null
@@ -146,8 +187,8 @@ export default function InformeDiarioPage() {
 
     }
 
-  const handleRevertirRecaudacionDiaSig =
-    async (zona) => {
+  const handleRevertirOverride =
+    async (zona, campoOverride) => {
 
       try {
 
@@ -156,7 +197,7 @@ export default function InformeDiarioPage() {
         await informeDiarioService.guardar({
           zoneId: zona.zoneId,
           fecha,
-          recaudacionDiaSigOverride: null
+          [campoOverride]: null
         })
 
         await cargar()
@@ -176,22 +217,76 @@ export default function InformeDiarioPage() {
 
     }
 
-  const inputClass = `
-    w-24
-    rounded-lg
-    border
-    border-stone-200
-    bg-stone-50
-    p-1.5
-    text-right
-    text-sm
-    outline-none
-    transition
-    focus:border-amber-400
-    focus:bg-white
-    focus:ring-4
-    focus:ring-amber-100
-  `
+  const exportarExcel =
+    async () => {
+
+      try {
+
+        setExportando(true)
+
+        const { default: ExcelJS } = await import('exceljs')
+
+        const workbook = new ExcelJS.Workbook()
+
+        const sheet = workbook.addWorksheet('Informe diario')
+
+        sheet.columns = COLUMNAS_EXCEL
+
+        for (const zona of zonas) {
+
+          sheet.addRow({
+            zona: zona.zona,
+            aRecaudar: zona.aRecaudar,
+            porcentajeCobranza: zona.porcentajeCobranza,
+            recaudado: zona.recaudado,
+            entregas: zona.entregas,
+            ayuda: zona.ayuda,
+            ayudaA: zona.ayudaA,
+            vale: zona.vale,
+            valeSup: zona.valeSup,
+            pr: zona.pr,
+            mp: zona.mp,
+            deja: zona.deja,
+            ecu: zona.ecu,
+            recaudacionDiaSig: zona.recaudacionDiaSig
+          })
+        }
+
+        sheet.getRow(1).font = { bold: true }
+
+        const buffer = await workbook.xlsx.writeBuffer()
+
+        const blob = new Blob(
+          [buffer],
+          {
+            type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+          }
+        )
+
+        const url = URL.createObjectURL(blob)
+
+        const link = document.createElement('a')
+
+        link.href = url
+        link.download = `informe-diario-${fecha}.xlsx`
+
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+
+        URL.revokeObjectURL(url)
+
+      } catch {
+
+        setError('Error exportando el informe a Excel')
+
+      } finally {
+
+        setExportando(false)
+
+      }
+
+    }
 
   return (
 
@@ -233,28 +328,73 @@ export default function InformeDiarioPage() {
           </p>
         </div>
 
-        <input
-          type="date"
-          value={fecha}
-          onChange={(e) =>
-            setFecha(e.target.value)
-          }
+        <div
           className="
-            rounded-xl
-            border
-            border-stone-200
-            bg-white
-            px-3.5
-            py-2.5
-            text-sm
-            text-stone-900
-            outline-none
-            transition
-            focus:border-amber-400
-            focus:ring-4
-            focus:ring-amber-100
+            flex
+            items-center
+            gap-3
           "
-        />
+        >
+
+          <input
+            type="date"
+            value={fecha}
+            onChange={(e) =>
+              setFecha(e.target.value)
+            }
+            className="
+              rounded-xl
+              border
+              border-stone-200
+              bg-white
+              px-3.5
+              py-2.5
+              text-sm
+              text-stone-900
+              outline-none
+              transition
+              focus:border-amber-400
+              focus:ring-4
+              focus:ring-amber-100
+            "
+          />
+
+          <button
+            type="button"
+            onClick={exportarExcel}
+            disabled={
+              exportando ||
+              loading ||
+              !zonas.length
+            }
+            className="
+              flex
+              items-center
+              gap-2
+              rounded-xl
+              border
+              border-stone-200
+              bg-white
+              px-3.5
+              py-2.5
+              text-sm
+              font-semibold
+              text-stone-700
+              transition
+              hover:bg-stone-50
+              disabled:cursor-not-allowed
+              disabled:opacity-50
+            "
+          >
+            <Download className="h-4 w-4" />
+            {
+              exportando
+                ? 'Exportando...'
+                : 'Exportar a Excel'
+            }
+          </button>
+
+        </div>
 
       </div>
 
@@ -379,19 +519,27 @@ export default function InformeDiarioPage() {
                       {money(zona.recaudado)}
                     </td>
 
-                    <td className="px-4 py-4 text-right text-stone-600">
+                    <td className="px-4 py-4">
 
-                      <input
-                        type="number"
+                      <CalculadoManualCell
                         value={valores.entregas}
-                        onChange={(e) =>
+                        onChange={(valor) =>
                           handleChange(
                             zona.zoneId,
                             'entregas',
-                            e.target.value
+                            valor
                           )
                         }
-                        className={inputClass}
+                        esOverride={zona.entregasEsOverride}
+                        onRevertir={() =>
+                          handleRevertirOverride(
+                            zona,
+                            'entregasOverride'
+                          )
+                        }
+                        disabled={
+                          guardandoZona === zona.zoneId
+                        }
                       />
 
                     </td>
@@ -446,27 +594,15 @@ export default function InformeDiarioPage() {
 
                     </td>
 
-                    <td
-                      className="
-                        px-4
-                        py-4
-                        text-right
-                        font-bold
-                        text-stone-900
-                      "
-                    >
-                      {money(zona.deja)}
-                    </td>
-
                     <td className="px-4 py-4 text-right text-stone-600">
 
                       <input
                         type="number"
-                        value={valores.ecu}
+                        value={valores.deja}
                         onChange={(e) =>
                           handleChange(
                             zona.zoneId,
-                            'ecu',
+                            'deja',
                             e.target.value
                           )
                         }
@@ -477,84 +613,51 @@ export default function InformeDiarioPage() {
 
                     <td className="px-4 py-4">
 
-                      <div
-                        className="
-                          flex
-                          flex-col
-                          items-end
-                          gap-1
-                        "
-                      >
+                      <CalculadoManualCell
+                        value={valores.ecu}
+                        onChange={(valor) =>
+                          handleChange(
+                            zona.zoneId,
+                            'ecu',
+                            valor
+                          )
+                        }
+                        esOverride={zona.ecuEsOverride}
+                        onRevertir={() =>
+                          handleRevertirOverride(
+                            zona,
+                            'ecuOverride'
+                          )
+                        }
+                        disabled={
+                          guardandoZona === zona.zoneId
+                        }
+                      />
 
-                        <input
-                          type="number"
-                          value={valores.recaudacionDiaSig}
-                          onChange={(e) =>
-                            handleChange(
-                              zona.zoneId,
-                              'recaudacionDiaSig',
-                              e.target.value
-                            )
-                          }
-                          className={inputClass}
-                        />
+                    </td>
 
-                        <div
-                          className="
-                            flex
-                            items-center
-                            gap-1.5
-                          "
-                        >
+                    <td className="px-4 py-4">
 
-                          <span
-                            className={`
-                              text-[10px]
-                              font-semibold
-                              px-1.5
-                              py-0.5
-                              rounded
-                              ${
-                                zona.recaudacionDiaSigEsOverride
-                                  ? 'bg-amber-100 text-amber-700'
-                                  : 'bg-stone-100 text-stone-500'
-                              }
-                            `}
-                          >
-                            {
-                              zona.recaudacionDiaSigEsOverride
-                                ? 'Manual'
-                                : 'Calculado'
-                            }
-                          </span>
-
-                          {zona.recaudacionDiaSigEsOverride && (
-
-                            <button
-                              type="button"
-                              title="Volver al valor calculado"
-                              onClick={() =>
-                                handleRevertirRecaudacionDiaSig(zona)
-                              }
-                              disabled={
-                                guardandoZona === zona.zoneId
-                              }
-                              className="
-                                text-[10px]
-                                font-semibold
-                                text-amber-700
-                                hover:text-amber-800
-                                underline
-                              "
-                            >
-                              Revertir
-                            </button>
-
-                          )}
-
-                        </div>
-
-                      </div>
+                      <CalculadoManualCell
+                        value={valores.recaudacionDiaSig}
+                        onChange={(valor) =>
+                          handleChange(
+                            zona.zoneId,
+                            'recaudacionDiaSig',
+                            valor
+                          )
+                        }
+                        esOverride={zona.recaudacionDiaSigEsOverride}
+                        onRevertir={() =>
+                          handleRevertirOverride(
+                            zona,
+                            'recaudacionDiaSigOverride'
+                          )
+                        }
+                        disabled={
+                          guardandoZona === zona.zoneId
+                        }
+                      />
 
                     </td>
 
@@ -605,6 +708,95 @@ export default function InformeDiarioPage() {
         </div>
 
       )}
+
+    </div>
+
+  )
+
+}
+
+/* ===================================================== */
+/* CALCULADO / MANUAL */
+/* ===================================================== */
+
+function CalculadoManualCell({
+  value,
+  onChange,
+  esOverride,
+  onRevertir,
+  disabled
+}) {
+
+  return (
+
+    <div
+      className="
+        flex
+        flex-col
+        items-end
+        gap-1
+      "
+    >
+
+      <input
+        type="number"
+        value={value}
+        onChange={(e) =>
+          onChange(e.target.value)
+        }
+        className={inputClass}
+      />
+
+      <div
+        className="
+          flex
+          items-center
+          gap-1.5
+        "
+      >
+
+        <span
+          className={`
+            text-[10px]
+            font-semibold
+            px-1.5
+            py-0.5
+            rounded
+            ${
+              esOverride
+                ? 'bg-amber-100 text-amber-700'
+                : 'bg-stone-100 text-stone-500'
+            }
+          `}
+        >
+          {
+            esOverride
+              ? 'Manual'
+              : 'Calculado'
+          }
+        </span>
+
+        {esOverride && (
+
+          <button
+            type="button"
+            title="Volver al valor calculado"
+            onClick={onRevertir}
+            disabled={disabled}
+            className="
+              text-[10px]
+              font-semibold
+              text-amber-700
+              hover:text-amber-800
+              underline
+            "
+          >
+            Revertir
+          </button>
+
+        )}
+
+      </div>
 
     </div>
 

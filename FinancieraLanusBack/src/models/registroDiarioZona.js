@@ -23,12 +23,6 @@ export const RegistroDiarioZonaModel = (sequelize, DataTypes) => {
         allowNull: false,
       },
 
-      entregas: {
-        type: DataTypes.DECIMAL(12, 2),
-        allowNull: false,
-        defaultValue: 0,
-      },
-
       pr: {
         type: DataTypes.DECIMAL(12, 2),
         allowNull: false,
@@ -41,10 +35,20 @@ export const RegistroDiarioZonaModel = (sequelize, DataTypes) => {
         defaultValue: 0,
       },
 
-      ecu: {
+      deja: {
         type: DataTypes.DECIMAL(12, 2),
         allowNull: false,
         defaultValue: 0,
+      },
+
+      entregasOverride: {
+        type: DataTypes.DECIMAL(12, 2),
+        allowNull: true,
+      },
+
+      ecuOverride: {
+        type: DataTypes.DECIMAL(12, 2),
+        allowNull: true,
       },
 
       recaudacionDiaSigOverride: {

@@ -13,6 +13,7 @@ import toast from 'react-hot-toast'
 
 import {
   ArrowLeft,
+  Banknote,
   CalendarDays,
   CheckCircle2,
   CircleDollarSign,
@@ -1111,9 +1112,21 @@ ${url}`
           grid
           grid-cols-1
           sm:grid-cols-2
-          xl:grid-cols-4
+          xl:grid-cols-5
           gap-4
         ">
+
+          <FinancialCard
+            icon={Banknote}
+            label="Monto prestado"
+            value={
+              `$ ${money(
+                credito.montoCredito
+              )}`
+            }
+            description="Capital otorgado, sin interés"
+            variant="blue"
+          />
 
           <FinancialCard
             icon={Wallet}

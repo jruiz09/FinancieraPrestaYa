@@ -354,17 +354,33 @@ export default function CreditosTable({
                 className="
                   mt-4
                   grid
-                  grid-cols-3
+                  grid-cols-2
                   gap-2
                 "
               >
+                <MobileAmount
+                  label="Prestado"
+                  value={formatMoney(
+                    credito.montoCredito,
+                  )}
+                />
+
                 <MobileAmount
                   label="Total"
                   value={formatMoney(
                     credito.montoFinal,
                   )}
                 />
+              </div>
 
+              <div
+                className="
+                  mt-2
+                  grid
+                  grid-cols-2
+                  gap-2
+                "
+              >
                 <MobileAmount
                   label="Cobrado"
                   value={formatMoney(
@@ -545,7 +561,7 @@ export default function CreditosTable({
           <table
             className="
               w-full
-              min-w-[1100px]
+              min-w-[1200px]
               border-collapse
             "
           >
@@ -575,6 +591,10 @@ export default function CreditosTable({
 
                 <th className="px-4 py-3 text-left">
                   Plan
+                </th>
+
+                <th className="px-4 py-3 text-right">
+                  Prestado
                 </th>
 
                 <th className="px-4 py-3 text-right">
@@ -714,6 +734,23 @@ export default function CreditosTable({
                     >
                       {credito.tipoPlan
                         ?.descripcion || "-"}
+                    </td>
+
+                    {/* PRESTADO */}
+                    <td
+                      className="
+                        whitespace-nowrap
+                        px-4
+                        py-4
+                        text-right
+                        text-sm
+                        text-stone-600
+                        dark:text-stone-300
+                      "
+                    >
+                      {formatMoney(
+                        credito.montoCredito,
+                      )}
                     </td>
 
                     {/* TOTAL */}

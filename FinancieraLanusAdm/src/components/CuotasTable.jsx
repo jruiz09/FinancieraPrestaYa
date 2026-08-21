@@ -6,6 +6,8 @@ import {
   useNavigate
 } from 'react-router-dom'
 
+import toast from 'react-hot-toast'
+
 import {
   ArrowRight,
   CalendarDays,
@@ -171,6 +173,13 @@ export default function CuotasTable({
 
         console.error(error)
 
+        toast.error(
+          error?.response
+            ?.data
+            ?.message ||
+          'No se pudo registrar el pago'
+        )
+
       } finally {
 
         setGuardando(false)
@@ -202,6 +211,13 @@ export default function CuotasTable({
       } catch (error) {
 
         console.error(error)
+
+        toast.error(
+          error?.response
+            ?.data
+            ?.message ||
+          'No se pudo registrar el pago'
+        )
 
       } finally {
 

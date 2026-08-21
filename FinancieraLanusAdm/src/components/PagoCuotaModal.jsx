@@ -58,6 +58,21 @@ export default function PagoCuotaModal({
     saldoPendiente
   ]);
 
+  const excedente =
+    useMemo(() => {
+
+      const monto =
+        Number(formData.montoPago);
+
+      return monto > saldoPendiente
+        ? monto - saldoPendiente
+        : 0;
+
+    }, [
+      formData.montoPago,
+      saldoPendiente
+    ]);
+
   if (
     !isOpen ||
     !cuota
@@ -126,21 +141,6 @@ export default function PagoCuotaModal({
 
       onConfirm(formData);
     };
-
-  const excedente =
-    useMemo(() => {
-
-      const monto =
-        Number(formData.montoPago);
-
-      return monto > saldoPendiente
-        ? monto - saldoPendiente
-        : 0;
-
-    }, [
-      formData.montoPago,
-      saldoPendiente
-    ]);
 
   return (
 

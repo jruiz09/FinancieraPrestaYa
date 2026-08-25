@@ -23,7 +23,9 @@ export default function AyudaCard({
 
     ? ayuda.origenTipo === 'SUPERVISOR'
       ? `${ayuda.origenSupervisor?.apellido}, ${ayuda.origenSupervisor?.nombre}`
-      : `${ayuda.origenCobrador?.apellido}, ${ayuda.origenCobrador?.nombre}`
+      : ayuda.origenTipo === 'OFICINA'
+        ? 'Oficina'
+        : `${ayuda.origenCobrador?.apellido}, ${ayuda.origenCobrador?.nombre}`
 
     : ayuda.destinoTipo === 'SUPERVISOR'
       ? `${ayuda.destinoSupervisor?.apellido}, ${ayuda.destinoSupervisor?.nombre}`

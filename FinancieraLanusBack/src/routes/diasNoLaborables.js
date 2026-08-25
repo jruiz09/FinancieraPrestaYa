@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { body, param, query } from 'express-validator';
 
-import { authenticate } from '../middleware/authMiddleware.js';
+import { authenticate, authorize } from '../middleware/authMiddleware.js';
 import { validateRequest } from '../middleware/validationMiddleware.js';
 
 import {
@@ -18,6 +18,7 @@ router.use(authenticate);
 
 router.get(
   '/',
+  authorize('HOLIDAYS_VIEW'),
   query('page').optional().isInt({ min: 1 }).toInt(),
   query('limit').optional().isInt({ min: 1, max: 100 }).toInt(),
   validateRequest,
@@ -26,6 +27,7 @@ router.get(
 
 router.get(
   '/:id',
+  authorize('HOLIDAYS_VIEW'),
   param('id').isUUID(),
   validateRequest,
   getDiaNoLaborable
@@ -33,6 +35,7 @@ router.get(
 
 router.post(
   '/',
+  authorize('HOLIDAYS_CREATE'),
   body('fecha')
     .notEmpty()
     .withMessage('La fecha es requerida')
@@ -49,6 +52,8 @@ router.post(
 
 router.put(
   '/:id',
+
+  authorize('HOLIDAYS_EDIT'),
 
   param('id').isUUID(),
 
@@ -67,6 +72,7 @@ router.put(
 
 router.delete(
   '/:id',
+  authorize('HOLIDAYS_DELETE'),
   param('id').isUUID(),
   validateRequest,
   deleteDiaNoLaborable

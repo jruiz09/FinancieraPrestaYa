@@ -9,7 +9,8 @@ import {
 from 'express-validator';
 
 import {
-  authenticate
+  authenticate,
+  authorize
 }
 from '../middleware/authMiddleware.js';
 
@@ -35,6 +36,9 @@ router.use(
 
 router.get(
   '/',
+
+  authorize('SUPERVISORS_VIEW'),
+
   query('page')
     .optional()
     .isInt({ min: 1 })
@@ -60,6 +64,8 @@ router.get(
 router.get(
   '/:id',
 
+  authorize('SUPERVISORS_VIEW'),
+
   param('id')
     .isUUID(),
 
@@ -70,6 +76,8 @@ router.get(
 
 router.post(
   '/',
+
+  authorize('SUPERVISORS_CREATE'),
 
   body('nombre')
     .notEmpty(),
@@ -96,6 +104,8 @@ router.post(
 router.put(
   '/:id',
 
+  authorize('SUPERVISORS_EDIT'),
+
   param('id')
     .isUUID(),
 
@@ -106,6 +116,8 @@ router.put(
 
 router.delete(
   '/:id',
+
+  authorize('SUPERVISORS_DELETE'),
 
   param('id')
     .isUUID(),

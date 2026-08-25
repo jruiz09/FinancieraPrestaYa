@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { body, param } from 'express-validator';
 
-import { authenticate } from '../middleware/authMiddleware.js';
+import { authenticate, authorize } from '../middleware/authMiddleware.js';
 import { validateRequest } from '../middleware/validationMiddleware.js';
 
 import {
@@ -16,11 +16,13 @@ router.use(authenticate);
 
 router.get(
   '/',
+  authorize('VALES_VIEW'),
   listVales
 );
 
 router.post(
   '/',
+  authorize('VALES_CREATE'),
   body('fecha').isDate(),
   body('tipo').isIn(['ADELANTO', 'COMBUSTIBLE', 'GASTOS', 'OTROS']),
   body('monto').isFloat({ min: 0.01 }),
@@ -33,6 +35,7 @@ router.post(
 
 router.put(
   '/:id/anular',
+  authorize('VALES_DELETE'),
   param('id').isUUID(),
   validateRequest,
   anularVale

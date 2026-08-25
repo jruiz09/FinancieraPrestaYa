@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { body, param, query } from 'express-validator';
 
-import { authenticate } from '../middleware/authMiddleware.js';
+import { authenticate, authorize } from '../middleware/authMiddleware.js';
 import { validateRequest } from '../middleware/validationMiddleware.js';
 
 import {
@@ -18,6 +18,7 @@ router.use(authenticate);
 
 router.get(
   '/',
+  authorize('PLAN_TYPES_VIEW'),
   query('page').optional().isInt({ min: 1 }).toInt(),
   query('limit').optional().isInt({ min: 1, max: 100 }).toInt(),
   validateRequest,
@@ -26,6 +27,7 @@ router.get(
 
 router.get(
   '/:id',
+  authorize('PLAN_TYPES_VIEW'),
   param('id').isUUID(),
   validateRequest,
   getTipoPlan
@@ -33,6 +35,7 @@ router.get(
 
 router.post(
   '/',
+  authorize('PLAN_TYPES_CREATE'),
   body('descripcion')
     .notEmpty()
     .withMessage('La descripción es requerida'),
@@ -47,6 +50,7 @@ router.post(
 
 router.put(
   '/:id',
+  authorize('PLAN_TYPES_EDIT'),
   param('id').isUUID(),
 
   body('descripcion')
@@ -63,6 +67,7 @@ router.put(
 
 router.delete(
   '/:id',
+  authorize('PLAN_TYPES_DELETE'),
   param('id').isUUID(),
   validateRequest,
   deleteTipoPlan

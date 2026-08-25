@@ -2,7 +2,8 @@ import { Router } from 'express'
 import { body, param } from 'express-validator'
 
 import {
-  authenticate
+  authenticate,
+  authorize
 } from '../middleware/authMiddleware.js'
 
 import {
@@ -31,12 +32,14 @@ router.use(authenticate)
 
 router.get(
   '/',
+  authorize('ROLES_VIEW'),
   getRoles
 )
 
 router.get(
   '/:id',
 
+  authorize('ROLES_VIEW'),
 
   param('id').isUUID(),
 
@@ -48,6 +51,7 @@ router.get(
 router.post(
   '/',
 
+  authorize('ROLES_CREATE'),
 
   body('name')
     .trim()
@@ -69,6 +73,7 @@ router.post(
 router.put(
   '/:id',
 
+  authorize('ROLES_EDIT'),
 
   param('id').isUUID(),
 
@@ -88,6 +93,7 @@ router.put(
 router.put(
   '/:id/permissions',
 
+  authorize('ROLES_EDIT'),
 
   param('id').isUUID(),
 
@@ -101,6 +107,8 @@ router.put(
 
 router.delete(
   '/:id',
+
+  authorize('ROLES_DELETE'),
 
   param('id').isUUID(),
 

@@ -6,7 +6,8 @@ import {
 from '../controllers/dashboardController.js';
 
 import {
-  authenticate
+  authenticate,
+  authorize
 }
 from '../middleware/authMiddleware.js';
 
@@ -19,6 +20,7 @@ router.use(
 
 router.get(
   '/resumen',
+  authorize('DASHBOARD_VIEW'),
   getResumenDashboard
 );
 

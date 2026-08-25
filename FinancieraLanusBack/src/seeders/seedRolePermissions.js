@@ -4,7 +4,13 @@ import { ROLES } from '../config/auth.js'
 export const seedRolePermissions = async () => {
 
   const roles =
-    await Role.findAll()
+    await Role.findAll({
+
+      include: [
+        'permissions'
+      ]
+
+    })
 
   const permissions =
     await Permission.findAll()
@@ -91,8 +97,16 @@ export const seedRolePermissions = async () => {
     }
 
     //
-    // resto
+    // resto: los permisos por defecto solo se aplican en el alta
+    // inicial del rol, para no pisar ediciones manuales hechas
+    // desde la UI en cada arranque del servidor
     //
+
+    if (role.permissions.length > 0) {
+
+      continue
+
+    }
 
     const permisos =
       rolePermissions[

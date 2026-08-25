@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { body, param, query } from 'express-validator';
-import { authenticate } from '../middleware/authMiddleware.js';
+import { authenticate, authorize } from '../middleware/authMiddleware.js';
 import { validateRequest } from '../middleware/validationMiddleware.js';
 import {
   listClients,
@@ -16,6 +16,7 @@ router.use(authenticate);
 
 router.get(
   '/',
+  authorize('CLIENTS_VIEW'),
   query('page').optional().isInt({ min: 1 }).toInt(),
   query('limit').optional().isInt({ min: 1, max: 100 }).toInt(),
   query('ownerId').optional().isUUID(),
@@ -24,10 +25,11 @@ router.get(
   listClients
 );
 
-router.get('/:id', param('id').isUUID(), validateRequest, getClient);
+router.get('/:id', authorize('CLIENTS_VIEW'), param('id').isUUID(), validateRequest, getClient);
 
 router.post(
   '/',
+  authorize('CLIENTS_CREATE'),
   body('nombre').notEmpty().withMessage('Nombre es requerido'),
   body('apellido').notEmpty().withMessage('Apellido es requerido'),
   body('dni').notEmpty().withMessage('DNI es requerido'),
@@ -48,6 +50,7 @@ router.post(
 
 router.put(
   '/:id',
+  authorize('CLIENTS_EDIT'),
   param('id').isUUID(),
   body('latitud')
     .optional({ nullable: true })
@@ -59,7 +62,7 @@ router.put(
   updateClient
 );
 
-router.delete('/:id', param('id').isUUID(), validateRequest, deleteClient);
+router.delete('/:id', authorize('CLIENTS_DELETE'), param('id').isUUID(), validateRequest, deleteClient);
 
 router.post(
   '/geolocalizar',

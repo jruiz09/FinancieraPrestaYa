@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { body, param, query } from 'express-validator';
 
-import { authenticate } from '../middleware/authMiddleware.js';
+import { authenticate, authorize } from '../middleware/authMiddleware.js';
 import { validateRequest } from '../middleware/validationMiddleware.js';
 
 import {
@@ -20,6 +20,7 @@ router.use(authenticate);
 
 router.get(
   '/',
+  authorize('CREDITS_VIEW'),
   query('page').optional().isInt({ min: 1 }),
   query('limit').optional().isInt({ min: 1 }),
   validateRequest,
@@ -28,6 +29,8 @@ router.get(
 
 router.get(
   '/cuotas/list',
+
+  authorize('CREDITS_VIEW'),
 
   query('estado')
     .optional(),
@@ -39,6 +42,7 @@ router.get(
 
 router.get(
   '/:id',
+  authorize('CREDITS_VIEW'),
   param('id').isUUID(),
   validateRequest,
   getCredito
@@ -46,6 +50,7 @@ router.get(
 
 router.post(
   '/',
+  authorize('CREDITS_CREATE'),
   body('clienteId').isUUID(),
   body('tipoPlanId').isUUID(),
   body('cantidadCuotas').isInt({ min: 1 }),
@@ -60,6 +65,7 @@ router.post(
 
 router.delete(
   '/:id',
+  authorize('CREDITS_DELETE'),
   param('id').isUUID(),
   validateRequest,
   deleteCredito
@@ -68,6 +74,8 @@ router.delete(
 
 router.post(
   '/simular',
+
+  authorize('CREDITS_CREATE'),
 
   body('tipoPlanId').isUUID(),
 
@@ -90,6 +98,8 @@ router.post(
 
 router.post(
   '/cuotas/:id/pago',
+
+  authorize('CREDITS_EDIT'),
 
   param('id').isUUID(),
 

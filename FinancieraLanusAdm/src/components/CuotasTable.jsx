@@ -29,6 +29,11 @@ import PagoCuotaModal
 import ConfirmCascadaModal
   from './ConfirmCascadaModal'
 
+import Permission
+  from './Permission'
+
+import { PERMISSIONS } from '../constants/permissions'
+
 import api
   from '../api/axios'
 
@@ -840,53 +845,57 @@ export default function CuotasTable({
 
                           {!pagada && (
 
-                            <button
-                              type="button"
-                              onClick={() =>
-                                abrirModal(
-                                  cuota
-                                )
-                              }
-                              className={`
-                                h-9
-                                px-3
-                                inline-flex
-                                items-center
-                                justify-center
-                                gap-1.5
-                                rounded-lg
-                                text-sm
-                                font-bold
-                                text-white
-                                transition
+                            <Permission permission={PERMISSIONS.CREDITS_EDIT}>
 
-                                ${
-                                  vencida
-                                    ? `
-                                      bg-red-600
-                                      hover:bg-red-700
-                                    `
-                                    : `
-                                      bg-amber-600
-                                      hover:bg-amber-700
-                                    `
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  abrirModal(
+                                    cuota
+                                  )
                                 }
-                              `}
-                            >
+                                className={`
+                                  h-9
+                                  px-3
+                                  inline-flex
+                                  items-center
+                                  justify-center
+                                  gap-1.5
+                                  rounded-lg
+                                  text-sm
+                                  font-bold
+                                  text-white
+                                  transition
 
-                              <HandCoins
-                                className="
-                                  w-4
-                                  h-4
-                                "
-                              />
+                                  ${
+                                    vencida
+                                      ? `
+                                        bg-red-600
+                                        hover:bg-red-700
+                                      `
+                                      : `
+                                        bg-amber-600
+                                        hover:bg-amber-700
+                                      `
+                                  }
+                                `}
+                              >
 
-                              {parcial
-                                ? 'Completar'
-                                : 'Cobrar'
-                              }
+                                <HandCoins
+                                  className="
+                                    w-4
+                                    h-4
+                                  "
+                                />
 
-                            </button>
+                                {parcial
+                                  ? 'Completar'
+                                  : 'Cobrar'
+                                }
+
+                              </button>
+
+                            </Permission>
 
                           )}
 
@@ -1207,52 +1216,56 @@ export default function CuotasTable({
 
                     {!pagada && (
 
-                      <button
-                        type="button"
-                        onClick={() =>
-                          abrirModal(
-                            cuota
-                          )
-                        }
-                        className={`
-                          flex-1
-                          h-10
-                          inline-flex
-                          items-center
-                          justify-center
-                          gap-2
-                          rounded-xl
-                          text-sm
-                          font-bold
-                          text-white
+                      <Permission permission={PERMISSIONS.CREDITS_EDIT}>
 
-                          ${
-                            vencida
-                              ? `
-                                bg-red-600
-                                hover:bg-red-700
-                              `
-                              : `
-                                bg-amber-600
-                                hover:bg-amber-700
-                              `
+                        <button
+                          type="button"
+                          onClick={() =>
+                            abrirModal(
+                              cuota
+                            )
                           }
-                        `}
-                      >
+                          className={`
+                            flex-1
+                            h-10
+                            inline-flex
+                            items-center
+                            justify-center
+                            gap-2
+                            rounded-xl
+                            text-sm
+                            font-bold
+                            text-white
 
-                        <HandCoins
-                          className="
-                            w-4
-                            h-4
-                          "
-                        />
+                            ${
+                              vencida
+                                ? `
+                                  bg-red-600
+                                  hover:bg-red-700
+                                `
+                                : `
+                                  bg-amber-600
+                                  hover:bg-amber-700
+                                `
+                            }
+                          `}
+                        >
 
-                        {parcial
-                          ? 'Completar pago'
-                          : 'Registrar cobro'
-                        }
+                          <HandCoins
+                            className="
+                              w-4
+                              h-4
+                            "
+                          />
 
-                      </button>
+                          {parcial
+                            ? 'Completar pago'
+                            : 'Registrar cobro'
+                          }
+
+                        </button>
+
+                      </Permission>
 
                     )}
 

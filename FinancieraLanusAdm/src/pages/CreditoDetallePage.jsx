@@ -42,6 +42,11 @@ import PagoCuotaModal
 import ConfirmCascadaModal
   from '../components/ConfirmCascadaModal'
 
+import Permission
+  from '../components/Permission'
+
+import { PERMISSIONS } from '../constants/permissions'
+
 
 export default function CreditoDetallePage() {
 
@@ -1447,42 +1452,46 @@ ${url}`
                 </div>
 
 
-                <button
-                  onClick={() => {
+                <Permission permission={PERMISSIONS.CREDITS_EDIT}>
 
-                    setCuotaSeleccionada(
-                      proximaCuota
-                    )
+                  <button
+                    onClick={() => {
 
-                    setModalPagoOpen(
-                      true
-                    )
+                      setCuotaSeleccionada(
+                        proximaCuota
+                      )
 
-                  }}
-                  className="
-                    w-full
-                    h-11
-                    mt-4
-                    bg-amber-600
-                    hover:bg-amber-700
-                    text-white
-                    rounded-xl
-                    font-bold
-                    flex
-                    items-center
-                    justify-center
-                    gap-2
-                    transition
-                  "
-                >
+                      setModalPagoOpen(
+                        true
+                      )
 
-                  <HandCoins
-                    className="w-4 h-4"
-                  />
+                    }}
+                    className="
+                      w-full
+                      h-11
+                      mt-4
+                      bg-amber-600
+                      hover:bg-amber-700
+                      text-white
+                      rounded-xl
+                      font-bold
+                      flex
+                      items-center
+                      justify-center
+                      gap-2
+                      transition
+                    "
+                  >
 
-                  Registrar cobro
+                    <HandCoins
+                      className="w-4 h-4"
+                    />
 
-                </button>
+                    Registrar cobro
+
+                  </button>
+
+                </Permission>
 
               </div>
 
@@ -2092,57 +2101,61 @@ ${url}`
 
                         ) : (
 
-                          <button
-                            onClick={() => {
+                          <Permission permission={PERMISSIONS.CREDITS_EDIT}>
 
-                              setCuotaSeleccionada(
-                                cuota
-                              )
+                            <button
+                              onClick={() => {
 
-                              setModalPagoOpen(
-                                true
-                              )
+                                setCuotaSeleccionada(
+                                  cuota
+                                )
 
-                            }}
-                            className={`
-                              h-9
-                              px-3
-                              inline-flex
-                              items-center
-                              justify-center
-                              gap-2
-                              rounded-lg
-                              text-sm
-                              font-bold
-                              text-white
-                              transition
+                                setModalPagoOpen(
+                                  true
+                                )
 
-                              ${
-                                vencida
-                                  ? `
-                                    bg-red-600
-                                    hover:bg-red-700
-                                  `
-                                  : `
-                                    bg-amber-600
-                                    hover:bg-amber-700
-                                  `
+                              }}
+                              className={`
+                                h-9
+                                px-3
+                                inline-flex
+                                items-center
+                                justify-center
+                                gap-2
+                                rounded-lg
+                                text-sm
+                                font-bold
+                                text-white
+                                transition
+
+                                ${
+                                  vencida
+                                    ? `
+                                      bg-red-600
+                                      hover:bg-red-700
+                                    `
+                                    : `
+                                      bg-amber-600
+                                      hover:bg-amber-700
+                                    `
+                                }
+                              `}
+                            >
+
+                              <HandCoins
+                                className="w-4 h-4"
+                              />
+
+                              {
+                                cuota.estado ===
+                                'PARCIAL'
+                                  ? 'Completar'
+                                  : 'Cobrar'
                               }
-                            `}
-                          >
 
-                            <HandCoins
-                              className="w-4 h-4"
-                            />
+                            </button>
 
-                            {
-                              cuota.estado ===
-                              'PARCIAL'
-                                ? 'Completar'
-                                : 'Cobrar'
-                            }
-
-                          </button>
+                          </Permission>
 
                         )}
 

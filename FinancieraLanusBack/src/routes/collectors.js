@@ -33,7 +33,7 @@ router.post(
   body('dni').notEmpty().withMessage('DNI es requerido'),
   body('celular').optional().isMobilePhone('any'),
   body('zoneId')
-  .optional()
+  .notEmpty().withMessage('Zona es requerida')
   .isUUID(),
   body('supervisorId')
   .optional()

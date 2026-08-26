@@ -40,6 +40,9 @@ export default function ZoneForm({
   const [buscando,
     setBuscando] = useState(false)
 
+  const [errorUbicacion,
+    setErrorUbicacion] = useState(null)
+
   useEffect(() => {
 
     setFormData({
@@ -97,6 +100,7 @@ export default function ZoneForm({
       try {
 
         setBuscando(true)
+        setErrorUbicacion(null)
 
         const data =
           await clientService.geolocalizar({
@@ -105,7 +109,15 @@ export default function ZoneForm({
               formData.direccionCentro
 
           })
-          console.log(data)
+
+        if (
+          data?.latitud == null ||
+          data?.longitud == null
+        ) {
+          throw new Error(
+            'No se encontraron coordenadas para esa dirección'
+          )
+        }
 
         setUbicacion(data)
 
@@ -124,6 +136,12 @@ export default function ZoneForm({
       } catch (error) {
 
         console.error(error)
+
+        setUbicacion(null)
+
+        setErrorUbicacion(
+          'No se encontraron coordenadas para esa dirección. Probá con otra dirección o cargá los datos manualmente.'
+        )
 
       } finally {
 
@@ -274,6 +292,12 @@ export default function ZoneForm({
             : '📍 Buscar ubicación'
         }
       </button>
+
+      {errorUbicacion && (
+        <p className="text-xs font-medium text-red-500">
+          {errorUbicacion}
+        </p>
+      )}
 
       <div>
 

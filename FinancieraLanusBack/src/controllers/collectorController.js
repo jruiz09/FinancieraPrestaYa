@@ -112,6 +112,20 @@ export const createCollector = async (req, res, next) => {
 
     }
 
+    if (!zoneId) {
+
+      await transaction.rollback()
+
+      return res.status(400).json({
+
+        success:false,
+
+        message:'Zona es requerida'
+
+      })
+
+    }
+
     const collector =
       await Collector.create({
 
@@ -126,8 +140,7 @@ export const createCollector = async (req, res, next) => {
         supervisorId:
           supervisorId || null,
 
-        zoneId:
-          zoneId || null
+        zoneId
 
       },{
         transaction
@@ -341,6 +354,20 @@ export const updateCollector = async (req, res, next) => {
 
     } = req.body
 
+    if (!zoneId) {
+
+      await transaction.rollback()
+
+      return res.status(400).json({
+
+        success:false,
+
+        message:'Zona es requerida'
+
+      })
+
+    }
+
     collector.nombre =
       nombre
 
@@ -357,7 +384,7 @@ export const updateCollector = async (req, res, next) => {
       supervisorId || null
 
     collector.zoneId =
-      zoneId || null
+      zoneId
 
     if (
 

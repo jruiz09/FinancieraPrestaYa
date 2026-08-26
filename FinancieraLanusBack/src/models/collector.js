@@ -36,7 +36,7 @@ export const CollectorModel = (sequelize, DataTypes) => {
 },
 zoneId: {
   type: DataTypes.UUID,
-  allowNull: true
+  allowNull: false
 },
 userId: {
   type: DataTypes.UUID,

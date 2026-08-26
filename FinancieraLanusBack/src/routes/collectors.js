@@ -33,7 +33,7 @@ router.post(
   body('dni').notEmpty().withMessage('DNI es requerido'),
   body('celular').optional().isMobilePhone('any'),
   body('zoneId')
-  .optional()
+  .notEmpty().withMessage('Zona es requerida')
   .isUUID(),
   body('supervisorId')
   .optional()
@@ -43,7 +43,15 @@ router.post(
   createCollector
 );
 
-router.put('/:id', authorize('COLLECTORS_EDIT'), param('id').isUUID(), validateRequest, updateCollector);
+router.put(
+  '/:id',
+  authorize('COLLECTORS_EDIT'),
+  param('id').isUUID(),
+  // TODO: el PUT no valida el resto del body (nombre, apellido, dni, etc.) - gap preexistente, fuera de alcance de esta rama.
+  body('zoneId').notEmpty().withMessage('Zona es requerida').isUUID(),
+  validateRequest,
+  updateCollector
+);
 
 router.delete('/:id', authorize('COLLECTORS_DELETE'), param('id').isUUID(), validateRequest, deleteCollector);
 

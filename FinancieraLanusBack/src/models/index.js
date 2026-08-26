@@ -54,7 +54,10 @@ Zone.belongsTo(Owner, {
 Zone.hasMany(
   Collector,
   {
-    foreignKey: 'zoneId',
+    foreignKey: {
+      name: 'zoneId',
+      allowNull: false
+    },
     as: 'collectors'
   }
 )

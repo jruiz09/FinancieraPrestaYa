@@ -65,9 +65,14 @@ export const resolverUbicacion =
 
     // Dirección
 
+    const direccionBusqueda =
+      /argentina/i.test(texto)
+        ? texto
+        : `${texto}, Argentina`
+
     const resultados =
       await geocoder.geocode(
-        `${texto}, Argentina`
+        direccionBusqueda
       )
 
     if (!resultados.length) {

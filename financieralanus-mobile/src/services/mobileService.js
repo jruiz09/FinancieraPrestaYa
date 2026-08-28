@@ -183,7 +183,25 @@ vales:
 
     return data.data
 
-  }
+  },
+
+  crearVale:
+    async payload => {
+
+      const {
+        data
+      } =
+        await api.post(
+
+          '/mobile/vales',
+
+          payload
+
+        )
+
+      return data.data
+
+    }
 
 }
 

@@ -30,17 +30,19 @@ export default function PagoModal({
 
 }) {
 
-  const [montoPago,
-    setMontoPago] =
+  const [montoEfectivo,
+    setMontoEfectivo] =
       useState(
         Number(cuota.saldo)
       )
 
-  const [tipoTransaccion,
-    setTipoTransaccion] =
-      useState(
-        'EFECTIVO'
-      )
+  const [montoTransferencia,
+    setMontoTransferencia] =
+      useState(0)
+
+  const [mostrarTransferencia,
+    setMostrarTransferencia] =
+      useState(false)
 
   const [observaciones,
     setObservaciones] =
@@ -50,6 +52,12 @@ export default function PagoModal({
     setMostrarObs] =
       useState(false)
 
+  const totalIngresado =
+
+    Number(montoEfectivo || 0) +
+
+    Number(montoTransferencia || 0)
+
   const handleSubmit =
     e => {
 
@@ -57,7 +65,7 @@ export default function PagoModal({
 
       if (
 
-        montoPago <= 0
+        totalIngresado <= 0
 
       ) {
 
@@ -67,9 +75,11 @@ export default function PagoModal({
 
       onConfirm({
 
-        montoPago,
+        montoEfectivo:
+          Number(montoEfectivo || 0),
 
-        tipoTransaccion,
+        montoTransferencia:
+          Number(montoTransferencia || 0),
 
         observaciones
 
@@ -81,7 +91,7 @@ export default function PagoModal({
 
     Number(cuota.saldo) -
 
-    Number(montoPago)
+    totalIngresado
 
   return (
 
@@ -120,7 +130,7 @@ export default function PagoModal({
             "
           >
 
-            ¿Cuánto recibiste?
+            ¿Cuánto recibiste en efectivo?
 
           </label>
 
@@ -128,10 +138,10 @@ export default function PagoModal({
 
             autoFocus
 
-            value={montoPago}
+            value={montoEfectivo}
 
             onChange={
-              setMontoPago
+              setMontoEfectivo
             }
 
           />
@@ -217,103 +227,73 @@ export default function PagoModal({
 
         <div>
 
-          <label
-            className="
-              block
-              mb-2
-              text-sm
-              text-slate-400
-            "
-          >
+          <button
 
-            Tipo de cobro
+            type="button"
 
-          </label>
+            onClick={() =>
 
-          <div
-            className="
-              flex
-              rounded-2xl
-              overflow-hidden
-              bg-slate-800
-            "
-          >
+              setMostrarTransferencia(
 
-            {
-
-              [
-
-                'EFECTIVO',
-
-                'TRANSFERENCIA'
-
-              ].map(
-
-                tipo => (
-
-                  <button
-
-                    key={tipo}
-
-                    type="button"
-
-                    onClick={() =>
-
-                      setTipoTransaccion(
-                        tipo
-                      )
-
-                    }
-
-                    className={`
-                      flex-1
-                      py-3
-                      font-semibold
-                      transition
-
-                      ${
-
-                        tipo ===
-
-                        tipoTransaccion
-
-                        ?
-
-                        'bg-cyan-600'
-
-                        :
-
-                        'bg-transparent'
-
-                      }
-
-                    `}
-                  >
-
-                    {
-
-                      tipo ===
-                      'EFECTIVO'
-
-                        ?
-
-                        'Efectivo'
-
-                        :
-
-                        'Transferencia'
-
-                    }
-
-                  </button>
-
-                )
+                !mostrarTransferencia
 
               )
 
             }
 
-          </div>
+            className="
+              w-full
+              flex
+              justify-between
+              items-center
+              py-2
+              text-slate-300
+              font-medium
+            "
+
+          >
+
+            <span>
+
+              Agregar transferencia
+
+            </span>
+
+            {
+
+              mostrarTransferencia
+
+                ?
+
+                <ChevronUp
+                  size={18}
+                />
+
+                :
+
+                <ChevronDown
+                  size={18}
+                />
+
+            }
+
+          </button>
+
+          {
+
+            mostrarTransferencia &&
+
+            <MoneyInput
+
+              value={montoTransferencia}
+
+              onChange={
+                setMontoTransferencia
+              }
+
+            />
+
+          }
 
         </div>
 
@@ -421,7 +401,7 @@ export default function PagoModal({
 
           disabled={
 
-            montoPago <= 0
+            totalIngresado <= 0
 
           }
 
@@ -439,7 +419,7 @@ export default function PagoModal({
 
             ${
 
-              montoPago <= 0
+              totalIngresado <= 0
 
                 ?
 

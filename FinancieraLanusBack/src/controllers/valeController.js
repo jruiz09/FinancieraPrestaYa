@@ -13,7 +13,7 @@ const ROLES_QUE_OTORGAN = [
   ROLES.ADMINISTRATIVO
 ];
 
-const generarNumeroVale = async transaction => {
+export const generarNumeroVale = async transaction => {
 
   const ultimo =
     await Vale.findOne({

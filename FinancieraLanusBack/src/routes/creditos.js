@@ -106,11 +106,32 @@ router.post(
 
   param('id').isUUID(),
 
-  body('montoPago')
-    .isFloat({ min: 0.01 }),
+  body('montoEfectivo')
+    .optional()
+    .isFloat({ min: 0 }),
 
-  body('tipoTransaccion')
-    .notEmpty(),
+  body('montoTransferencia')
+    .optional()
+    .isFloat({ min: 0 }),
+
+  body().custom((value) => {
+
+    const efectivo =
+      Number(value.montoEfectivo || 0);
+
+    const transferencia =
+      Number(value.montoTransferencia || 0);
+
+    if (efectivo + transferencia <= 0) {
+
+      throw new Error(
+        'La suma de montoEfectivo y montoTransferencia debe ser mayor a cero.'
+      );
+    }
+
+    return true;
+
+  }),
 
   body('confirmado')
     .optional()

@@ -5,6 +5,8 @@ import { seedRoles } from './seeders/seedRoles.js';
 import { seedPermissions } from './seeders/seedPermissions.js';
 import { seedRolePermissions } from './seeders/seedRolePermissions.js';
 import { seedOwners } from './seeders/seedOwners.js';
+import { seedPermisosValesAutogestion } from './seeders/seedPermisosValesAutogestion.js';
+import { seedColumnasMpDejaOverride } from './seeders/seedColumnasMpDejaOverride.js';
 
 dotenv.config();
 
@@ -17,11 +19,15 @@ const startServer = async () => {
 
     await sequelize.sync();
 
+    await seedColumnasMpDejaOverride();
+
     await seedRoles();
 
     await seedPermissions();
 
     await seedRolePermissions();
+
+    await seedPermisosValesAutogestion();
 
     await seedOwners();
 

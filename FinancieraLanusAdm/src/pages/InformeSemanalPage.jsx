@@ -252,8 +252,8 @@ export default function InformeSemanalPage() {
             zoneId: zona.zoneId,
             fecha: dia.fecha,
             pr: valores.pr,
-            mp: valores.mp,
-            deja: valores.deja,
+            mpOverride: valores.mp,
+            dejaOverride: valores.deja,
             entregasOverride: valores.entregas,
             ecuOverride: valores.ecu
           })
@@ -702,21 +702,25 @@ export default function InformeSemanalPage() {
                             total={money(zona.prSemanaTotal)}
                           />
 
-                          <FilaManual
+                          <FilaCalculadoManual
                             label="MP"
                             campo="mp"
+                            campoOverride="mpOverride"
                             zona={zona}
                             edits={edits}
                             onChangeDia={handleChangeDia}
+                            onRevertirDia={handleRevertirDia}
                             total={money(zona.mpSemanaTotal)}
                           />
 
-                          <FilaManual
+                          <FilaCalculadoManual
                             label="Deja"
                             campo="deja"
+                            campoOverride="dejaOverride"
                             zona={zona}
                             edits={edits}
                             onChangeDia={handleChangeDia}
+                            onRevertirDia={handleRevertirDia}
                             total={money(zona.dejaSemanaTotal)}
                           />
 

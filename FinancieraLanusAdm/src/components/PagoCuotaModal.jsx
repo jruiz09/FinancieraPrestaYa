@@ -34,8 +34,8 @@ export default function PagoCuotaModal({
   const [formData,
     setFormData] =
       useState({
-        montoPago: 0,
-        tipoTransaccion: 'EFECTIVO',
+        montoEfectivo: 0,
+        montoTransferencia: 0,
         observaciones: ''
       });
 
@@ -44,10 +44,8 @@ export default function PagoCuotaModal({
     if (!cuota) return;
 
     setFormData({
-      montoPago: saldoPendiente,
-      tipoTransaccion:
-        cuota.tipoTransaccion ||
-        'EFECTIVO',
+      montoEfectivo: saldoPendiente,
+      montoTransferencia: 0,
       observaciones: ''
     });
 
@@ -58,18 +56,28 @@ export default function PagoCuotaModal({
     saldoPendiente
   ]);
 
+  const totalIngresado =
+    useMemo(() => {
+
+      return (
+        Number(formData.montoEfectivo || 0) +
+        Number(formData.montoTransferencia || 0)
+      );
+
+    }, [
+      formData.montoEfectivo,
+      formData.montoTransferencia
+    ]);
+
   const excedente =
     useMemo(() => {
 
-      const monto =
-        Number(formData.montoPago);
-
-      return monto > saldoPendiente
-        ? monto - saldoPendiente
+      return totalIngresado > saldoPendiente
+        ? totalIngresado - saldoPendiente
         : 0;
 
     }, [
-      formData.montoPago,
+      totalIngresado,
       saldoPendiente
     ]);
 
@@ -94,20 +102,30 @@ export default function PagoCuotaModal({
       }));
 
       if (
-        name ===
-        'montoPago'
+        name === 'montoEfectivo' ||
+        name === 'montoTransferencia'
       ) {
 
-        const monto =
-          Number(value);
+        const efectivo =
+          name === 'montoEfectivo'
+            ? Number(value)
+            : Number(formData.montoEfectivo);
+
+        const transferencia =
+          name === 'montoTransferencia'
+            ? Number(value)
+            : Number(formData.montoTransferencia);
 
         if (
-          !Number.isFinite(monto) ||
-          monto <= 0
+          !Number.isFinite(efectivo) ||
+          !Number.isFinite(transferencia) ||
+          efectivo < 0 ||
+          transferencia < 0 ||
+          (efectivo + transferencia) <= 0
         ) {
 
           setError(
-            'Debe ingresar un importe válido.'
+            'Ingresá al menos un importe (efectivo y/o transferencia) mayor a cero.'
           );
 
         } else {
@@ -122,24 +140,32 @@ export default function PagoCuotaModal({
 
       e.preventDefault();
 
-      const monto =
-        Number(
-          formData.montoPago
-        );
+      const efectivo =
+        Number(formData.montoEfectivo);
+
+      const transferencia =
+        Number(formData.montoTransferencia);
 
       if (
-        !Number.isFinite(monto) ||
-        monto <= 0
+        !Number.isFinite(efectivo) ||
+        !Number.isFinite(transferencia) ||
+        efectivo < 0 ||
+        transferencia < 0 ||
+        (efectivo + transferencia) <= 0
       ) {
 
         setError(
-          'Debe ingresar un importe válido.'
+          'Ingresá al menos un importe (efectivo y/o transferencia) mayor a cero.'
         );
 
         return;
       }
 
-      onConfirm(formData);
+      onConfirm({
+        montoEfectivo: efectivo,
+        montoTransferencia: transferencia,
+        observaciones: formData.observaciones
+      });
     };
 
   return (
@@ -276,84 +302,102 @@ export default function PagoCuotaModal({
 
           </div>
 
-          <div>
+          <div className="
+            grid
+            grid-cols-2
+            gap-3
+          ">
 
-            <label className="
-              block
-              text-sm
-              font-medium
-              mb-1
-            ">
-              Importe a Cobrar
-            </label>
+            <div>
 
-            <input
-              type="number"
-              step="0.01"
-              name="montoPago"
-              value={formData.montoPago}
-              onChange={handleChange}
-              className="
-                w-full
-                p-2
-                border
-                rounded
-              "
-            />
-
-            {excedente > 0 && (
-
-              <p className="
+              <label className="
+                block
                 text-sm
-                text-amber-700
-                mt-1
+                font-medium
+                mb-1
               ">
-                El excedente de $
-                {excedente.toLocaleString('es-AR')}
-                {' '}
-                se aplicará automáticamente
-                a otras cuotas del crédito.
-              </p>
-
-            )}
-
-          </div>
-
-          <div>
-
-            <label className="
-              block
-              text-sm
-              font-medium
-              mb-1
-            ">
-              Tipo Transacción
-            </label>
-
-            <select
-              name="tipoTransaccion"
-              value={
-                formData.tipoTransaccion
-              }
-              onChange={handleChange}
-              className="
-                w-full
-                p-2
-                border
-                rounded
-              "
-            >
-              <option value="EFECTIVO">
                 Efectivo
-              </option>
+              </label>
 
-              <option value="TRANSFERENCIA">
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                name="montoEfectivo"
+                value={formData.montoEfectivo}
+                onChange={handleChange}
+                className="
+                  w-full
+                  p-2
+                  border
+                  rounded
+                "
+              />
+
+            </div>
+
+            <div>
+
+              <label className="
+                block
+                text-sm
+                font-medium
+                mb-1
+              ">
                 Transferencia
-              </option>
+              </label>
 
-            </select>
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                name="montoTransferencia"
+                value={formData.montoTransferencia}
+                onChange={handleChange}
+                className="
+                  w-full
+                  p-2
+                  border
+                  rounded
+                "
+              />
+
+            </div>
 
           </div>
+
+          <div className="
+            flex
+            justify-between
+            text-sm
+          ">
+
+            <span className="text-gray-500">
+              Total a cobrar
+            </span>
+
+            <strong>
+              $
+              {totalIngresado.toLocaleString('es-AR')}
+            </strong>
+
+          </div>
+
+          {excedente > 0 && (
+
+            <p className="
+              text-sm
+              text-amber-700
+              -mt-3
+            ">
+              El excedente de $
+              {excedente.toLocaleString('es-AR')}
+              {' '}
+              se aplicará automáticamente
+              a otras cuotas del crédito.
+            </p>
+
+          )}
 
           <div>
 

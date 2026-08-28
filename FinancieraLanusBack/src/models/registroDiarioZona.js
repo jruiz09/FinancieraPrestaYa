@@ -41,6 +41,16 @@ export const RegistroDiarioZonaModel = (sequelize, DataTypes) => {
         defaultValue: 0,
       },
 
+      mpOverride: {
+        type: DataTypes.DECIMAL(12, 2),
+        allowNull: true,
+      },
+
+      dejaOverride: {
+        type: DataTypes.DECIMAL(12, 2),
+        allowNull: true,
+      },
+
       entregasOverride: {
         type: DataTypes.DECIMAL(12, 2),
         allowNull: true,

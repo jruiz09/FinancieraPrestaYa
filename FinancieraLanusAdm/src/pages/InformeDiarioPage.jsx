@@ -144,8 +144,8 @@ export default function InformeDiarioPage() {
           zoneId: zona.zoneId,
           fecha,
           pr: valores.pr,
-          mp: valores.mp,
-          deja: valores.deja,
+          mpOverride: valores.mp,
+          dejaOverride: valores.deja,
           entregasOverride: valores.entregas,
           ecuOverride: valores.ecu,
           recaudacionDiaSigOverride:
@@ -563,36 +563,52 @@ export default function InformeDiarioPage() {
 
                     </td>
 
-                    <td className="px-4 py-4 text-right text-stone-600">
+                    <td className="px-4 py-4">
 
-                      <input
-                        type="number"
+                      <CalculadoManualCell
                         value={valores.mp}
-                        onChange={(e) =>
+                        onChange={(valor) =>
                           handleChange(
                             zona.zoneId,
                             'mp',
-                            e.target.value
+                            valor
                           )
                         }
-                        className={inputClass}
+                        esOverride={zona.mpEsOverride}
+                        onRevertir={() =>
+                          handleRevertirOverride(
+                            zona,
+                            'mpOverride'
+                          )
+                        }
+                        disabled={
+                          guardandoZona === zona.zoneId
+                        }
                       />
 
                     </td>
 
-                    <td className="px-4 py-4 text-right text-stone-600">
+                    <td className="px-4 py-4">
 
-                      <input
-                        type="number"
+                      <CalculadoManualCell
                         value={valores.deja}
-                        onChange={(e) =>
+                        onChange={(valor) =>
                           handleChange(
                             zona.zoneId,
                             'deja',
-                            e.target.value
+                            valor
                           )
                         }
-                        className={inputClass}
+                        esOverride={zona.dejaEsOverride}
+                        onRevertir={() =>
+                          handleRevertirOverride(
+                            zona,
+                            'dejaOverride'
+                          )
+                        }
+                        disabled={
+                          guardandoZona === zona.zoneId
+                        }
                       />
 
                     </td>

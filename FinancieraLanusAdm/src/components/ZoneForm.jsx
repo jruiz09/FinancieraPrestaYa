@@ -3,8 +3,7 @@ import { useState, useEffect } from 'react'
 import {
   MapContainer,
   TileLayer,
-  Marker,
-  Circle
+  Marker
 } from 'react-leaflet'
 
 import { clientService }
@@ -27,8 +26,6 @@ export default function ZoneForm({
 
     latitudCentro: '',
     longitudCentro: '',
-
-    radioMetros: 3000,
 
     ...initialData
 
@@ -55,8 +52,6 @@ export default function ZoneForm({
 
       latitudCentro: '',
       longitudCentro: '',
-
-      radioMetros: 3000,
 
       ...initialData
 
@@ -299,26 +294,6 @@ export default function ZoneForm({
         </p>
       )}
 
-      <div>
-
-        <label
-          className={labelClass}
-        >
-          Radio (metros)
-        </label>
-
-        <input
-          type="number"
-          name="radioMetros"
-          value={
-            formData.radioMetros
-          }
-          onChange={handleChange}
-          className={inputClass}
-        />
-
-      </div>
-
       {ubicacion && (
 
         <div
@@ -375,26 +350,6 @@ export default function ZoneForm({
                   ubicacion.longitud
                 )
               ]}
-            />
-
-            <Circle
-              center={[
-                Number(
-                  ubicacion.latitud
-                ),
-                Number(
-                  ubicacion.longitud
-                )
-              ]}
-              radius={
-                Number(
-                  formData.radioMetros
-                )
-              }
-              pathOptions={{
-                color:
-                  formData.color
-              }}
             />
 
           </MapContainer>

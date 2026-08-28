@@ -60,8 +60,12 @@ router.put(
   body('zoneId').isUUID(),
   body('fecha').isDate(),
   body('pr').optional().isFloat({ min: 0 }),
-  body('mp').optional().isFloat({ min: 0 }),
-  body('deja').optional().isFloat(),
+  body('mpOverride')
+    .optional({ nullable: true })
+    .isFloat({ min: 0 }),
+  body('dejaOverride')
+    .optional({ nullable: true })
+    .isFloat(),
   body('entregasOverride')
     .optional({ nullable: true })
     .isFloat({ min: 0 }),

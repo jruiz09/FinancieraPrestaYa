@@ -8,7 +8,8 @@ import {
 } from 'react-router-dom'
 
 import {
-  ArrowLeft
+  ArrowLeft,
+  Plus
 } from 'lucide-react'
 
 import {
@@ -17,6 +18,12 @@ import {
 
 import ValeCard
   from '../../components/ValeCard'
+
+import NuevaValeSheet
+  from '../../components/NuevaValeSheet'
+
+import Toast
+  from '../../components/Toast'
 
 export default function ValesPage() {
 
@@ -31,11 +38,38 @@ export default function ValesPage() {
     setVales] =
       useState([])
 
+  const [mostrarNuevo,
+    setMostrarNuevo] =
+      useState(false)
+
+  const [toast,
+    setToast] =
+      useState(null)
+
   useEffect(() => {
 
     cargar()
 
   }, [])
+
+  const mostrarToast =
+    (
+      message,
+      type = 'success'
+    ) => {
+
+      setToast({
+        message,
+        type
+      })
+
+      setTimeout(
+        () =>
+          setToast(null),
+        2500
+      )
+
+    }
 
   const cargar =
     async () => {
@@ -55,6 +89,37 @@ export default function ValesPage() {
       } finally {
 
         setLoading(false)
+
+      }
+
+    }
+
+  const crearVale =
+    async payload => {
+
+      try {
+
+        await mobileService
+          .crearVale(
+            payload
+          )
+
+        mostrarToast(
+          'Vale cargado'
+        )
+
+        setMostrarNuevo(
+          false
+        )
+
+        cargar()
+
+      } catch {
+
+        mostrarToast(
+          'No se pudo cargar el vale',
+          'error'
+        )
 
       }
 
@@ -81,6 +146,18 @@ export default function ValesPage() {
   }
 
   return (
+
+    <>
+
+      <Toast
+
+        show={!!toast}
+
+        message={toast?.message}
+
+        type={toast?.type}
+
+      />
 
     <div
       className="
@@ -113,28 +190,65 @@ export default function ValesPage() {
 
       </button>
 
-      <div>
+      <div
+        className="
+          flex
+          justify-between
+          items-center
+        "
+      >
 
-        <h1
+        <div>
+
+          <h1
+            className="
+              text-3xl
+              font-bold
+            "
+          >
+
+            Mis Vales
+
+          </h1>
+
+          <p
+            className="
+              text-slate-400
+            "
+          >
+
+            Adelantos y vales propios
+
+          </p>
+
+        </div>
+
+        <button
+
+          onClick={() =>
+
+            setMostrarNuevo(
+              true
+            )
+
+          }
+
           className="
-            text-3xl
-            font-bold
+            h-14
+            w-14
+            rounded-full
+            bg-cyan-600
+            flex
+            justify-center
+            items-center
+            shadow-lg
           "
+
         >
 
-          Mis Vales
+          <Plus />
 
-        </h1>
-
-        <p
-          className="
-            text-slate-400
-          "
-        >
-
-          Adelantos recibidos de la oficina
-
-        </p>
+        </button>
 
       </div>
 
@@ -169,7 +283,7 @@ export default function ValesPage() {
             "
           >
 
-            Cuando la oficina te otorgue un vale, va a aparecer acá.
+            Cargá un vale propio o esperá a que la oficina te otorgue uno.
 
           </p>
 
@@ -210,6 +324,30 @@ export default function ValesPage() {
       </div>
 
     </div>
+
+    {
+
+      mostrarNuevo &&
+
+      <NuevaValeSheet
+
+        onClose={() =>
+
+          setMostrarNuevo(
+            false
+          )
+
+        }
+
+        onConfirm={
+          crearVale
+        }
+
+      />
+
+    }
+
+    </>
 
   )
 

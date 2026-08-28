@@ -1060,6 +1060,14 @@ export default function CuotasTable({
                 `${cuota.credito?.cliente?.apellido || ''} ${cuota.credito?.cliente?.nombre || ''}`
                   .trim()
 
+              const cobrador =
+                `${cuota.credito?.cobrador?.apellido || ''} ${cuota.credito?.cobrador?.nombre || ''}`
+                  .trim()
+
+              const observacionesCredito =
+                cuota.credito
+                  ?.observaciones
+
               return (
 
                 <div

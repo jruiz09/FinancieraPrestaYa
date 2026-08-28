@@ -709,25 +709,46 @@ export const registrarPagoCuota = async (
     }
 
     const {
-      montoPago,
-      tipoTransaccion,
+      montoEfectivo,
+      montoTransferencia,
       observaciones,
       fechaPago
     } = req.body;
 
     /*
     =====================================================
-    VALIDAR MONTO
+    VALIDAR MONTO (split efectivo / transferencia)
     =====================================================
     */
 
-    const montoIngresado =
-      Number(montoPago);
+    const efectivo =
+      Number(montoEfectivo || 0);
+
+    const transferencia =
+      Number(montoTransferencia || 0);
 
     if (
-      !Number.isFinite(montoIngresado) ||
-      montoIngresado <= 0
+      !Number.isFinite(efectivo) ||
+      !Number.isFinite(transferencia) ||
+      efectivo < 0 ||
+      transferencia < 0
     ) {
+
+      await transaction.rollback();
+
+      return res.status(400).json({
+        success: false,
+        message:
+          'Los montos de efectivo y transferencia deben ser numéricos y no negativos.'
+      });
+    }
+
+    const montoIngresado =
+      Math.round(
+        (efectivo + transferencia) * 100
+      ) / 100;
+
+    if (montoIngresado <= 0) {
 
       await transaction.rollback();
 
@@ -735,36 +756,6 @@ export const registrarPagoCuota = async (
         success: false,
         message:
           'El monto debe ser mayor a cero.'
-      });
-    }
-
-    /*
-    =====================================================
-    VALIDAR TIPO DE TRANSACCION
-    =====================================================
-    */
-
-    const tiposPermitidos = [
-      'EFECTIVO',
-      'TRANSFERENCIA'
-    ];
-
-    const tipoPago =
-      tipoTransaccion ||
-      'EFECTIVO';
-
-    if (
-      !tiposPermitidos.includes(
-        tipoPago
-      )
-    ) {
-
-      await transaction.rollback();
-
-      return res.status(400).json({
-        success: false,
-        message:
-          'Tipo de transacción inválido.'
       });
     }
 
@@ -867,33 +858,61 @@ export const registrarPagoCuota = async (
 
     for (const { cuota: c, aPagar } of cuotasObjetivo) {
 
-      const pagoCuota =
-        await PagoCuota.create(
-          {
-            cuotaId:
-              c.id,
+      /*
+      Prorratea el split efectivo/transferencia del pago
+      total sobre lo que le corresponde a esta cuota en la
+      cascada. El efectivo se calcula por proporción y la
+      transferencia se deriva como el resto, para que la
+      suma de las dos partes cierre exacto contra "aPagar"
+      sin arrastre de redondeo.
+      */
 
-            fecha:
-              fechaMovimiento,
+      const aPagarEfectivo =
+        Math.round(
+          (aPagar * efectivo / montoIngresado) * 100
+        ) / 100;
 
-            monto:
-              aPagar,
+      const aPagarTransferencia =
+        Math.round(
+          (aPagar - aPagarEfectivo) * 100
+        ) / 100;
 
-            tipoTransaccion:
-              tipoPago,
+      const partes = [
+        { tipo: 'EFECTIVO', monto: aPagarEfectivo },
+        { tipo: 'TRANSFERENCIA', monto: aPagarTransferencia }
+      ].filter(parte => parte.monto > 0);
 
-            observaciones:
-              observaciones || null,
+      for (const parte of partes) {
 
-            activo:
-              true
-          },
-          {
-            transaction
-          }
-        );
+        const pagoCuota =
+          await PagoCuota.create(
+            {
+              cuotaId:
+                c.id,
 
-      pagosCreados.push(pagoCuota);
+              fecha:
+                fechaMovimiento,
+
+              monto:
+                parte.monto,
+
+              tipoTransaccion:
+                parte.tipo,
+
+              observaciones:
+                observaciones || null,
+
+              activo:
+                true
+            },
+            {
+              transaction
+            }
+          );
+
+        pagosCreados.push(pagoCuota);
+
+      }
 
       const nuevoMontoPago =
         Number(c.montoPago || 0) +
@@ -906,11 +925,14 @@ export const registrarPagoCuota = async (
       Estos campos quedan por compatibilidad
       con el sistema actual.
 
-      Representan el ULTIMO pago realizado.
+      Representan el ULTIMO pago realizado. Cuando el pago
+      de esta cuota tuvo ambos medios, se guarda 'MIXTO'.
       */
 
       c.tipoTransaccion =
-        tipoPago;
+        partes.length > 1
+          ? 'MIXTO'
+          : partes[0].tipo;
 
       c.observaciones =
         observaciones || null;
@@ -928,9 +950,6 @@ export const registrarPagoCuota = async (
         transaction
       });
     }
-
-    const pago =
-      pagosCreados[0];
 
     /*
     =====================================================
@@ -1033,17 +1052,17 @@ export const registrarPagoCuota = async (
       data: {
 
         pago: {
-          id:
-            pago.id,
-
           fecha:
-            pago.fecha,
+            fechaMovimiento,
 
           monto:
-            Number(pago.monto),
+            montoIngresado,
 
-          tipoTransaccion:
-            pago.tipoTransaccion
+          montoEfectivo:
+            efectivo,
+
+          montoTransferencia:
+            transferencia
         },
 
         cuota: {

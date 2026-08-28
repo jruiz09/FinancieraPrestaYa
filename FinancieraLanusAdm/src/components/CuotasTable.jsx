@@ -15,7 +15,9 @@ import {
   Eye,
   HandCoins,
   Loader2,
+  StickyNote,
   UserRound,
+  Users,
   WalletCards
 } from 'lucide-react'
 
@@ -457,6 +459,15 @@ export default function CuotasTable({
                 <th className="
                   px-4
                   py-3
+                  text-left
+                  font-semibold
+                ">
+                  Cobrador
+                </th>
+
+                <th className="
+                  px-4
+                  py-3
                   text-center
                   font-semibold
                 ">
@@ -562,6 +573,14 @@ export default function CuotasTable({
                     `${cuota.credito?.cliente?.apellido || ''} ${cuota.credito?.cliente?.nombre || ''}`
                       .trim()
 
+                  const cobrador =
+                    `${cuota.credito?.cobrador?.apellido || ''} ${cuota.credito?.cobrador?.nombre || ''}`
+                      .trim()
+
+                  const observacionesCredito =
+                    cuota.credito
+                      ?.observaciones
+
                   return (
 
                     <tr
@@ -661,9 +680,54 @@ export default function CuotasTable({
 
                             {cliente || '-'}
 
+                            {observacionesCredito && (
+                              <StickyNote
+                                className="
+                                  w-3.5
+                                  h-3.5
+                                  text-amber-500
+                                  shrink-0
+                                "
+                                title={
+                                  `Observación del crédito: ${observacionesCredito}`
+                                }
+                              />
+                            )}
+
                           </div>
 
                         </button>
+
+                      </td>
+
+
+                      {/* COBRADOR */}
+
+                      <td className="
+                        px-4
+                        py-4
+                      ">
+
+                        <div className="
+                          flex
+                          items-center
+                          gap-1.5
+                          text-sm
+                          text-stone-600
+                        ">
+
+                          <Users
+                            className="
+                              w-3.5
+                              h-3.5
+                              text-stone-400
+                              shrink-0
+                            "
+                          />
+
+                          {cobrador || '-'}
+
+                        </div>
 
                       </td>
 
@@ -1062,6 +1126,56 @@ export default function CuotasTable({
                       ">
                         {cliente || '-'}
                       </p>
+
+                      {cobrador && (
+
+                        <p className="
+                          flex
+                          items-center
+                          gap-1
+                          text-xs
+                          text-stone-400
+                          mt-0.5
+                        ">
+
+                          <Users
+                            className="
+                              w-3
+                              h-3
+                            "
+                          />
+
+                          {cobrador}
+
+                        </p>
+
+                      )}
+
+                      {observacionesCredito && (
+
+                        <p className="
+                          flex
+                          items-start
+                          gap-1
+                          text-xs
+                          text-amber-600
+                          mt-1
+                        ">
+
+                          <StickyNote
+                            className="
+                              w-3
+                              h-3
+                              mt-0.5
+                              shrink-0
+                            "
+                          />
+
+                          {observacionesCredito}
+
+                        </p>
+
+                      )}
 
                     </div>
 

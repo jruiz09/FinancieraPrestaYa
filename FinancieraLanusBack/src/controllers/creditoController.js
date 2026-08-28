@@ -1150,6 +1150,15 @@ export const listCuotas = async (
                   'dni',
                   'celular'
                 ]
+              },
+              {
+                association: 'cobrador',
+
+                attributes: [
+                  'id',
+                  'nombre',
+                  'apellido'
+                ]
               }
             ]
           }

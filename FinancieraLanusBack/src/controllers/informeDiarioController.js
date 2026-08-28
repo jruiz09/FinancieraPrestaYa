@@ -428,9 +428,11 @@ const calcularRecaudadoPorZona = async (
 ) => {
 
   const porZona = new Map();
+  const mpPorZona = new Map();
+  const dejaPorZona = new Map();
 
   if (todosLosCollectorIds.length === 0) {
-    return porZona;
+    return { porZona, mpPorZona, dejaPorZona };
   }
 
   const pagos = await PagoCuota.findAll({
@@ -438,7 +440,7 @@ const calcularRecaudadoPorZona = async (
       activo: true,
       fecha: { [Op.between]: [fechaInicio, fechaFin] }
     },
-    attributes: ['id', 'monto'],
+    attributes: ['id', 'monto', 'tipoTransaccion'],
     include: [
       {
         model: CreditoDetalle,
@@ -472,9 +474,115 @@ const calcularRecaudadoPorZona = async (
       zonaId,
       numero(porZona.get(zonaId)) + numero(pago.monto)
     );
+
+    /*
+    MP = transferencia, DEJA = efectivo (ver Cambio 2:
+    cada fila PagoCuota tiene un unico medio de pago,
+    el split se traduce en dos filas separadas).
+    */
+
+    if (pago.tipoTransaccion === 'TRANSFERENCIA') {
+
+      mpPorZona.set(
+        zonaId,
+        numero(mpPorZona.get(zonaId)) + numero(pago.monto)
+      );
+
+    } else if (pago.tipoTransaccion === 'EFECTIVO') {
+
+      dejaPorZona.set(
+        zonaId,
+        numero(dejaPorZona.get(zonaId)) + numero(pago.monto)
+      );
+
+    }
   }
 
-  return porZona;
+  return { porZona, mpPorZona, dejaPorZona };
+};
+
+/*
+=====================================================
+MP (transferencia) / DEJA (efectivo) por zona y día,
+con el mismo "fin de semana suma al viernes" que ya usan
+Entregas/Terminados. Se usa solo en el informe semanal
+para el desglose dia por dia; el diario usa el total del
+rango de calcularRecaudadoPorZona (un unico dia, sin
+necesidad de plegar fin de semana).
+=====================================================
+*/
+
+const calcularMpDejaPorZonaYDia = async (
+  todosLosCollectorIds,
+  collectorZonaMap,
+  fechaInicio,
+  fechaFin
+) => {
+
+  const mpPorZonaYDia = new Map();
+  const dejaPorZonaYDia = new Map();
+
+  if (todosLosCollectorIds.length === 0) {
+    return { mpPorZonaYDia, dejaPorZonaYDia };
+  }
+
+  const pagos = await PagoCuota.findAll({
+    where: {
+      activo: true,
+      fecha: { [Op.between]: [fechaInicio, fechaFin] }
+    },
+    attributes: ['id', 'monto', 'tipoTransaccion', 'fecha'],
+    include: [
+      {
+        model: CreditoDetalle,
+        as: 'cuota',
+        required: true,
+        attributes: ['id'],
+        include: [
+          {
+            model: Credito,
+            as: 'credito',
+            required: true,
+            attributes: ['id', 'cobradorId'],
+            where: {
+              activo: true,
+              cobradorId: todosLosCollectorIds
+            }
+          }
+        ]
+      }
+    ]
+  });
+
+  for (const pago of pagos) {
+
+    const cobradorId = pago.cuota.credito.cobradorId;
+    const zonaId = collectorZonaMap.get(cobradorId);
+
+    if (!zonaId) continue;
+
+    if (
+      pago.tipoTransaccion !== 'TRANSFERENCIA' &&
+      pago.tipoTransaccion !== 'EFECTIVO'
+    ) continue;
+
+    const destino =
+      pago.tipoTransaccion === 'TRANSFERENCIA'
+        ? mpPorZonaYDia
+        : dejaPorZonaYDia;
+
+    const dia = fechaEfectivaSemana(pago.fecha);
+
+    if (!destino.has(zonaId)) {
+      destino.set(zonaId, new Map());
+    }
+
+    const porDia = destino.get(zonaId);
+
+    porDia.set(dia, numero(porDia.get(dia)) + numero(pago.monto));
+  }
+
+  return { mpPorZonaYDia, dejaPorZonaYDia };
 };
 
 /*
@@ -711,7 +819,11 @@ export const getInformeDiario = async (req, res, next) => {
     const entregasCalculadoPorZona = totalPorZona(entregasPorZonaYDia);
     const terminadosCalculadoPorZona = totalPorZona(terminadosPorZonaYDia);
 
-    const recaudadoPorZona = await calcularRecaudadoPorZona(
+    const {
+      porZona: recaudadoPorZona,
+      mpPorZona: mpCalculadoPorZona,
+      dejaPorZona: dejaCalculadoPorZona
+    } = await calcularRecaudadoPorZona(
       todosLosCollectorIds,
       collectorZonaMap,
       fecha,
@@ -755,8 +867,18 @@ export const getInformeDiario = async (req, res, next) => {
       const vale = numero(valePorZona.get(zona.id));
       const valeSup = numero(valeSupPorZona.get(zona.id));
       const pr = numero(registroHoy?.pr);
-      const mp = numero(registroHoy?.mp);
-      const deja = numero(registroHoy?.deja);
+
+      const mpCalculado = numero(mpCalculadoPorZona.get(zona.id));
+      const mpTieneOverride = registroHoy?.mpOverride != null;
+      const mp = mpTieneOverride
+        ? numero(registroHoy.mpOverride)
+        : mpCalculado;
+
+      const dejaCalculado = numero(dejaCalculadoPorZona.get(zona.id));
+      const dejaTieneOverride = registroHoy?.dejaOverride != null;
+      const deja = dejaTieneOverride
+        ? numero(registroHoy.dejaOverride)
+        : dejaCalculado;
 
       const puntos = numero(puntosCobranzaPorZona.get(zona.id));
       const clientesConCuota = numero(clientesConCuotaPorZona.get(zona.id));
@@ -792,7 +914,9 @@ export const getInformeDiario = async (req, res, next) => {
         valeSup,
         pr,
         mp,
+        mpEsOverride: mpTieneOverride,
         deja,
+        dejaEsOverride: dejaTieneOverride,
         ecu,
         ecuEsOverride: ecuTieneOverride,
         recaudacionDiaSig,
@@ -928,7 +1052,7 @@ export const getInformeSemanal = async (req, res, next) => {
       clientesConCuotaPorZona
     } = await calcularCobranzaPorZona(cuotasVencenSemana);
 
-    const recaudadoPorZona = await calcularRecaudadoPorZona(
+    const { porZona: recaudadoPorZona } = await calcularRecaudadoPorZona(
       todosLosCollectorIds,
       collectorZonaMap,
       fechaLunes,
@@ -972,6 +1096,13 @@ export const getInformeSemanal = async (req, res, next) => {
       fechaDomingo
     );
 
+    const { mpPorZonaYDia, dejaPorZonaYDia } = await calcularMpDejaPorZonaYDia(
+      todosLosCollectorIds,
+      collectorZonaMap,
+      fechaLunes,
+      fechaDomingo
+    );
+
     const data = zonas.map(zona => {
 
       const registrosDeLaZona =
@@ -979,6 +1110,8 @@ export const getInformeSemanal = async (req, res, next) => {
 
       const entregasCalculadoPorDia = entregasPorZonaYDia.get(zona.id) || new Map();
       const terminadosCalculadoPorDia = terminadosPorZonaYDia.get(zona.id) || new Map();
+      const mpCalculadoPorDia = mpPorZonaYDia.get(zona.id) || new Map();
+      const dejaCalculadoPorDia = dejaPorZonaYDia.get(zona.id) || new Map();
 
       let entregasSemanaTotal = 0;
       let ecuSemanaTotal = 0;
@@ -1004,8 +1137,18 @@ export const getInformeSemanal = async (req, res, next) => {
           : ecuCalculado;
 
         const pr = numero(registroDia?.pr);
-        const mp = numero(registroDia?.mp);
-        const deja = numero(registroDia?.deja);
+
+        const mpCalculado = numero(mpCalculadoPorDia.get(fechaDia));
+        const mpTieneOverride = registroDia?.mpOverride != null;
+        const mp = mpTieneOverride
+          ? numero(registroDia.mpOverride)
+          : mpCalculado;
+
+        const dejaCalculado = numero(dejaCalculadoPorDia.get(fechaDia));
+        const dejaTieneOverride = registroDia?.dejaOverride != null;
+        const deja = dejaTieneOverride
+          ? numero(registroDia.dejaOverride)
+          : dejaCalculado;
 
         entregasSemanaTotal += entregas;
         ecuSemanaTotal += ecu;
@@ -1021,7 +1164,9 @@ export const getInformeSemanal = async (req, res, next) => {
           ecuEsOverride: ecuTieneOverride,
           pr,
           mp,
-          deja
+          mpEsOverride: mpTieneOverride,
+          deja,
+          dejaEsOverride: dejaTieneOverride
         };
       });
 
@@ -1094,8 +1239,8 @@ export const guardarInformeDiario = async (req, res, next) => {
       zoneId,
       fecha,
       pr,
-      mp,
-      deja,
+      mpOverride,
+      dejaOverride,
       entregasOverride,
       ecuOverride,
       recaudacionDiaSigOverride
@@ -1130,8 +1275,8 @@ export const guardarInformeDiario = async (req, res, next) => {
 
     const campos = {
       pr,
-      mp,
-      deja,
+      mpOverride,
+      dejaOverride,
       entregasOverride,
       ecuOverride,
       recaudacionDiaSigOverride

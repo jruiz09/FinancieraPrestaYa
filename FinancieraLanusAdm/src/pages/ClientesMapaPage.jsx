@@ -130,7 +130,7 @@ export default function ClientesMapaPage() {
         await zoneService.list()
 
       setZonas(
-        zonasData.zones || []
+        zonasData || []
       )
 
       const clientesData =

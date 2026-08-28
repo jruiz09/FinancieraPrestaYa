@@ -264,7 +264,7 @@ export default function ZonesPage() {
               "
             >
               Administrá las zonas de
-              cobranza y su radio de acción.
+              cobranza y su color identificatorio.
             </p>
           </div>
 
@@ -417,10 +417,6 @@ export default function ZonesPage() {
                   </th>
 
                   <th className="px-4 py-3 text-left">
-                    Radio
-                  </th>
-
-                  <th className="px-4 py-3 text-left">
                     Estado
                   </th>
 
@@ -475,13 +471,6 @@ export default function ZonesPage() {
 
                         </div>
 
-                      </td>
-
-                      <td className="px-4 py-4 text-stone-600">
-                        {
-                          zone.radioMetros
-                        }
-                        {' '}m
                       </td>
 
                       <td className="px-4 py-4">

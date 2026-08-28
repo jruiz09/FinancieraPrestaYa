@@ -8,12 +8,17 @@ import {
   Client,
   Ayuda,
   Vale,
-  Zone
+  Zone,
+  sequelize
 } from '../models/index.js'
 
 import {
   registrarPagoCuota
 } from './creditoController.js'
+
+import {
+  generarNumeroVale
+} from './valeController.js'
 
 const obtenerCollector =
   async (userId) => {
@@ -1779,6 +1784,166 @@ async (
     })
 
   } catch (error) {
+
+    next(error)
+
+  }
+
+}
+
+
+const TIPOS_VALE_PERMITIDOS = [
+  'ADELANTO',
+  'COMBUSTIBLE',
+  'GASTOS',
+  'OTROS'
+]
+
+export const crearValeMobile =
+async (
+  req,
+  res,
+  next
+) => {
+
+  const transaction =
+    await sequelize.transaction()
+
+  try {
+
+    const {
+      tipo,
+      monto,
+      observaciones
+    } = req.body
+
+    if (!TIPOS_VALE_PERMITIDOS.includes(tipo)) {
+
+      await transaction.rollback()
+
+      return res.status(400).json({
+        success: false,
+        message: 'Tipo de vale inválido.'
+      })
+
+    }
+
+    const montoVale =
+      Number(monto)
+
+    if (
+      !Number.isFinite(montoVale) ||
+      montoVale <= 0
+    ) {
+
+      await transaction.rollback()
+
+      return res.status(400).json({
+        success: false,
+        message: 'El monto debe ser mayor a cero.'
+      })
+
+    }
+
+    /*
+    El origen del autovale se resuelve siempre desde
+    req.user.id, nunca desde el body, para que un cobrador
+    o supervisor no pueda cargar un vale a nombre de otro.
+    */
+
+    let collectorId = null
+    let supervisorId = null
+    let usuarioRecepcionId = null
+
+    if (esSupervisor(req.user)) {
+
+      const supervisor =
+        await obtenerSupervisor(
+          req.user.id
+        )
+
+      if (!supervisor) {
+
+        await transaction.rollback()
+
+        return res.status(404).json({
+          success: false,
+          message: 'Supervisor no encontrado'
+        })
+
+      }
+
+      supervisorId = supervisor.id
+      usuarioRecepcionId = req.user.id
+
+    } else {
+
+      const collector =
+        await obtenerCollector(
+          req.user.id
+        )
+
+      if (!collector) {
+
+        await transaction.rollback()
+
+        return res.status(404).json({
+          success: false,
+          message: 'Cobrador no encontrado'
+        })
+
+      }
+
+      collectorId = collector.id
+      usuarioRecepcionId = req.user.id
+
+    }
+
+    const numero =
+      await generarNumeroVale(transaction)
+
+    const vale =
+      await Vale.create(
+        {
+          numero,
+
+          fecha:
+            new Date(),
+
+          ownerId:
+            req.user.ownerId,
+
+          collectorId,
+
+          supervisorId,
+
+          tipo,
+
+          monto: montoVale,
+
+          observaciones:
+            observaciones || null,
+
+          usuarioEntregaId:
+            req.user.id,
+
+          usuarioRecepcionId
+        },
+        { transaction }
+      )
+
+    await transaction.commit()
+
+    return res.status(201).json({
+      success: true,
+      data: vale
+    })
+
+  } catch (error) {
+
+    if (!transaction.finished) {
+      await transaction.rollback()
+    }
 
     next(error)
 

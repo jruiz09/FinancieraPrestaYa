@@ -25,7 +25,8 @@ import {
   crearAyudaMobile,
   aceptarAyudaMobile,
   rechazarAyudaMobile,
-  valesMobile
+  valesMobile,
+  crearValeMobile
 
 }
 from '../controllers/mobileController.js'
@@ -103,6 +104,11 @@ router.put(
 router.get(
   '/vales',
   valesMobile
+)
+
+router.post(
+  '/vales',
+  crearValeMobile
 )
 
 export default router

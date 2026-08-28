@@ -28,6 +28,23 @@ const obtenerCollector =
 
   }
 
+const obtenerFechaLocal =
+  (fecha = new Date()) => {
+
+    const anio = fecha.getFullYear()
+
+    const mes =
+      String(fecha.getMonth() + 1)
+        .padStart(2, '0')
+
+    const dia =
+      String(fecha.getDate())
+        .padStart(2, '0')
+
+    return `${anio}-${mes}-${dia}`
+
+  }
+
 const obtenerSupervisor =
   async (userId) => {
 
@@ -1063,9 +1080,7 @@ export const perfilMobile =
           collectors.map((c) => c.id)
 
         const hoy =
-          new Date()
-            .toISOString()
-            .split('T')[0]
+          obtenerFechaLocal()
 
         const creditos =
           await Credito.findAll({
@@ -1086,13 +1101,11 @@ export const perfilMobile =
         let pendienteCobro = 0
         let cuotasPendientes = 0
         let cuotasVencidas = 0
-        let totalCuotas = 0
-        let totalPagadas = 0
+        let cuotasVencenHoy = 0
         const clientesVisitadosHoy = new Set()
 
         creditos.forEach((credito) => {
           credito.cuotas.forEach((cuota) => {
-            totalCuotas++
             const saldo =
               Number(cuota.monto) -
               Number(cuota.montoPago)
@@ -1105,24 +1118,27 @@ export const perfilMobile =
 
             if (cuota.estado !== 'PAGADA') {
               pendienteCobro += saldo
-              cuotasPendientes++
             }
 
             if (cuota.estado === 'VENCIDA') {
               cuotasVencidas++
             }
 
-            if (cuota.estado === 'PAGADA') {
-              totalPagadas++
+            if (cuota.fechaPagoEsperada === hoy) {
+              cuotasVencenHoy++
+
+              if (cuota.estado !== 'PAGADA') {
+                cuotasPendientes++
+              }
             }
           })
         })
 
         const efectividad =
-          totalCuotas === 0
+          cuotasVencenHoy === 0
             ? 0
             : Math.round(
-                (totalPagadas * 100) / totalCuotas
+                (cuotasCobradas * 100) / cuotasVencenHoy
               )
 
         return res.json({
@@ -1153,7 +1169,7 @@ export const perfilMobile =
       }
 
       const hoy =
-        new Date().toISOString().split('T')[0]
+        obtenerFechaLocal()
 
       const creditos =
         await Credito.findAll({
@@ -1174,12 +1190,10 @@ export const perfilMobile =
       let pendienteCobro = 0
       let cuotasPendientes = 0
       let cuotasVencidas = 0
-      let totalCuotas = 0
-      let totalPagadas = 0
+      let cuotasVencenHoy = 0
 
       creditos.forEach((credito) => {
         credito.cuotas.forEach((cuota) => {
-          totalCuotas++
           const saldo = Number(cuota.monto) - Number(cuota.montoPago)
 
           if (cuota.fechaPago === hoy) {
@@ -1189,23 +1203,28 @@ export const perfilMobile =
 
           if (cuota.estado !== 'PAGADA') {
             pendienteCobro += saldo
-            cuotasPendientes++
           }
 
           if (cuota.estado === 'VENCIDA') {
             cuotasVencidas++
           }
 
-          if (cuota.estado === 'PAGADA') {
-            totalPagadas++
+          if (cuota.fechaPagoEsperada === hoy) {
+            cuotasVencenHoy++
+
+            if (cuota.estado !== 'PAGADA') {
+              cuotasPendientes++
+            }
           }
         })
       })
 
       const efectividad =
-        totalCuotas === 0
+        cuotasVencenHoy === 0
           ? 0
-          : Math.round((totalPagadas * 100) / totalCuotas)
+          : Math.round(
+              (cuotasCobradas * 100) / cuotasVencenHoy
+            )
 
       return res.json({
         success: true,

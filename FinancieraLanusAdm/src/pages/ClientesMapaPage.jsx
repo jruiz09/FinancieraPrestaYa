@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 import {
   MapContainer,
@@ -10,39 +10,85 @@ import {
 
 import L from 'leaflet'
 
+import {
+  AlertTriangle,
+  MapPin,
+  MapPinOff,
+  Wallet
+} from 'lucide-react'
+
 import { clientService } from '../services/clientService'
 import { collectorService } from '../services/collectorService'
 import { useAuthStore } from '../store/useAuthStore'
 import { zoneService } from '../services/zoneService'
 
 
-const colores = [
-  'blue',
-  'green',
-  'red',
-  'orange',
-  'violet'
-]
+const money =
+  value =>
+    Number(
+      value || 0
+    ).toLocaleString(
+      'es-AR'
+    )
 
-const iconos = {}
 
-colores.forEach((color) => {
+const formatDate =
+  fecha => {
 
-  iconos[color] = new L.Icon({
+    if (!fecha)
+      return '-'
 
-    iconUrl:
-      `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-${color}.png`,
+    const fechaLimpia =
+      String(fecha)
+        .split('T')[0]
 
-    shadowUrl:
-      'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+    const [
+      anio,
+      mes,
+      dia
+    ] = fechaLimpia
+      .split('-')
 
-    iconSize: [25, 41],
-    iconAnchor: [12, 41],
-    popupAnchor: [1, -34]
+    if (
+      !anio ||
+      !mes ||
+      !dia
+    ) {
+      return fecha
+    }
 
-  })
+    return `${dia}/${mes}/${anio}`
 
-})
+  }
+
+
+const COLOR_SIN_ZONA = '#78716c'
+
+const crearIconoZona =
+  (color) =>
+    new L.DivIcon({
+
+      className: '',
+
+      html: `
+        <div style="
+          width: 26px;
+          height: 26px;
+          border-radius: 50% 50% 50% 0;
+          background: ${color};
+          transform: rotate(-45deg);
+          border: 2px solid white;
+          box-shadow: 0 1px 4px rgba(0,0,0,0.4);
+        "></div>
+      `,
+
+      iconSize: [26, 26],
+      iconAnchor: [13, 26],
+      popupAnchor: [0, -28]
+
+    })
+
+
 export default function ClientesMapaPage() {
 
   const ownerId =
@@ -50,8 +96,8 @@ export default function ClientesMapaPage() {
       (state) => state.ownerId
     )
 
-    const [zonas, setZonas] =
-  useState([])
+  const [zonas, setZonas] =
+    useState([])
 
   const [clientes, setClientes] =
     useState([])
@@ -60,6 +106,9 @@ export default function ClientesMapaPage() {
     useState([])
 
   const [cobradorId, setCobradorId] =
+    useState('')
+
+  const [zonaId, setZonaId] =
     useState('')
 
   const [loading, setLoading] =
@@ -77,16 +126,15 @@ export default function ClientesMapaPage() {
 
       setLoading(true)
 
-
       const zonasData =
-  await zoneService.list()
+        await zoneService.list()
 
-setZonas(
-  zonasData.zones || []
-)
+      setZonas(
+        zonasData.zones || []
+      )
 
       const clientesData =
-        await clientService.list(
+        await clientService.listConCreditoActivo(
           1,
           100,
           ownerId
@@ -119,22 +167,43 @@ setZonas(
 
   }
 
-  const colorPorCobrador = {}
+  const iconosPorZona =
+    useMemo(() => {
 
-cobradores.forEach((c, index) => {
+      const mapa = {}
 
-  colorPorCobrador[c.id] =
-    colores[index % colores.length]
+      zonas.forEach((zona) => {
+        mapa[zona.id] =
+          crearIconoZona(zona.color)
+      })
 
-})
+      mapa.sinZona =
+        crearIconoZona(COLOR_SIN_ZONA)
+
+      return mapa
+
+    }, [zonas])
 
   const clientesFiltrados =
-    cobradorId
-      ? clientes.filter(
-          c =>
-            c.cobradorId === cobradorId
-        )
-      : clientes
+    clientes.filter((cliente) => {
+
+      if (
+        cobradorId &&
+        cliente.cobradorId !== cobradorId
+      ) {
+        return false
+      }
+
+      if (
+        zonaId &&
+        cliente.collector?.zoneId !== zonaId
+      ) {
+        return false
+      }
+
+      return true
+
+    })
 
   const clientesConCoordenadas =
     clientesFiltrados.filter(
@@ -143,52 +212,72 @@ cobradores.forEach((c, index) => {
         c.longitud
     )
 
-const distanciaMetros =
-  (
-    lat1,
-    lon1,
-    lat2,
-    lon2
-  ) => {
+  const sinGeolocalizar =
+    clientesFiltrados.length -
+    clientesConCoordenadas.length
 
-    const R = 6371000
+  const clientesEnMora =
+    clientesConCoordenadas.filter(
+      c => c.resumenCredito?.tieneMora
+    ).length
 
-    const dLat =
-      (lat2 - lat1) *
-      Math.PI /
-      180
+  const saldoPendienteTotal =
+    clientesConCoordenadas.reduce(
+      (total, c) =>
+        total +
+        Number(
+          c.resumenCredito
+            ?.saldoPendiente || 0
+        ),
+      0
+    )
 
-    const dLon =
-      (lon2 - lon1) *
-      Math.PI /
-      180
+  const distanciaMetros =
+    (
+      lat1,
+      lon1,
+      lat2,
+      lon2
+    ) => {
 
-    const a =
-      Math.sin(dLat / 2) *
-      Math.sin(dLat / 2) +
-      Math.cos(
-        lat1 *
+      const R = 6371000
+
+      const dLat =
+        (lat2 - lat1) *
         Math.PI /
         180
-      ) *
-      Math.cos(
-        lat2 *
+
+      const dLon =
+        (lon2 - lon1) *
         Math.PI /
         180
-      ) *
-      Math.sin(dLon / 2) *
-      Math.sin(dLon / 2)
 
-    const c =
-      2 *
-      Math.atan2(
-        Math.sqrt(a),
-        Math.sqrt(1 - a)
-      )
+      const a =
+        Math.sin(dLat / 2) *
+        Math.sin(dLat / 2) +
+        Math.cos(
+          lat1 *
+          Math.PI /
+          180
+        ) *
+        Math.cos(
+          lat2 *
+          Math.PI /
+          180
+        ) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2)
 
-    return R * c
+      const c =
+        2 *
+        Math.atan2(
+          Math.sqrt(a),
+          Math.sqrt(1 - a)
+        )
 
-  }
+      return R * c
+
+    }
 
   const centroMapa =
     clientesConCoordenadas.length
@@ -275,9 +364,9 @@ const distanciaMetros =
             flex
             flex-col
             gap-5
-            sm:flex-row
-            sm:items-center
-            sm:justify-between
+            lg:flex-row
+            lg:items-center
+            lg:justify-between
           "
         >
           <div>
@@ -322,75 +411,154 @@ const distanciaMetros =
                 sm:text-base
               "
             >
-              Ubicación de clientes por
-              zona y cobrador.
+              Clientes con créditos activos,
+              por zona y cobrador.
             </p>
           </div>
 
-          <select
-            value={cobradorId}
-            onChange={(e) =>
-              setCobradorId(
-                e.target.value
-              )
-            }
+          <div
             className="
-              rounded-xl
-              border
-              border-stone-200
-              bg-white
-              px-3.5
-              py-2.5
-              text-sm
-              text-stone-900
-              outline-none
-              transition
-              focus:border-amber-400
-              focus:ring-4
-              focus:ring-amber-100
+              flex
+              flex-col
+              gap-2
+              sm:flex-row
             "
           >
-            <option value="">
-              Todos los cobradores
-            </option>
 
-            {cobradores.map(
-              (cobrador) => (
-                <option
-                  key={cobrador.id}
-                  value={cobrador.id}
-                >
-                  {cobrador.apellido}
-                  {', '}
-                  {cobrador.nombre}
-                </option>
-              )
-            )}
-          </select>
+            <select
+              value={zonaId}
+              onChange={(e) =>
+                setZonaId(
+                  e.target.value
+                )
+              }
+              className="
+                rounded-xl
+                border
+                border-stone-200
+                bg-white
+                px-3.5
+                py-2.5
+                text-sm
+                text-stone-900
+                outline-none
+                transition
+                focus:border-amber-400
+                focus:ring-4
+                focus:ring-amber-100
+              "
+            >
+              <option value="">
+                Todas las zonas
+              </option>
 
+              {zonas.map(
+                (zona) => (
+                  <option
+                    key={zona.id}
+                    value={zona.id}
+                  >
+                    {zona.nombre}
+                  </option>
+                )
+              )}
+            </select>
+
+            <select
+              value={cobradorId}
+              onChange={(e) =>
+                setCobradorId(
+                  e.target.value
+                )
+              }
+              className="
+                rounded-xl
+                border
+                border-stone-200
+                bg-white
+                px-3.5
+                py-2.5
+                text-sm
+                text-stone-900
+                outline-none
+                transition
+                focus:border-amber-400
+                focus:ring-4
+                focus:ring-amber-100
+              "
+            >
+              <option value="">
+                Todos los cobradores
+              </option>
+
+              {cobradores.map(
+                (cobrador) => (
+                  <option
+                    key={cobrador.id}
+                    value={cobrador.id}
+                  >
+                    {cobrador.apellido}
+                    {', '}
+                    {cobrador.nombre}
+                  </option>
+                )
+              )}
+            </select>
+
+          </div>
         </div>
       </section>
 
-      <div>
 
-        <span
-          className="
-            inline-flex
-            rounded-full
-            bg-amber-50
-            px-3
-            py-1.5
-            text-sm
-            font-semibold
-            text-amber-700
-          "
-        >
-          {clientesConCoordenadas.length}
-          {' '}
-          clientes ubicados
-        </span>
+      {/* RESUMEN */}
+      <div
+        className="
+          grid
+          grid-cols-2
+          gap-3
+          md:gap-4
+          xl:grid-cols-4
+        "
+      >
+
+        <MetricCard
+          icon={MapPin}
+          title="Clientes en el mapa"
+          value={
+            clientesConCoordenadas.length
+          }
+          description="Con crédito activo y ubicación cargada"
+          variant="blue"
+        />
+
+        <MetricCard
+          icon={AlertTriangle}
+          title="En mora"
+          value={clientesEnMora}
+          description="Con al menos una cuota vencida"
+          variant="red"
+        />
+
+        <MetricCard
+          icon={Wallet}
+          title="Saldo pendiente"
+          value={
+            `$${money(saldoPendienteTotal)}`
+          }
+          description="Suma de saldos de los créditos activos"
+          variant="amber"
+        />
+
+        <MetricCard
+          icon={MapPinOff}
+          title="Sin geolocalizar"
+          value={sinGeolocalizar}
+          description="Clientes activos sin lat/long cargada"
+          variant="green"
+        />
 
       </div>
+
 
       <div
         className="
@@ -485,87 +653,200 @@ const distanciaMetros =
   })
 }
         {clientesConCoordenadas.map(
-          (cliente) => (
+          (cliente) => {
 
-            <Marker
-             key={cliente.id}
-  position={[
-    Number(cliente.latitud),
-    Number(cliente.longitud)
-  ]}
-  icon={
-    iconos[
-      colorPorCobrador[
-        cliente.cobradorId
-      ]
-    ]
-  }
-            >
+            const zonaCliente =
+              zonas.find(
+                zona =>
+                  zona.id ===
+                  cliente.collector?.zoneId
+              )
 
-              <Popup>
+            const resumen =
+              cliente.resumenCredito ||
+              {}
 
-                <div
-                  className="
-                    min-w-[220px]
-                  "
-                >
+            return (
 
-                  <h3
+              <Marker
+                key={cliente.id}
+                position={[
+                  Number(cliente.latitud),
+                  Number(cliente.longitud)
+                ]}
+                icon={
+                  iconosPorZona[
+                    cliente.collector?.zoneId
+                  ] ||
+                  iconosPorZona.sinZona
+                }
+              >
+
+                <Popup>
+
+                  <div
                     className="
-                      font-bold
-                      text-lg
+                      min-w-[250px]
+                      space-y-2
                     "
                   >
-                    {cliente.apellido}
-                    {', '}
-                    {cliente.nombre}
-                  </h3>
 
-                  <p>
-                    DNI:
-                    {' '}
-                    {cliente.dni}
-                  </p>
+                    <div
+                      className="
+                        flex
+                        items-start
+                        justify-between
+                        gap-2
+                      "
+                    >
 
-                  <p>
-                    Tel:
-                    {' '}
-                    {cliente.celular || '-'}
-                  </p>
+                      <h3
+                        className="
+                          font-bold
+                          text-base
+                          leading-tight
+                        "
+                      >
+                        {cliente.apellido}
+                        {', '}
+                        {cliente.nombre}
+                      </h3>
 
-                  <p>
-                    Dirección:
-                    {' '}
-                    {cliente.direccion || '-'}
-                  </p>
+                      <span
+                        className={`
+                          shrink-0
+                          rounded-full
+                          px-2
+                          py-0.5
+                          text-[11px]
+                          font-bold
 
-                  <p>
-                    Cobrador:
-                    {' '}
-                    {cliente.collector?.apellido}
-                    {' '}
-                    {cliente.collector?.nombre}
-                  </p>
+                          ${
+                            resumen.tieneMora
+                              ? 'bg-red-100 text-red-700'
+                              : 'bg-emerald-100 text-emerald-700'
+                          }
+                        `}
+                      >
+                        {
+                          resumen.tieneMora
+                            ? 'En mora'
+                            : 'Al día'
+                        }
+                      </span>
 
-                  <a
-                    href={`https://www.google.com/maps?q=${cliente.latitud},${cliente.longitud}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="
-                      text-amber-700
-                      font-medium
-                    "
-                  >
-                    Abrir en Google Maps
-                  </a>
+                    </div>
 
-                </div>
+                    <div
+                      className="
+                        space-y-0.5
+                        text-sm
+                        text-stone-700
+                      "
+                    >
 
-              </Popup>
+                      <p>
+                        DNI:
+                        {' '}
+                        {cliente.dni}
+                      </p>
 
-            </Marker>
+                      <p>
+                        Tel:
+                        {' '}
+                        {cliente.celular || '-'}
+                      </p>
 
-          )
+                      <p>
+                        Dirección:
+                        {' '}
+                        {cliente.direccion || '-'}
+                      </p>
+
+                      <p>
+                        Cobrador:
+                        {' '}
+                        {cliente.collector?.apellido}
+                        {' '}
+                        {cliente.collector?.nombre}
+                      </p>
+
+                      <p>
+                        Zona:
+                        {' '}
+                        {zonaCliente?.nombre || '-'}
+                      </p>
+
+                    </div>
+
+                    <div
+                      className="
+                        rounded-lg
+                        bg-stone-50
+                        p-2
+                        text-sm
+                      "
+                    >
+
+                      <p
+                        className="
+                          flex
+                          justify-between
+                        "
+                      >
+                        <span className="text-stone-500">
+                          Saldo pendiente
+                        </span>
+
+                        <span className="font-bold text-stone-800">
+                          ${money(resumen.saldoPendiente)}
+                        </span>
+                      </p>
+
+                      <p
+                        className="
+                          flex
+                          justify-between
+                        "
+                      >
+                        <span className="text-stone-500">
+                          Próxima cuota
+                        </span>
+
+                        <span className="font-semibold text-stone-800">
+                          {
+                            resumen.proximaCuota
+                              ? `#${resumen.proximaCuota.numeroCuota} · ${formatDate(resumen.proximaCuota.fechaVencimiento)}`
+                              : 'Sin cuotas pendientes'
+                          }
+                        </span>
+                      </p>
+
+                    </div>
+
+                    <a
+                      href={`https://www.google.com/maps?q=${cliente.latitud},${cliente.longitud}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="
+                        inline-block
+                        text-amber-700
+                        font-medium
+                        text-sm
+                      "
+                    >
+                      Abrir en Google Maps
+                    </a>
+
+                  </div>
+
+                </Popup>
+
+              </Marker>
+
+            )
+
+          }
         )}
 
       </MapContainer>
@@ -573,6 +854,132 @@ const distanciaMetros =
       </div>
 
     </div>
+  )
+
+}
+
+
+/* ===================================================== */
+/* METRIC CARD */
+/* ===================================================== */
+
+function MetricCard({
+  icon: Icon,
+  title,
+  value,
+  description,
+  variant
+}) {
+
+  const styles = {
+
+    blue: {
+      card: 'border-blue-200 bg-gradient-to-br from-white to-blue-50/60',
+      icon: 'bg-blue-100 text-blue-700',
+      value: 'text-blue-700'
+    },
+
+    green: {
+      card: 'border-emerald-200 bg-gradient-to-br from-white to-emerald-50/60',
+      icon: 'bg-emerald-100 text-emerald-700',
+      value: 'text-emerald-700'
+    },
+
+    amber: {
+      card: 'border-amber-200 bg-gradient-to-br from-white to-amber-50/60',
+      icon: 'bg-amber-100 text-amber-700',
+      value: 'text-amber-700'
+    },
+
+    red: {
+      card: 'border-red-200 bg-gradient-to-br from-white to-red-50/70',
+      icon: 'bg-red-100 text-red-700',
+      value: 'text-red-700'
+    }
+
+  }
+
+  const current =
+    styles[variant] ||
+    styles.blue
+
+  return (
+
+    <div className={`
+      relative
+      overflow-hidden
+      border
+      rounded-2xl
+      p-4
+      md:p-5
+      shadow-sm
+      transition
+      hover:shadow-md
+      ${current.card}
+    `}>
+
+      <div className="
+        flex
+        items-start
+        justify-between
+        gap-3
+      ">
+
+        <div>
+
+          <p className="
+            text-xs
+            md:text-sm
+            font-semibold
+            text-stone-600
+          ">
+            {title}
+          </p>
+
+          <p className={`
+            text-xl
+            md:text-2xl
+            font-bold
+            tracking-tight
+            mt-2
+            ${current.value}
+          `}>
+            {value}
+          </p>
+
+        </div>
+
+        <div className={`
+          w-9
+          h-9
+          md:w-10
+          md:h-10
+          rounded-xl
+          flex
+          items-center
+          justify-center
+          shrink-0
+          ${current.icon}
+        `}>
+
+          <Icon className="w-4 h-4 md:w-5 md:h-5" />
+
+        </div>
+
+      </div>
+
+      <p className="
+        hidden
+        sm:block
+        text-xs
+        text-stone-500
+        mt-2
+      ">
+        {description}
+      </p>
+
+    </div>
+
   )
 
 }

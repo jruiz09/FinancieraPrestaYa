@@ -1134,7 +1134,8 @@ export const listCuotas = async (
             attributes: [
               'id',
               'numeroCredito',
-              'cantidadCuotas'
+              'cantidadCuotas',
+              'observaciones'
             ],
 
             include: [

@@ -8,6 +8,13 @@ export const clientService = {
     return response.data.data
   },
 
+  listConCreditoActivo: async (page = 1, limit = 100, ownerId = null) => {
+    const params = { page, limit, soloConCreditoActivo: true }
+    if (ownerId) params.ownerId = ownerId
+    const response = await api.get('/clients', { params })
+    return response.data.data
+  },
+
   getById: async (id) => {
     const response = await api.get(`/clients/${id}`)
     return response.data.data

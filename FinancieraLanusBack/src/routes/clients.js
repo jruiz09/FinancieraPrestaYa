@@ -21,6 +21,7 @@ router.get(
   query('limit').optional().isInt({ min: 1, max: 100 }).toInt(),
   query('ownerId').optional().isUUID(),
   query('cobradorId').optional().isUUID(),
+  query('soloConCreditoActivo').optional().isBoolean(),
   validateRequest,
   listClients
 );

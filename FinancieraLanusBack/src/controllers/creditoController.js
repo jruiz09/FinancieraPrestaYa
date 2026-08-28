@@ -13,6 +13,8 @@ import { Op } from 'sequelize';
 
 import { calcularCuotasAfectadas } from '../services/pagoCuotaService.js';
 
+const canViewAllOwners = (user) => user.permissions?.includes('OWNERS_VIEW');
+
 
 export const actualizarCuotasVencidas =
   async () => {
@@ -109,11 +111,19 @@ export const listCreditos = async (
     const offset =
       (page - 1) * limit;
 
+    const where = {
+      activo: true
+    };
+
+    if (!canViewAllOwners(req.user)) {
+      where.ownerId = req.user.ownerId;
+    } else if (req.query.ownerId) {
+      where.ownerId = req.query.ownerId;
+    }
+
     const { count, rows } =
       await Credito.findAndCountAll({
-        where: {
-          activo: true
-        },
+        where,
 
         include: [
           'cliente',
@@ -236,6 +246,16 @@ await actualizarCuotasVencidas();
       );
 
     if (!credito || !credito.activo) {
+      return res.status(404).json({
+        success: false,
+        message: 'Crédito no encontrado.'
+      });
+    }
+
+    if (
+      !canViewAllOwners(req.user) &&
+      credito.ownerId !== req.user.ownerId
+    ) {
       return res.status(404).json({
         success: false,
         message: 'Crédito no encontrado.'
@@ -1121,6 +1141,51 @@ export const listCuotas = async (
         req.query.estado;
     }
 
+    const whereCredito = {};
+
+    if (!canViewAllOwners(req.user)) {
+      whereCredito.ownerId = req.user.ownerId;
+    } else if (req.query.ownerId) {
+      whereCredito.ownerId = req.query.ownerId;
+    }
+
+    const estadosPosibles = [
+      'PENDIENTE',
+      'PARCIAL',
+      'VENCIDA',
+      'PAGADA'
+    ];
+
+    const conteosPorEstado =
+      await Promise.all(
+        estadosPosibles.map(
+          (estadoItem) =>
+            CreditoDetalle.count({
+              where: {
+                estado: estadoItem
+              },
+              include: [
+                {
+                  model: Credito,
+                  as: 'credito',
+                  where: whereCredito,
+                  required: true
+                }
+              ]
+            })
+        )
+      );
+
+    const counts =
+      estadosPosibles.reduce(
+        (acc, estadoItem, index) => {
+          acc[estadoItem] =
+            conteosPorEstado[index];
+          return acc;
+        },
+        {}
+      );
+
     const { count, rows } =
       await CreditoDetalle.findAndCountAll({
 
@@ -1131,10 +1196,14 @@ export const listCuotas = async (
             model: Credito,
             as: 'credito',
 
+            where: whereCredito,
+            required: true,
+
             attributes: [
               'id',
               'numeroCredito',
-              'cantidadCuotas'
+              'cantidadCuotas',
+              'observaciones'
             ],
 
             include: [
@@ -1148,6 +1217,15 @@ export const listCuotas = async (
                   'apellido',
                   'dni',
                   'celular'
+                ]
+              },
+              {
+                association: 'cobrador',
+
+                attributes: [
+                  'id',
+                  'nombre',
+                  'apellido'
                 ]
               }
             ]
@@ -1204,6 +1282,7 @@ export const listCuotas = async (
         total: count,
         page,
         limit,
+        counts,
         cuotas
       }
     });

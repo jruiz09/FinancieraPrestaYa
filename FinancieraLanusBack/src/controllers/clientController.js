@@ -1,3 +1,4 @@
+import { Op } from 'sequelize';
 import { Client, Owner, Collector } from '../models/index.js';
 import {
   resolverUbicacion
@@ -5,6 +6,57 @@ import {
 
 const canViewAllOwners = (user) => user.permissions?.includes('OWNERS_VIEW');
 const canSetOwner = (user) => user.permissions?.includes('OWNERS_EDIT');
+
+/*
+=====================================================
+Resume el estado de credito de un cliente para el mapa:
+saldo pendiente y proxima cuota agregados entre todos
+sus creditos activos, y si tiene alguna cuota vencida.
+=====================================================
+*/
+const calcularResumenCredito = (creditos = []) => {
+
+  let saldoPendiente = 0;
+  let proximaCuota = null;
+  let tieneMora = false;
+
+  creditos.forEach((credito) => {
+
+    const montoCobrado = (credito.cuotas || []).reduce(
+      (total, cuota) => total + Number(cuota.montoPago || 0),
+      0
+    );
+
+    saldoPendiente += Number(credito.montoFinal || 0) - montoCobrado;
+
+    (credito.cuotas || []).forEach((cuota) => {
+
+      if (cuota.estado === 'VENCIDA') {
+        tieneMora = true;
+      }
+
+      if (cuota.estado === 'PAGADA') {
+        return;
+      }
+
+      if (
+        !proximaCuota ||
+        new Date(cuota.fechaVencimiento) < new Date(proximaCuota.fechaVencimiento)
+      ) {
+        proximaCuota = {
+          numeroCuota: cuota.numeroCuota,
+          monto: cuota.monto,
+          fechaVencimiento: cuota.fechaVencimiento,
+          estado: cuota.estado
+        };
+      }
+
+    });
+
+  });
+
+  return { saldoPendiente, proximaCuota, tieneMora };
+};
 
 /*
 =====================================================
@@ -71,9 +123,35 @@ export const listClients = async (req, res, next) => {
       where.cobradorId = req.query.cobradorId;
     }
 
+    const soloConCreditoActivo =
+      req.query.soloConCreditoActivo === 'true';
+
+    const include = soloConCreditoActivo
+      ? [
+          'owner',
+          'collector',
+          {
+            association: 'creditos',
+            where: {
+              activo: true,
+              estado: { [Op.in]: ['NUEVO', 'EN_CURSO'] }
+            },
+            required: true,
+            attributes: ['id', 'estado', 'montoFinal'],
+            include: [
+              {
+                association: 'cuotas',
+                attributes: ['numeroCuota', 'monto', 'montoPago', 'estado', 'fechaVencimiento']
+              }
+            ]
+          }
+        ]
+      : ['owner', 'collector'];
+
     const { count, rows } = await Client.findAndCountAll({
       where,
-      include: ['owner', 'collector'],
+      include,
+      distinct: true,
       limit,
       offset,
       order: [
@@ -82,13 +160,20 @@ export const listClients = async (req, res, next) => {
       ]
     });
 
+    const clients = soloConCreditoActivo
+      ? rows.map((client) => ({
+          ...client.toJSON(),
+          resumenCredito: calcularResumenCredito(client.creditos)
+        }))
+      : rows;
+
     res.json({
       success: true,
       data: {
         total: count,
         page,
         limit,
-        clients: rows
+        clients
       }
     });
   } catch (error) {

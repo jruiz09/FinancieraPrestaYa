@@ -18,9 +18,14 @@ import {
 import CuotasTable
   from '../components/CuotasTable'
 
+import Pagination
+  from '../components/Pagination'
+
 import {
   cuotaService
 } from '../services/cuotaService'
+
+const CUOTAS_POR_PAGINA = 20
 
 
 export default function CuotasPage() {
@@ -50,6 +55,21 @@ export default function CuotasPage() {
     setError
   ] = useState('')
 
+  const [
+    page,
+    setPage
+  ] = useState(1)
+
+  const [
+    total,
+    setTotal
+  ] = useState(0)
+
+  const [
+    counts,
+    setCounts
+  ] = useState({})
+
 
   /* ===================================================== */
   /* CARGA */
@@ -65,11 +85,21 @@ export default function CuotasPage() {
 
         const data =
           await cuotaService.list(
-            estado
+            estado,
+            page,
+            CUOTAS_POR_PAGINA
           )
 
         setCuotas(
           data.cuotas || []
+        )
+
+        setTotal(
+          data.total || 0
+        )
+
+        setCounts(
+          data.counts || {}
         )
 
       } catch (error) {
@@ -96,7 +126,16 @@ export default function CuotasPage() {
 
     cargarDatos()
 
-  }, [estado])
+  }, [estado, page])
+
+
+  const cambiarEstado =
+    (nuevoEstado) => {
+
+      setEstado(nuevoEstado)
+      setPage(1)
+
+    }
 
 
   /* ===================================================== */
@@ -142,12 +181,26 @@ export default function CuotasPage() {
               ?.dni ||
             ''
 
+          const cobradorNombre =
+            cuota.credito
+              ?.cobrador
+              ?.nombre ||
+            ''
+
+          const cobradorApellido =
+            cuota.credito
+              ?.cobrador
+              ?.apellido ||
+            ''
+
           const texto =
             `
               ${numeroCredito}
               ${nombre}
               ${apellido}
               ${dni}
+              ${cobradorNombre}
+              ${cobradorApellido}
             `.toLowerCase()
 
           return texto.includes(
@@ -166,37 +219,20 @@ export default function CuotasPage() {
   /* ===================================================== */
   /* CONTADORES */
   /* ===================================================== */
+  /* Vienen del backend (counts) para reflejar el total real
+     de cada estado y no solo la pagina actual cargada. */
 
   const pendientes =
-    cuotas.filter(
-      cuota =>
-        cuota.estado ===
-        'PENDIENTE'
-    ).length
-
+    counts.PENDIENTE || 0
 
   const parciales =
-    cuotas.filter(
-      cuota =>
-        cuota.estado ===
-        'PARCIAL'
-    ).length
-
+    counts.PARCIAL || 0
 
   const vencidas =
-    cuotas.filter(
-      cuota =>
-        cuota.estado ===
-        'VENCIDA'
-    ).length
-
+    counts.VENCIDA || 0
 
   const pagadas =
-    cuotas.filter(
-      cuota =>
-        cuota.estado ===
-        'PAGADA'
-    ).length
+    counts.PAGADA || 0
 
 
   const filtros = [
@@ -494,7 +530,7 @@ export default function CuotasPage() {
 
             <input
               type="text"
-              placeholder="Buscar por cliente, DNI o número de crédito..."
+              placeholder="Buscar por cliente, DNI, cobrador o N° de crédito (en esta página)..."
               value={search}
               onChange={
                 event =>
@@ -581,7 +617,7 @@ export default function CuotasPage() {
                   }
                   type="button"
                   onClick={() =>
-                    setEstado(
+                    cambiarEstado(
                       filtro.value
                     )
                   }
@@ -681,7 +717,7 @@ export default function CuotasPage() {
             <button
               type="button"
               onClick={() =>
-                setEstado('TODAS')
+                cambiarEstado('TODAS')
               }
               className="
                 text-xs
@@ -715,6 +751,18 @@ export default function CuotasPage() {
           cargarDatos
         }
       />
+
+
+      {total > CUOTAS_POR_PAGINA && (
+
+        <Pagination
+          page={page}
+          total={total}
+          limit={CUOTAS_POR_PAGINA}
+          onPageChange={setPage}
+        />
+
+      )}
 
     </div>
 

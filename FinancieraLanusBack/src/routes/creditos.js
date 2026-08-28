@@ -35,6 +35,9 @@ router.get(
   query('estado')
     .optional(),
 
+  query('page').optional().isInt({ min: 1 }),
+  query('limit').optional().isInt({ min: 1 }),
+
   validateRequest,
 
   listCuotas

@@ -1149,6 +1149,43 @@ export const listCuotas = async (
       whereCredito.ownerId = req.query.ownerId;
     }
 
+    const estadosPosibles = [
+      'PENDIENTE',
+      'PARCIAL',
+      'VENCIDA',
+      'PAGADA'
+    ];
+
+    const conteosPorEstado =
+      await Promise.all(
+        estadosPosibles.map(
+          (estadoItem) =>
+            CreditoDetalle.count({
+              where: {
+                estado: estadoItem
+              },
+              include: [
+                {
+                  model: Credito,
+                  as: 'credito',
+                  where: whereCredito,
+                  required: true
+                }
+              ]
+            })
+        )
+      );
+
+    const counts =
+      estadosPosibles.reduce(
+        (acc, estadoItem, index) => {
+          acc[estadoItem] =
+            conteosPorEstado[index];
+          return acc;
+        },
+        {}
+      );
+
     const { count, rows } =
       await CreditoDetalle.findAndCountAll({
 
@@ -1245,6 +1282,7 @@ export const listCuotas = async (
         total: count,
         page,
         limit,
+        counts,
         cuotas
       }
     });

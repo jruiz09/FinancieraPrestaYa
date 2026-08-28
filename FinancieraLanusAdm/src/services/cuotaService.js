@@ -5,7 +5,9 @@ import api from '../api/axios'
 export const cuotaService = {
 
   list: async (
-    estado = 'TODAS'
+    estado = 'TODAS',
+    page = 1,
+    limit = 20
   ) => {
 
     const response =
@@ -13,7 +15,9 @@ export const cuotaService = {
         '/creditos/cuotas/list',
         {
           params: {
-            estado
+            estado,
+            page,
+            limit
           }
         }
       )

@@ -187,7 +187,7 @@ export const listCreditos = async (
           [
             sequelize.fn(
               'COUNT',
-              sequelize.col('Credito.id')
+              sequelize.col('Creditos.id')
             ),
             'cantidad'
           ]

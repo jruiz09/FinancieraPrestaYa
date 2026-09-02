@@ -8,11 +8,28 @@ import { useNavigate } from "react-router-dom";
 
 import CreditosTable from "../components/CreditosTable";
 import Permission from "../components/Permission";
+import ZonaMultiSelect from "../components/ZonaMultiSelect";
 import { PERMISSIONS } from "../constants/permissions";
 
 import {
   creditoService,
 } from "../services/creditoService";
+
+import { zoneService } from "../services/zoneService";
+
+const ZONA_FILTRO_STORAGE_KEY = "creditos_zona_filtro";
+
+const cargarZonaIdsGuardadas = () => {
+  try {
+    const stored = localStorage.getItem(
+      ZONA_FILTRO_STORAGE_KEY,
+    );
+
+    return stored ? JSON.parse(stored) : [];
+  } catch (error) {
+    return [];
+  }
+};
 
 export default function CreditosPage() {
   const navigate = useNavigate();
@@ -21,6 +38,34 @@ export default function CreditosPage() {
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
 
+  const [zonas, setZonas] = useState([]);
+
+  const [selectedZoneIds, setSelectedZoneIds] =
+    useState(cargarZonaIdsGuardadas);
+
+  const [resumen, setResumen] = useState({
+    total: 0,
+    enCurso: 0,
+    finalizados: 0,
+    nuevos: 0,
+  });
+
+  useEffect(() => {
+    zoneService
+      .list()
+      .then((data) => setZonas(data || []))
+      .catch((error) => console.error(error));
+  }, []);
+
+  const handleZoneChange = (zoneIds) => {
+    setSelectedZoneIds(zoneIds);
+
+    localStorage.setItem(
+      ZONA_FILTRO_STORAGE_KEY,
+      JSON.stringify(zoneIds),
+    );
+  };
+
   const cargarDatos = async () => {
     try {
       setLoading(true);
@@ -28,10 +73,20 @@ export default function CreditosPage() {
       const data = await creditoService.list(
         1,
         100,
+        selectedZoneIds,
       );
 
       setCreditos(
         data.creditos || [],
+      );
+
+      setResumen(
+        data.resumen || {
+          total: 0,
+          enCurso: 0,
+          finalizados: 0,
+          nuevos: 0,
+        },
       );
     } catch (error) {
       console.error(error);
@@ -42,28 +97,8 @@ export default function CreditosPage() {
 
   useEffect(() => {
     cargarDatos();
-  }, []);
-
-  const resumen = useMemo(() => {
-    return {
-      total: creditos.length,
-
-      enCurso: creditos.filter(
-        (credito) =>
-          credito.estado === "EN_CURSO",
-      ).length,
-
-      finalizados: creditos.filter(
-        (credito) =>
-          credito.estado === "FINALIZADO",
-      ).length,
-
-      nuevos: creditos.filter(
-        (credito) =>
-          credito.estado === "NUEVO",
-      ).length,
-    };
-  }, [creditos]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedZoneIds]);
 
   const creditosFiltrados = useMemo(() => {
     const termino = search
@@ -412,6 +447,27 @@ export default function CreditosPage() {
                 </button>
               )}
             </div>
+          </div>
+
+          <div className="md:w-64">
+            <label
+              className="
+                mb-2
+                block
+                text-sm
+                font-semibold
+                text-stone-700
+                dark:text-stone-300
+              "
+            >
+              Zona
+            </label>
+
+            <ZonaMultiSelect
+              zonas={zonas}
+              selectedZoneIds={selectedZoneIds}
+              onChange={handleZoneChange}
+            />
           </div>
 
           <div

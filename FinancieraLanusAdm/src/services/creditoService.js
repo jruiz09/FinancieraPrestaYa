@@ -1,9 +1,13 @@
 import api from '../api/axios'
 
 export const creditoService = {
-  list: async (page = 1, limit = 10) => {
+  list: async (page = 1, limit = 10, zoneIds = []) => {
     const response = await api.get('/creditos', {
-      params: { page, limit }
+      params: {
+        page,
+        limit,
+        zoneIds: zoneIds.length ? zoneIds.join(',') : undefined
+      }
     })
 
     return response.data.data

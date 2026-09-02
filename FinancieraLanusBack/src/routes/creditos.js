@@ -23,6 +23,7 @@ router.get(
   authorize('CREDITS_VIEW'),
   query('page').optional().isInt({ min: 1 }),
   query('limit').optional().isInt({ min: 1 }),
+  query('zoneIds').optional().isString(),
   validateRequest,
   listCreditos
 );

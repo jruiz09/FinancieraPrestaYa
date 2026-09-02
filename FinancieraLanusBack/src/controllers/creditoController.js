@@ -121,13 +121,31 @@ export const listCreditos = async (
       where.ownerId = req.query.ownerId;
     }
 
+    const zoneIds = req.query.zoneIds
+      ? req.query.zoneIds
+          .split(',')
+          .map((id) => id.trim())
+          .filter(Boolean)
+      : [];
+
+    const cobradorInclude = zoneIds.length
+      ? {
+          association: 'cobrador',
+          where: {
+            zoneId: {
+              [Op.in]: zoneIds
+            }
+          }
+        }
+      : 'cobrador';
+
     const { count, rows } =
       await Credito.findAndCountAll({
         where,
 
         include: [
           'cliente',
-          'cobrador',
+          cobradorInclude,
           'tipoPlan',
           {
             association: 'cuotas',
@@ -145,6 +163,63 @@ export const listCreditos = async (
           ['createdAt', 'DESC']
         ]
       });
+
+    const resumenPorEstado =
+      await Credito.findAll({
+        where,
+
+        include: [
+          {
+            association: 'cobrador',
+            attributes: [],
+            where: zoneIds.length
+              ? {
+                  zoneId: {
+                    [Op.in]: zoneIds
+                  }
+                }
+              : undefined
+          }
+        ],
+
+        attributes: [
+          'estado',
+          [
+            sequelize.fn(
+              'COUNT',
+              sequelize.col('Credito.id')
+            ),
+            'cantidad'
+          ]
+        ],
+
+        group: ['estado'],
+        raw: true
+      });
+
+    const resumen = resumenPorEstado.reduce(
+      (acc, fila) => {
+        const cantidad = Number(fila.cantidad);
+
+        acc.total += cantidad;
+
+        if (fila.estado === 'EN_CURSO') {
+          acc.enCurso = cantidad;
+        } else if (fila.estado === 'FINALIZADO') {
+          acc.finalizados = cantidad;
+        } else if (fila.estado === 'NUEVO') {
+          acc.nuevos = cantidad;
+        }
+
+        return acc;
+      },
+      {
+        total: 0,
+        enCurso: 0,
+        finalizados: 0,
+        nuevos: 0
+      }
+    );
 
     const creditos =
       rows.map((credito) => {
@@ -217,7 +292,8 @@ export const listCreditos = async (
         total: count,
         page,
         limit,
-        creditos
+        creditos,
+        resumen
       }
     });
 

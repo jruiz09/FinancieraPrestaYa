@@ -5,6 +5,7 @@ import { useAuthStore } from "../store/useAuthStore";
 import AppLayout from "../layouts/AppLayout";
 
 import LoginPage from "../pages/LoginPage";
+import BienvenidaPage from "../pages/BienvenidaPage";
 import DashboardPage from "../pages/DashboardPage";
 import CollectorsPage from "../pages/CollectorsPage";
 import ClientsPage from "../pages/ClientsPage";
@@ -34,18 +35,12 @@ import AyudasPage from "../pages/AyudasPage";
 import ValesPage from "../pages/ValesPage";
 import RolesPage from "../pages/RolePage";
 import SinAccesoPage from "../pages/SinAccesoPage";
-import { obtenerPrimeraRutaAccesible } from "../utils/permissionRoutes";
 
 export default function AppRoutes() {
 
   const token =
     useAuthStore(
       (state) => state.token
-    );
-
-  const permissions =
-    useAuthStore(
-      (state) => state.user?.permissions || []
     );
 
   return (
@@ -58,7 +53,7 @@ export default function AppRoutes() {
         path="/login"
         element={
           token
-            ? <Navigate to={obtenerPrimeraRutaAccesible(permissions)} replace />
+            ? <Navigate to="/bienvenida" replace />
             : <LoginPage />
         }
       />
@@ -87,10 +82,15 @@ export default function AppRoutes() {
           index
           element={
             <Navigate
-              to={obtenerPrimeraRutaAccesible(permissions)}
+              to="/bienvenida"
               replace
             />
           }
+        />
+
+        <Route
+          path="bienvenida"
+          element={<BienvenidaPage />}
         />
 
         <Route
@@ -267,11 +267,7 @@ export default function AppRoutes() {
         path="*"
         element={
           <Navigate
-            to={
-              token
-                ? obtenerPrimeraRutaAccesible(permissions)
-                : "/login"
-            }
+            to={token ? "/bienvenida" : "/login"}
             replace
           />
         }

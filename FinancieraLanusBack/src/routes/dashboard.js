@@ -1,7 +1,9 @@
 import { Router } from 'express';
+import { query } from 'express-validator';
 
 import {
-  getResumenDashboard
+  getResumenDashboard,
+  getResumenPorZona
 }
 from '../controllers/dashboardController.js';
 
@@ -10,6 +12,8 @@ import {
   authorize
 }
 from '../middleware/authMiddleware.js';
+
+import { validateRequest } from '../middleware/validationMiddleware.js';
 
 const router =
   Router();
@@ -22,6 +26,14 @@ router.get(
   '/resumen',
   authorize('DASHBOARD_VIEW'),
   getResumenDashboard
+);
+
+router.get(
+  '/zonas-resumen',
+  authorize('DASHBOARD_VIEW'),
+  query('zoneIds').optional().isString(),
+  validateRequest,
+  getResumenPorZona
 );
 
 export default router;

@@ -21,6 +21,8 @@ import {
   dashboardService
 } from '../services/dashboardService'
 
+import DashboardZonasSection from '../components/DashboardZonasSection'
+
 export default function DashboardPage() {
 
   const [loading, setLoading] =
@@ -1017,6 +1019,8 @@ export default function DashboardPage() {
         </div>
 
       </section>
+
+      <DashboardZonasSection />
 
     </div>
 

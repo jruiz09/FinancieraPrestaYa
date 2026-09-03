@@ -10,5 +10,22 @@ export const dashboardService = {
       )
 
     return response.data.data
+  },
+
+  zonasResumen: async (zoneIds = []) => {
+
+    const response =
+      await api.get(
+        '/dashboard/zonas-resumen',
+        {
+          params: {
+            zoneIds: zoneIds.length
+              ? zoneIds.join(',')
+              : undefined
+          }
+        }
+      )
+
+    return response.data.data
   }
 }

@@ -21,7 +21,10 @@ import {
   dashboardService
 } from '../services/dashboardService'
 
+import { zoneService } from '../services/zoneService'
+
 import DashboardZonasSection from '../components/DashboardZonasSection'
+import ZonaMultiSelect from '../components/ZonaMultiSelect'
 
 export default function DashboardPage() {
 
@@ -34,9 +37,23 @@ export default function DashboardPage() {
   const [error, setError] =
     useState(false)
 
+  const [zonas, setZonas] =
+    useState([])
+
+  const [selectedZoneIds, setSelectedZoneIds] =
+    useState([])
+
+  useEffect(() => {
+    zoneService
+      .list()
+      .then((data) => setZonas(data || []))
+      .catch((error) => console.error(error))
+  }, [])
+
   useEffect(() => {
     cargarDashboard()
-  }, [])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedZoneIds])
 
   const cargarDashboard =
     async () => {
@@ -47,7 +64,7 @@ export default function DashboardPage() {
       try {
 
         const data =
-          await dashboardService.resumen()
+          await dashboardService.resumen(selectedZoneIds)
 
         setResumen(data)
 
@@ -90,7 +107,7 @@ export default function DashboardPage() {
 
   }
 
-  if (loading) {
+  if (loading && !resumen) {
 
     return (
 
@@ -342,6 +359,56 @@ export default function DashboardPage() {
 
           Información actualizada
 
+        </div>
+
+      </div>
+
+      {/* ========================================= */}
+      {/* FILTRO DE ZONA */}
+      {/* ========================================= */}
+
+      <div className="
+        rounded-2xl
+        border
+        border-stone-200
+        bg-white
+        p-4
+        shadow-sm
+        sm:p-5
+        flex
+        flex-col
+        gap-3
+        sm:flex-row
+        sm:items-center
+        sm:justify-between
+      ">
+
+        <div>
+
+          <p className="
+            text-sm
+            font-semibold
+            text-stone-700
+          ">
+            Zona
+          </p>
+
+          <p className="
+            text-xs
+            text-stone-500
+            mt-0.5
+          ">
+            Filtra todo el dashboard por zona.
+          </p>
+
+        </div>
+
+        <div className="sm:w-64">
+          <ZonaMultiSelect
+            zonas={zonas}
+            selectedZoneIds={selectedZoneIds}
+            onChange={setSelectedZoneIds}
+          />
         </div>
 
       </div>
@@ -1020,7 +1087,9 @@ export default function DashboardPage() {
 
       </section>
 
-      <DashboardZonasSection />
+      <DashboardZonasSection
+        selectedZoneIds={selectedZoneIds}
+      />
 
     </div>
 

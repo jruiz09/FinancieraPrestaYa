@@ -15,8 +15,6 @@ import {
   YAxis,
 } from "recharts";
 
-import ZonaMultiSelect from "./ZonaMultiSelect";
-import { zoneService } from "../services/zoneService";
 import { dashboardService } from "../services/dashboardService";
 
 const money = (value) =>
@@ -67,19 +65,9 @@ function ChartCard({ title, subtitle, children }) {
   );
 }
 
-export default function DashboardZonasSection() {
-  const [zonas, setZonas] = useState([]);
-  const [selectedZoneIds, setSelectedZoneIds] = useState([]);
-
+export default function DashboardZonasSection({ selectedZoneIds }) {
   const [datos, setDatos] = useState([]);
   const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    zoneService
-      .list()
-      .then((data) => setZonas(data || []))
-      .catch((error) => console.error(error));
-  }, []);
 
   useEffect(() => {
     const cargar = async () => {
@@ -133,56 +121,28 @@ export default function DashboardZonasSection() {
 
   return (
     <section className="space-y-4">
-      <div
-        className="
-          flex
-          flex-col
-          gap-4
-          rounded-2xl
-          border
-          border-stone-200
-          bg-white
-          p-4
-          shadow-sm
-          sm:flex-row
-          sm:items-center
-          sm:justify-between
-          sm:p-5
-          dark:border-stone-700
-          dark:bg-stone-900
-        "
-      >
-        <div>
-          <h2
-            className="
-              text-lg
-              font-bold
-              text-stone-900
-              dark:text-white
-            "
-          >
-            Gráficos por zona
-          </h2>
+      <div>
+        <h2
+          className="
+            text-lg
+            font-bold
+            text-stone-900
+            dark:text-white
+          "
+        >
+          Gráficos por zona
+        </h2>
 
-          <p
-            className="
-              mt-0.5
-              text-sm
-              text-stone-500
-              dark:text-stone-400
-            "
-          >
-            Montos, créditos y % de cobranza segregados por zona.
-          </p>
-        </div>
-
-        <div className="sm:w-64">
-          <ZonaMultiSelect
-            zonas={zonas}
-            selectedZoneIds={selectedZoneIds}
-            onChange={setSelectedZoneIds}
-          />
-        </div>
+        <p
+          className="
+            mt-0.5
+            text-sm
+            text-stone-500
+            dark:text-stone-400
+          "
+        >
+          Montos, créditos y % de cobranza segregados por zona.
+        </p>
       </div>
 
       {!loading && datos.length === 0 ? (

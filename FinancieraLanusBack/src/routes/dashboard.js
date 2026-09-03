@@ -25,6 +25,8 @@ router.use(
 router.get(
   '/resumen',
   authorize('DASHBOARD_VIEW'),
+  query('zoneIds').optional().isString(),
+  validateRequest,
   getResumenDashboard
 );
 

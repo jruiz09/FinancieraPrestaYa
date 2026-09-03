@@ -32,29 +32,70 @@ export const getResumenDashboard =
           .toISOString()
           .split('T')[0];
 
+      const ownerId = req.user.ownerId;
+
+      const zoneIds =
+        req.query.zoneIds
+          ? req.query.zoneIds
+              .split(',')
+              .map(id => id.trim())
+              .filter(Boolean)
+          : [];
+
+      const { zonas } =
+        await obtenerZonasYCobradores(ownerId);
+
+      const zonasFiltradas =
+        zoneIds.length
+          ? zonas.filter(
+              zona => zoneIds.includes(zona.id)
+            )
+          : zonas;
+
+      const collectorIdsFiltro =
+        zonasFiltradas.flatMap(
+          zona =>
+            zona.collectors.map(
+              collector => collector.id
+            )
+        );
+
+      const whereCobrador =
+        zoneIds.length
+          ? { cobradorId: collectorIdsFiltro }
+          : {};
+
       const creditosActivos =
         await Credito.count({
           where: {
+            ownerId,
             estado: {
               [Op.in]: [
                 'NUEVO',
                 'EN_CURSO'
               ]
-            }
+            },
+            ...whereCobrador
           }
         });
 
       const clientesActivos =
         await Client.count({
           where: {
-            activo: true
+            ownerId,
+            activo: true,
+            ...whereCobrador
           }
         });
 
       const cobradoresActivos =
         await Collector.count({
           where: {
-            activo: true
+            ownerId,
+            activo: true,
+            ...(zoneIds.length
+              ? { zoneId: zoneIds }
+              : {})
           }
         });
 
@@ -62,7 +103,11 @@ export const getResumenDashboard =
         await Credito.findAll({
           attributes: [
             'montoFinal'
-          ]
+          ],
+          where: {
+            ownerId,
+            ...whereCobrador
+          }
         });
 
       const capitalPrestado =
@@ -76,7 +121,19 @@ export const getResumenDashboard =
         );
 
       const cuotas =
-        await CreditoDetalle.findAll();
+        await CreditoDetalle.findAll({
+          include: [
+            {
+              association: 'credito',
+              attributes: [],
+              required: true,
+              where: {
+                ownerId,
+                ...whereCobrador
+              }
+            }
+          ]
+        });
 
       let saldoCobrar = 0;
       let moraTotal = 0;
@@ -116,7 +173,18 @@ export const getResumenDashboard =
         await CreditoDetalle.findAll({
           where: {
             fechaPago: hoy
-          }
+          },
+          include: [
+            {
+              association: 'credito',
+              attributes: [],
+              required: true,
+              where: {
+                ownerId,
+                ...whereCobrador
+              }
+            }
+          ]
         });
 
       const cobradoHoy =
@@ -131,6 +199,11 @@ export const getResumenDashboard =
 
       const ultimosCreditos =
         await Credito.findAll({
+
+          where: {
+            ownerId,
+            ...whereCobrador
+          },
 
           include: [
             {
@@ -168,10 +241,17 @@ export const getResumenDashboard =
             {
               association: 'credito',
 
+              required: true,
+
               attributes: [
                 'id',
                 'numeroCredito'
               ],
+
+              where: {
+                ownerId,
+                ...whereCobrador
+              },
 
               include: [
                 {

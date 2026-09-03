@@ -5,6 +5,7 @@ import {
 } from 'react-router-dom'
 
 import {
+  Home,
   LayoutDashboard,
   Users,
   MapPinned,
@@ -373,6 +374,21 @@ export default function Sidebar({
           px-3
           pb-6
         ">
+
+          {/* INICIO */}
+
+          <div className="mt-3 space-y-1">
+
+            <SidebarLink
+              to="/bienvenida"
+              icon={Home}
+              collapsed={collapsed}
+              onClick={onMobileClose}
+            >
+              Inicio
+            </SidebarLink>
+
+          </div>
 
           {/* PRINCIPAL */}
 

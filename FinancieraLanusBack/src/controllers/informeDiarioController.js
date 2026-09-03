@@ -90,7 +90,7 @@ ZONAS + COBRADORES DEL OWNER
 =====================================================
 */
 
-const obtenerZonasYCobradores = async ownerId => {
+export const obtenerZonasYCobradores = async ownerId => {
 
   const zonas = await Zone.findAll({
     where: {
@@ -147,7 +147,7 @@ cubre el caso de un solo día.
 =====================================================
 */
 
-const calcularVencimientosPorZona = async (
+export const calcularVencimientosPorZona = async (
   todosLosCollectorIds,
   collectorZonaMap,
   fechaInicio,
@@ -214,7 +214,7 @@ solo día que para un rango de varios días.
 =====================================================
 */
 
-const calcularCobranzaPorZona = async cuotasDelRango => {
+export const calcularCobranzaPorZona = async cuotasDelRango => {
 
   const puntosPorZona = new Map();
   const clientesConCuotaPorZona = new Map();

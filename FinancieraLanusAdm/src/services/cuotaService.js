@@ -7,7 +7,8 @@ export const cuotaService = {
   list: async (
     estado = 'TODAS',
     page = 1,
-    limit = 20
+    limit = 20,
+    zoneIds = []
   ) => {
 
     const response =
@@ -17,7 +18,10 @@ export const cuotaService = {
           params: {
             estado,
             page,
-            limit
+            limit,
+            zoneIds: zoneIds.length
+              ? zoneIds.join(',')
+              : undefined
           }
         }
       )

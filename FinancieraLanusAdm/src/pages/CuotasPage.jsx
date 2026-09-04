@@ -21,11 +21,32 @@ import CuotasTable
 import Pagination
   from '../components/Pagination'
 
+import ZonaMultiSelect
+  from '../components/ZonaMultiSelect'
+
 import {
   cuotaService
 } from '../services/cuotaService'
 
+import {
+  zoneService
+} from '../services/zoneService'
+
 const CUOTAS_POR_PAGINA = 20
+
+const ZONA_FILTRO_STORAGE_KEY = 'cuotas_zona_filtro'
+
+const cargarZonaIdsGuardadas = () => {
+  try {
+    const stored = localStorage.getItem(
+      ZONA_FILTRO_STORAGE_KEY
+    )
+
+    return stored ? JSON.parse(stored) : []
+  } catch (error) {
+    return []
+  }
+}
 
 
 export default function CuotasPage() {
@@ -70,10 +91,29 @@ export default function CuotasPage() {
     setCounts
   ] = useState({})
 
+  const [
+    zonas,
+    setZonas
+  ] = useState([])
+
+  const [
+    selectedZoneIds,
+    setSelectedZoneIds
+  ] = useState(cargarZonaIdsGuardadas)
+
 
   /* ===================================================== */
   /* CARGA */
   /* ===================================================== */
+
+  useEffect(() => {
+
+    zoneService
+      .list()
+      .then(data => setZonas(data || []))
+      .catch(error => console.error(error))
+
+  }, [])
 
   const cargarDatos =
     async () => {
@@ -87,7 +127,8 @@ export default function CuotasPage() {
           await cuotaService.list(
             estado,
             page,
-            CUOTAS_POR_PAGINA
+            CUOTAS_POR_PAGINA,
+            selectedZoneIds
           )
 
         setCuotas(
@@ -126,7 +167,8 @@ export default function CuotasPage() {
 
     cargarDatos()
 
-  }, [estado, page])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [estado, page, selectedZoneIds])
 
 
   const cambiarEstado =
@@ -134,6 +176,20 @@ export default function CuotasPage() {
 
       setEstado(nuevoEstado)
       setPage(1)
+
+    }
+
+
+  const handleZoneChange =
+    (zoneIds) => {
+
+      setSelectedZoneIds(zoneIds)
+      setPage(1)
+
+      localStorage.setItem(
+        ZONA_FILTRO_STORAGE_KEY,
+        JSON.stringify(zoneIds)
+      )
 
     }
 
@@ -593,6 +649,30 @@ export default function CuotasPage() {
               </button>
 
             )}
+
+          </div>
+
+
+          {/* ZONA */}
+
+          <div className="xl:w-64">
+
+            <label className="
+              mb-1
+              block
+              text-xs
+              font-semibold
+              text-stone-500
+              xl:hidden
+            ">
+              Zona
+            </label>
+
+            <ZonaMultiSelect
+              zonas={zonas}
+              selectedZoneIds={selectedZoneIds}
+              onChange={handleZoneChange}
+            />
 
           </div>
 

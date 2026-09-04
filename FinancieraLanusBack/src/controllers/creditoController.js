@@ -1244,6 +1244,28 @@ export const listCuotas = async (
       whereCredito.ownerId = req.query.ownerId;
     }
 
+    const zoneIds = req.query.zoneIds
+      ? req.query.zoneIds
+          .split(',')
+          .map((id) => id.trim())
+          .filter(Boolean)
+      : [];
+
+    const cobradorIncludeConteos = zoneIds.length
+      ? [
+          {
+            association: 'cobrador',
+            attributes: [],
+            where: {
+              zoneId: {
+                [Op.in]: zoneIds
+              }
+            },
+            required: true
+          }
+        ]
+      : [];
+
     const estadosPosibles = [
       'PENDIENTE',
       'PARCIAL',
@@ -1264,7 +1286,8 @@ export const listCuotas = async (
                   model: Credito,
                   as: 'credito',
                   where: whereCredito,
-                  required: true
+                  required: true,
+                  include: cobradorIncludeConteos
                 }
               ]
             })
@@ -1321,7 +1344,17 @@ export const listCuotas = async (
                   'id',
                   'nombre',
                   'apellido'
-                ]
+                ],
+
+                where: zoneIds.length
+                  ? {
+                      zoneId: {
+                        [Op.in]: zoneIds
+                      }
+                    }
+                  : undefined,
+
+                required: zoneIds.length > 0
               }
             ]
           }

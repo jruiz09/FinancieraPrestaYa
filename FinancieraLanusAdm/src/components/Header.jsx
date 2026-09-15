@@ -15,6 +15,9 @@ import {
   useAuthStore
 } from '../store/useAuthStore'
 
+import NotificacionesBell
+  from './NotificacionesBell'
+
 export default function Header({
   sidebarCollapsed,
   onToggleSidebar,
@@ -182,6 +185,10 @@ export default function Header({
         gap-2
         sm:gap-3
       ">
+
+        {/* NOTIFICACIONES */}
+
+        <NotificacionesBell />
 
         {/* USUARIO */}
 

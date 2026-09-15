@@ -17,6 +17,7 @@ import rolesRoutes from './roles.js';
 import permissionsRoutes from './permissions.js';
 import reporteRoutes
 from './reporteRoutes.js';
+import notificacionRoutes from './notificaciones.js';
 
 const router = Router();
 
@@ -38,5 +39,6 @@ router.use('/permissions', permissionsRoutes);
 router.use('/mobile', mobileRoutes);
 router.use(  '/reportes',
   reporteRoutes);
+router.use('/notificaciones', notificacionRoutes);
 
 export default router;

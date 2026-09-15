@@ -5,7 +5,8 @@ import {
   TipoPlan,
   DiaNoLaborable,
   sequelize,
-  PagoCuota
+  PagoCuota,
+  Notificacion
 } from '../models/index.js';
 import crypto from 'crypto';
 
@@ -1110,6 +1111,44 @@ export const registrarPagoCuota = async (
     */
 
     await transaction.commit();
+
+    /*
+    =====================================================
+    NOTIFICACIÓN DE PAGO
+    (para Administrativos/Admin en el panel web; nunca debe
+    frenar la respuesta del pago si falla)
+    =====================================================
+    */
+
+    try {
+
+      const clienteDelPago =
+        await Client.findByPk(
+          credito.clienteId,
+          {
+            attributes: ['nombre', 'apellido']
+          }
+        );
+
+      const numeroCreditoFormateado =
+        `CR-${String(credito.numeroCredito || 0).padStart(6, '0')}`;
+
+      await Notificacion.create({
+        ownerId: credito.ownerId,
+        creditoId: credito.id,
+        tipo: 'PAGO_REGISTRADO',
+        mensaje:
+          `${clienteDelPago?.apellido || ''}, ${clienteDelPago?.nombre || ''} pagó $ ${montoIngresado.toLocaleString('es-AR')} — crédito ${numeroCreditoFormateado}`
+      });
+
+    } catch (errorNotificacion) {
+
+      console.error(
+        'Error creando notificación de pago:',
+        errorNotificacion
+      );
+
+    }
 
     /*
     =====================================================

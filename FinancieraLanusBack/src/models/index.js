@@ -20,6 +20,7 @@ import { RegistroDiarioZonaModel } from './registroDiarioZona.js';
 import {
   PagoCuotaModel
 } from './pagoCuota.js';
+import { NotificacionModel } from './notificacion.js';
 
 const Ayuda = AyudaModel(sequelize, DataTypes);
 const Zone = ZoneModel(sequelize, DataTypes);
@@ -39,6 +40,7 @@ const Permission = PermissionModel(sequelize, DataTypes);
 const RolePermission = RolePermissionModel(sequelize, DataTypes);
 const Vale = ValeModel(sequelize, DataTypes);
 const RegistroDiarioZona = RegistroDiarioZonaModel(sequelize, DataTypes);
+const Notificacion = NotificacionModel(sequelize, DataTypes);
 
 
   Owner.hasMany(Zone, {
@@ -459,6 +461,38 @@ RegistroDiarioZona.belongsTo(Zone, {
   as: 'zone',
 });
 
+//
+// OWNERS -> NOTIFICACIONES
+//
+Owner.hasMany(Notificacion, {
+  foreignKey: {
+    name: 'ownerId',
+    allowNull: false,
+  },
+  as: 'notificaciones',
+});
+
+Notificacion.belongsTo(Owner, {
+  foreignKey: 'ownerId',
+  as: 'owner',
+});
+
+//
+// CREDITOS -> NOTIFICACIONES
+//
+Credito.hasMany(Notificacion, {
+  foreignKey: {
+    name: 'creditoId',
+    allowNull: true,
+  },
+  as: 'notificaciones',
+});
+
+Notificacion.belongsTo(Credito, {
+  foreignKey: 'creditoId',
+  as: 'credito',
+});
+
 export {
   sequelize,
   Role,
@@ -478,4 +512,5 @@ export {
   RolePermission,
   Vale,
   RegistroDiarioZona,
+  Notificacion,
 };

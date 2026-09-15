@@ -14,7 +14,8 @@ import {
   Users,
   ArrowUpRight,
   ReceiptText,
-  ShieldCheck
+  ShieldCheck,
+  Percent
 } from 'lucide-react'
 
 import {
@@ -436,6 +437,10 @@ export default function DashboardPage() {
           ">
             Vista rápida del dinero prestado,
             pendiente, cobrado y en mora.
+            El capital prestado y el monto
+            con interés se muestran por
+            separado para no confundir uno
+            con otro.
           </p>
 
         </div>
@@ -444,7 +449,7 @@ export default function DashboardPage() {
           grid
           grid-cols-1
           sm:grid-cols-2
-          xl:grid-cols-4
+          xl:grid-cols-5
           gap-4
         ">
 
@@ -455,9 +460,21 @@ export default function DashboardPage() {
             value={`$ ${money(
               resumen.capitalPrestado
             )}`}
-            description="Dinero actualmente colocado"
+            description="Solo el dinero entregado a los clientes, sin contar el interés de los créditos vigentes."
             icon={Wallet}
             variant="blue"
+          />
+
+          {/* MONTO CON INTERES */}
+
+          <MetricCard
+            title="Total con interés"
+            value={`$ ${money(
+              resumen.montoConInteres
+            )}`}
+            description={`Lo que los clientes deben devolver en total (capital + $ ${money(resumen.interesTotal)} de interés).`}
+            icon={Percent}
+            variant="amber"
           />
 
           {/* SALDO A COBRAR */}
@@ -467,7 +484,7 @@ export default function DashboardPage() {
             value={`$ ${money(
               resumen.saldoCobrar
             )}`}
-            description="Capital todavía pendiente"
+            description="Lo que todavía falta cobrar de las cuotas no pagadas (capital + interés de esas cuotas)."
             icon={HandCoins}
             variant="amber"
           />
@@ -479,7 +496,7 @@ export default function DashboardPage() {
             value={`$ ${money(
               resumen.cobradoHoy
             )}`}
-            description="Ingresos registrados hoy"
+            description="Suma de los pagos de cuotas registrados con fecha de hoy."
             icon={CircleDollarSign}
             variant="green"
           />
@@ -491,7 +508,7 @@ export default function DashboardPage() {
             value={`$ ${money(
               resumen.moraTotal
             )}`}
-            description="Importe actualmente vencido"
+            description="Suma de las cuotas ya vencidas que todavía no se cobraron por completo."
             icon={TriangleAlert}
             variant="red"
             alert={
@@ -545,7 +562,7 @@ export default function DashboardPage() {
             value={
               resumen.creditosActivos
             }
-            description="Créditos vigentes"
+            description="Créditos en curso o recién otorgados (no incluye finalizados ni cancelados)."
             icon={CreditCard}
             variant="blue"
           />
@@ -555,7 +572,7 @@ export default function DashboardPage() {
             value={
               resumen.cuotasPendientes
             }
-            description="Todavía no vencieron"
+            description="Cuotas sin vencer todavía, o pagadas solo en parte."
             icon={Clock3}
             variant="amber"
           />
@@ -569,8 +586,8 @@ export default function DashboardPage() {
               Number(
                 resumen.cuotasVencidas
               ) > 0
-                ? 'Requieren atención'
-                : 'Sin vencimientos'
+                ? 'Pasaron su fecha de vencimiento sin cobrarse por completo.'
+                : 'Ninguna cuota está vencida hoy.'
             }
             icon={CalendarX2}
             variant="red"
@@ -586,7 +603,7 @@ export default function DashboardPage() {
             value={
               resumen.clientesActivos
             }
-            description="Con actividad vigente"
+            description="Clientes habilitados en el sistema (no dados de baja)."
             icon={Users}
             variant="green"
           />
@@ -802,16 +819,34 @@ export default function DashboardPage() {
                           text-stone-900
                         ">
                           $ {money(
-                            credito.montoFinal
+                            credito.montoCredito
                           )}
                         </p>
 
                         <p className="
                           text-xs
                           text-stone-400
-                          mt-1
+                          mt-0.5
                         ">
-                          Monto final
+                          Capital prestado
+                        </p>
+
+                        <p className="
+                          text-xs
+                          text-amber-700
+                          font-medium
+                          mt-1.5
+                        ">
+                          $ {money(
+                            credito.montoFinal
+                          )}
+                        </p>
+
+                        <p className="
+                          text-[11px]
+                          text-stone-400
+                        ">
+                          Total con interés
                         </p>
 
                       </div>

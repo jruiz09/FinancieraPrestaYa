@@ -102,6 +102,7 @@ export const getResumenDashboard =
       const creditos =
         await Credito.findAll({
           attributes: [
+            'montoCredito',
             'montoFinal'
           ],
           where: {
@@ -115,10 +116,23 @@ export const getResumenDashboard =
           (total, credito) =>
             total +
             Number(
+              credito.montoCredito || 0
+            ),
+          0
+        );
+
+      const montoConInteres =
+        creditos.reduce(
+          (total, credito) =>
+            total +
+            Number(
               credito.montoFinal || 0
             ),
           0
         );
+
+      const interesTotal =
+        montoConInteres - capitalPrestado;
 
       const cuotas =
         await CreditoDetalle.findAll({
@@ -218,6 +232,7 @@ export const getResumenDashboard =
           attributes: [
             'id',
             'numeroCredito',
+            'montoCredito',
             'montoFinal',
             'createdAt',
             'estado'
@@ -279,6 +294,10 @@ export const getResumenDashboard =
         data: {
 
           capitalPrestado,
+
+          montoConInteres,
+
+          interesTotal,
 
           saldoCobrar,
 

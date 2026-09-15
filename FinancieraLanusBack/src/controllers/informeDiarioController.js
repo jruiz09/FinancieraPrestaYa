@@ -1103,6 +1103,33 @@ export const getInformeSemanal = async (req, res, next) => {
       fechaDomingo
     );
 
+    /*
+    ===============================================
+    RECAUDACIÓN DÍA SIG.: igual que en el informe
+    diario, pero calculada para cada día Lunes-Viernes
+    (el "día siguiente" de cada uno, salteando fines de
+    semana y no laborables), respetando el override
+    puntual de cada día si existe.
+    ===============================================
+    */
+
+    const recaudacionDiaSigPorDia = new Map();
+
+    for (const fechaDia of diasSemana) {
+
+      const fechaSiguienteDia = await diaHabilSiguiente(fechaDia);
+
+      const { porZona: recaudacionDiaSigCalculadaPorZona } =
+        await calcularVencimientosPorZona(
+          todosLosCollectorIds,
+          collectorZonaMap,
+          fechaSiguienteDia,
+          fechaSiguienteDia
+        );
+
+      recaudacionDiaSigPorDia.set(fechaDia, recaudacionDiaSigCalculadaPorZona);
+    }
+
     const data = zonas.map(zona => {
 
       const registrosDeLaZona =
@@ -1118,6 +1145,7 @@ export const getInformeSemanal = async (req, res, next) => {
       let prSemanaTotal = 0;
       let mpSemanaTotal = 0;
       let dejaSemanaTotal = 0;
+      let recaudacionDiaSigSemanaTotal = 0;
 
       const dias = diasSemana.map(fechaDia => {
 
@@ -1150,11 +1178,21 @@ export const getInformeSemanal = async (req, res, next) => {
           ? numero(registroDia.dejaOverride)
           : dejaCalculado;
 
+        const recaudacionDiaSigCalculado = numero(
+          recaudacionDiaSigPorDia.get(fechaDia)?.get(zona.id)
+        );
+        const recaudacionDiaSigTieneOverride =
+          registroDia?.recaudacionDiaSigOverride != null;
+        const recaudacionDiaSig = recaudacionDiaSigTieneOverride
+          ? numero(registroDia.recaudacionDiaSigOverride)
+          : recaudacionDiaSigCalculado;
+
         entregasSemanaTotal += entregas;
         ecuSemanaTotal += ecu;
         prSemanaTotal += pr;
         mpSemanaTotal += mp;
         dejaSemanaTotal += deja;
+        recaudacionDiaSigSemanaTotal += recaudacionDiaSig;
 
         return {
           fecha: fechaDia,
@@ -1166,7 +1204,9 @@ export const getInformeSemanal = async (req, res, next) => {
           mp,
           mpEsOverride: mpTieneOverride,
           deja,
-          dejaEsOverride: dejaTieneOverride
+          dejaEsOverride: dejaTieneOverride,
+          recaudacionDiaSig,
+          recaudacionDiaSigEsOverride: recaudacionDiaSigTieneOverride
         };
       });
 
@@ -1196,6 +1236,7 @@ export const getInformeSemanal = async (req, res, next) => {
         prSemanaTotal,
         mpSemanaTotal,
         dejaSemanaTotal,
+        recaudacionDiaSigSemanaTotal,
         dias
       };
     });

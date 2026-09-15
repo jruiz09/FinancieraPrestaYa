@@ -7,7 +7,8 @@ import {
   ChevronDown,
   ChevronUp,
   CheckCircle2,
-  XCircle
+  XCircle,
+  Download
 } from 'lucide-react'
 
 import ErrorAlert
@@ -106,6 +107,9 @@ export default function InformeSemanalPage() {
   const [resultadosGuardado, setResultadosGuardado] =
     useState({})
 
+  const [exportando, setExportando] =
+    useState(false)
+
   const cargarSemana =
     async (nuevoLunes) => {
 
@@ -132,7 +136,8 @@ export default function InformeSemanalPage() {
               ecu: dia.ecu,
               pr: dia.pr,
               mp: dia.mp,
-              deja: dia.deja
+              deja: dia.deja,
+              recaudacionDiaSig: dia.recaudacionDiaSig ?? ''
             }
           }
         }
@@ -255,7 +260,11 @@ export default function InformeSemanalPage() {
             mpOverride: valores.mp,
             dejaOverride: valores.deja,
             entregasOverride: valores.entregas,
-            ecuOverride: valores.ecu
+            ecuOverride: valores.ecu,
+            recaudacionDiaSigOverride:
+              valores.recaudacionDiaSig === ''
+                ? null
+                : valores.recaudacionDiaSig
           })
 
         })
@@ -287,6 +296,128 @@ export default function InformeSemanalPage() {
     }
 
   }
+
+  const exportarExcel =
+    async () => {
+
+      try {
+
+        setExportando(true)
+
+        const { default: ExcelJS } = await import('exceljs')
+
+        const workbook = new ExcelJS.Workbook()
+
+        const resumenSheet = workbook.addWorksheet('Resumen semanal')
+
+        resumenSheet.columns = [
+          { header: 'Zona', key: 'zona', width: 22 },
+          { header: 'A Recaudar', key: 'aRecaudar', width: 14 },
+          { header: '% Cobranza', key: 'porcentajeCobranza', width: 12 },
+          { header: 'Recaudado', key: 'recaudado', width: 14 },
+          { header: 'Ayuda', key: 'ayuda', width: 12 },
+          { header: 'Ayuda A', key: 'ayudaA', width: 12 },
+          { header: 'Vale', key: 'vale', width: 12 },
+          { header: 'Vale Sup.', key: 'valeSup', width: 12 },
+          { header: 'Entregas', key: 'entregas', width: 14 },
+          { header: 'ECU', key: 'ecu', width: 12 },
+          { header: 'PR', key: 'pr', width: 10 },
+          { header: 'MP', key: 'mp', width: 10 },
+          { header: 'Deja', key: 'deja', width: 12 },
+          { header: 'Recaudación Día Sig.', key: 'recaudacionDiaSig', width: 20 },
+          { header: 'Recaudación Sem. Sig.', key: 'recaudacionSemSig', width: 20 }
+        ]
+
+        for (const zona of zonas) {
+
+          resumenSheet.addRow({
+            zona: zona.zona,
+            aRecaudar: zona.aRecaudar,
+            porcentajeCobranza: zona.porcentajeCobranza,
+            recaudado: zona.recaudado,
+            ayuda: zona.ayuda,
+            ayudaA: zona.ayudaA,
+            vale: zona.vale,
+            valeSup: zona.valeSup,
+            entregas: zona.entregasSemanaTotal,
+            ecu: zona.ecuSemanaTotal,
+            pr: zona.prSemanaTotal,
+            mp: zona.mpSemanaTotal,
+            deja: zona.dejaSemanaTotal,
+            recaudacionDiaSig: zona.recaudacionDiaSigSemanaTotal,
+            recaudacionSemSig: zona.aRecaudarSemanaSig
+          })
+        }
+
+        resumenSheet.getRow(1).font = { bold: true }
+
+        const detalleSheet = workbook.addWorksheet('Detalle diario')
+
+        detalleSheet.columns = [
+          { header: 'Zona', key: 'zona', width: 22 },
+          { header: 'Fecha', key: 'fecha', width: 12 },
+          { header: 'Día', key: 'dia', width: 12 },
+          { header: 'Entregas', key: 'entregas', width: 14 },
+          { header: 'ECU', key: 'ecu', width: 12 },
+          { header: 'PR', key: 'pr', width: 10 },
+          { header: 'MP', key: 'mp', width: 10 },
+          { header: 'Deja', key: 'deja', width: 12 },
+          { header: 'Recaudación Día Sig.', key: 'recaudacionDiaSig', width: 20 }
+        ]
+
+        for (const zona of zonas) {
+
+          zona.dias.forEach((dia, i) => {
+
+            detalleSheet.addRow({
+              zona: zona.zona,
+              fecha: dia.fecha,
+              dia: DIAS_LABEL[i],
+              entregas: dia.entregas,
+              ecu: dia.ecu,
+              pr: dia.pr,
+              mp: dia.mp,
+              deja: dia.deja,
+              recaudacionDiaSig: dia.recaudacionDiaSig
+            })
+          })
+        }
+
+        detalleSheet.getRow(1).font = { bold: true }
+
+        const buffer = await workbook.xlsx.writeBuffer()
+
+        const blob = new Blob(
+          [buffer],
+          {
+            type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+          }
+        )
+
+        const url = URL.createObjectURL(blob)
+
+        const link = document.createElement('a')
+
+        link.href = url
+        link.download = `informe-semanal-${lunes}.xlsx`
+
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+
+        URL.revokeObjectURL(url)
+
+      } catch {
+
+        setError('Error exportando el informe a Excel')
+
+      } finally {
+
+        setExportando(false)
+
+      }
+
+    }
 
   return (
 
@@ -422,6 +553,41 @@ export default function InformeSemanalPage() {
             "
           >
             <ChevronRight className="h-4 w-4" />
+          </button>
+
+          <button
+            type="button"
+            onClick={exportarExcel}
+            disabled={
+              exportando ||
+              loading ||
+              !zonas.length
+            }
+            className="
+              flex
+              items-center
+              gap-2
+              rounded-xl
+              border
+              border-stone-200
+              bg-white
+              px-3.5
+              py-2.5
+              text-sm
+              font-semibold
+              text-stone-700
+              transition
+              hover:bg-stone-50
+              disabled:cursor-not-allowed
+              disabled:opacity-50
+            "
+          >
+            <Download className="h-4 w-4" />
+            {
+              exportando
+                ? 'Exportando...'
+                : 'Exportar a Excel'
+            }
           </button>
 
         </div>
@@ -722,6 +888,17 @@ export default function InformeSemanalPage() {
                             onChangeDia={handleChangeDia}
                             onRevertirDia={handleRevertirDia}
                             total={money(zona.dejaSemanaTotal)}
+                          />
+
+                          <FilaCalculadoManual
+                            label="Recaudación Día Sig."
+                            campo="recaudacionDiaSig"
+                            campoOverride="recaudacionDiaSigOverride"
+                            zona={zona}
+                            edits={edits}
+                            onChangeDia={handleChangeDia}
+                            onRevertirDia={handleRevertirDia}
+                            total={money(zona.recaudacionDiaSigSemanaTotal)}
                           />
 
                         </tbody>

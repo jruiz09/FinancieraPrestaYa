@@ -23,7 +23,8 @@ import {
   ChartNoAxesCombined,
   Wallet,
   ClipboardList,
-  CalendarRange
+  CalendarRange,
+  CalendarCheck2
 } from 'lucide-react'
 
 import {
@@ -475,6 +476,19 @@ export default function Sidebar({
       onClick={onMobileClose}
     >
       Cuotas
+    </SidebarLink>
+
+  )}
+
+  {permissions.includes('CREDITS_VIEW') && (
+
+    <SidebarLink
+      to="/cuotas-del-dia"
+      icon={CalendarCheck2}
+      collapsed={collapsed}
+      onClick={onMobileClose}
+    >
+      Cuotas del día
     </SidebarLink>
 
   )}

@@ -39,6 +39,8 @@ router.get(
   query('page').optional().isInt({ min: 1 }),
   query('limit').optional().isInt({ min: 1 }),
   query('zoneIds').optional().isString(),
+  query('fechaDesde').optional().isISO8601(),
+  query('fechaHasta').optional().isISO8601(),
 
   validateRequest,
 

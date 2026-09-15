@@ -36,6 +36,22 @@ const CUOTAS_POR_PAGINA = 20
 
 const ZONA_FILTRO_STORAGE_KEY = 'cuotas_zona_filtro'
 
+const FECHA_FILTRO_STORAGE_KEY = 'cuotas_fecha_filtro'
+
+const cargarFechasGuardadas = () => {
+  try {
+    const stored = localStorage.getItem(
+      FECHA_FILTRO_STORAGE_KEY
+    )
+
+    return stored
+      ? JSON.parse(stored)
+      : { fechaDesde: '', fechaHasta: '' }
+  } catch (error) {
+    return { fechaDesde: '', fechaHasta: '' }
+  }
+}
+
 const cargarZonaIdsGuardadas = () => {
   try {
     const stored = localStorage.getItem(
@@ -101,6 +117,11 @@ export default function CuotasPage() {
     setSelectedZoneIds
   ] = useState(cargarZonaIdsGuardadas)
 
+  const [
+    { fechaDesde, fechaHasta },
+    setFechas
+  ] = useState(cargarFechasGuardadas)
+
 
   /* ===================================================== */
   /* CARGA */
@@ -128,7 +149,9 @@ export default function CuotasPage() {
             estado,
             page,
             CUOTAS_POR_PAGINA,
-            selectedZoneIds
+            selectedZoneIds,
+            fechaDesde,
+            fechaHasta
           )
 
         setCuotas(
@@ -168,7 +191,7 @@ export default function CuotasPage() {
     cargarDatos()
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [estado, page, selectedZoneIds])
+  }, [estado, page, selectedZoneIds, fechaDesde, fechaHasta])
 
 
   const cambiarEstado =
@@ -189,6 +212,50 @@ export default function CuotasPage() {
       localStorage.setItem(
         ZONA_FILTRO_STORAGE_KEY,
         JSON.stringify(zoneIds)
+      )
+
+    }
+
+
+  const handleFechaChange =
+    (campo, valor) => {
+
+      setPage(1)
+
+      setFechas(previas => {
+
+        const nuevas = {
+          ...previas,
+          [campo]: valor
+        }
+
+        localStorage.setItem(
+          FECHA_FILTRO_STORAGE_KEY,
+          JSON.stringify(nuevas)
+        )
+
+        return nuevas
+
+      })
+
+    }
+
+
+  const limpiarFechas =
+    () => {
+
+      setPage(1)
+
+      const vacias = {
+        fechaDesde: '',
+        fechaHasta: ''
+      }
+
+      setFechas(vacias)
+
+      localStorage.setItem(
+        FECHA_FILTRO_STORAGE_KEY,
+        JSON.stringify(vacias)
       )
 
     }
@@ -673,6 +740,125 @@ export default function CuotasPage() {
               selectedZoneIds={selectedZoneIds}
               onChange={handleZoneChange}
             />
+
+          </div>
+
+
+          {/* FECHA VENCIMIENTO */}
+
+          <div className="
+            flex
+            items-end
+            gap-2
+          ">
+
+            <div>
+
+              <label className="
+                mb-1
+                block
+                text-xs
+                font-semibold
+                text-stone-500
+              ">
+                Desde
+              </label>
+
+              <input
+                type="date"
+                value={fechaDesde}
+                onChange={event =>
+                  handleFechaChange(
+                    'fechaDesde',
+                    event.target.value
+                  )
+                }
+                className="
+                  h-11
+                  px-3
+                  border
+                  border-stone-200
+                  rounded-xl
+                  bg-stone-50
+                  text-sm
+                  text-stone-800
+                  outline-none
+                  focus:bg-white
+                  focus:border-amber-400
+                  focus:ring-2
+                  focus:ring-amber-100
+                  transition
+                "
+              />
+
+            </div>
+
+            <div>
+
+              <label className="
+                mb-1
+                block
+                text-xs
+                font-semibold
+                text-stone-500
+              ">
+                Hasta
+              </label>
+
+              <input
+                type="date"
+                value={fechaHasta}
+                onChange={event =>
+                  handleFechaChange(
+                    'fechaHasta',
+                    event.target.value
+                  )
+                }
+                className="
+                  h-11
+                  px-3
+                  border
+                  border-stone-200
+                  rounded-xl
+                  bg-stone-50
+                  text-sm
+                  text-stone-800
+                  outline-none
+                  focus:bg-white
+                  focus:border-amber-400
+                  focus:ring-2
+                  focus:ring-amber-100
+                  transition
+                "
+              />
+
+            </div>
+
+            {(fechaDesde || fechaHasta) && (
+
+              <button
+                type="button"
+                onClick={limpiarFechas}
+                className="
+                  h-11
+                  w-11
+                  flex
+                  items-center
+                  justify-center
+                  rounded-xl
+                  border
+                  border-stone-200
+                  text-stone-400
+                  hover:bg-stone-100
+                  hover:text-stone-700
+                  transition
+                "
+                title="Limpiar fechas"
+              >
+                <X className="w-4 h-4" />
+              </button>
+
+            )}
 
           </div>
 

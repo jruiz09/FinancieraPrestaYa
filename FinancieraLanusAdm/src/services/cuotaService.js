@@ -8,7 +8,9 @@ export const cuotaService = {
     estado = 'TODAS',
     page = 1,
     limit = 20,
-    zoneIds = []
+    zoneIds = [],
+    fechaDesde = '',
+    fechaHasta = ''
   ) => {
 
     const response =
@@ -21,7 +23,9 @@ export const cuotaService = {
             limit,
             zoneIds: zoneIds.length
               ? zoneIds.join(',')
-              : undefined
+              : undefined,
+            fechaDesde: fechaDesde || undefined,
+            fechaHasta: fechaHasta || undefined
           }
         }
       )

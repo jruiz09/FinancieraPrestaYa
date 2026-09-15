@@ -1225,7 +1225,23 @@ export const listCuotas = async (
     const offset =
       (page - 1) * limit;
 
-    const where = {};
+    const whereFecha = {};
+
+    if (req.query.fechaDesde && req.query.fechaHasta) {
+      whereFecha.fechaVencimiento = {
+        [Op.between]: [req.query.fechaDesde, req.query.fechaHasta]
+      };
+    } else if (req.query.fechaDesde) {
+      whereFecha.fechaVencimiento = {
+        [Op.gte]: req.query.fechaDesde
+      };
+    } else if (req.query.fechaHasta) {
+      whereFecha.fechaVencimiento = {
+        [Op.lte]: req.query.fechaHasta
+      };
+    }
+
+    const where = { ...whereFecha };
 
     if (
       req.query.estado &&
@@ -1279,6 +1295,7 @@ export const listCuotas = async (
           (estadoItem) =>
             CreditoDetalle.count({
               where: {
+                ...whereFecha,
                 estado: estadoItem
               },
               include: [
@@ -1303,6 +1320,32 @@ export const listCuotas = async (
         },
         {}
       );
+
+    const detalleParaTotales =
+      await CreditoDetalle.findAll({
+        where,
+        include: [
+          {
+            model: Credito,
+            as: 'credito',
+            where: whereCredito,
+            required: true,
+            include: cobradorIncludeConteos
+          }
+        ],
+        attributes: ['monto', 'montoPago']
+      });
+
+    const totales = detalleParaTotales.reduce(
+      (acc, cuota) => {
+        acc.monto += Number(cuota.monto);
+        acc.montoPago += Number(cuota.montoPago);
+        return acc;
+      },
+      { monto: 0, montoPago: 0 }
+    );
+
+    totales.saldo = totales.monto - totales.montoPago;
 
     const { count, rows } =
       await CreditoDetalle.findAndCountAll({
@@ -1411,6 +1454,7 @@ export const listCuotas = async (
         page,
         limit,
         counts,
+        totales,
         cuotas
       }
     });

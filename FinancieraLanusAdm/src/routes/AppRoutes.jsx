@@ -15,6 +15,7 @@ import NuevoCreditoPage from "../pages/NuevoCreditoPage";
 import CreditosPage from "../pages/CreditosPage";
 import CreditoDetallePage from "../pages/CreditoDetallePage";
 import CuotasPage from "../pages/CuotasPage";
+import CuotasDelDiaPage from "../pages/CuotasDelDiaPage";
 import DiasNoLaborablesPage
 from '../pages/DiasNoLaborablesPage'
 import ClienteCreditoPage from "../pages/ClienteCreditoPage";
@@ -257,6 +258,15 @@ export default function AppRoutes() {
           element={
             <ProtectedRoute requiredPermissions={['CREDITS_VIEW']}>
               <CuotasPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="cuotas-del-dia"
+          element={
+            <ProtectedRoute requiredPermissions={['CREDITS_VIEW']}>
+              <CuotasDelDiaPage />
             </ProtectedRoute>
           }
         />

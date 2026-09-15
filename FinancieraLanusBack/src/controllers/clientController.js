@@ -123,13 +123,29 @@ export const listClients = async (req, res, next) => {
       where.cobradorId = req.query.cobradorId;
     }
 
+    const zoneIds = req.query.zoneIds
+      ? req.query.zoneIds
+          .split(',')
+          .map((id) => id.trim())
+          .filter(Boolean)
+      : [];
+
+    const collectorInclude = {
+      association: 'collector',
+      include: ['zone'],
+      where: zoneIds.length
+        ? { zoneId: { [Op.in]: zoneIds } }
+        : undefined,
+      required: zoneIds.length > 0
+    };
+
     const soloConCreditoActivo =
       req.query.soloConCreditoActivo === 'true';
 
     const include = soloConCreditoActivo
       ? [
           'owner',
-          'collector',
+          collectorInclude,
           {
             association: 'creditos',
             where: {
@@ -146,7 +162,7 @@ export const listClients = async (req, res, next) => {
             ]
           }
         ]
-      : ['owner', 'collector'];
+      : ['owner', collectorInclude];
 
     const { count, rows } = await Client.findAndCountAll({
       where,
@@ -186,7 +202,10 @@ export const getClient = async (req, res, next) => {
     const client = await Client.findByPk(
       req.params.id,
       {
-        include: ['owner', 'collector']
+        include: [
+          'owner',
+          { association: 'collector', include: ['zone'] }
+        ]
       }
     );
 

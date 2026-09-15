@@ -22,6 +22,7 @@ router.get(
   query('ownerId').optional().isUUID(),
   query('cobradorId').optional().isUUID(),
   query('soloConCreditoActivo').optional().isBoolean(),
+  query('zoneIds').optional().isString(),
   validateRequest,
   listClients
 );

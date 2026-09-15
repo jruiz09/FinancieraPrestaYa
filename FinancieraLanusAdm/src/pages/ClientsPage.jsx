@@ -7,6 +7,7 @@ import Pagination from "../components/Pagination";
 import ErrorAlert from "../components/ErrorAlert";
 import ClientModal from "../components/ClientModal";
 import Permission from "../components/Permission";
+import ZonaMultiSelect from "../components/ZonaMultiSelect";
 import { PERMISSIONS } from "../constants/permissions";
 
 import {
@@ -18,8 +19,26 @@ import {
 } from "../services/collectorService";
 
 import {
+  zoneService,
+} from "../services/zoneService";
+
+import {
   useAuthStore,
 } from "../store/useAuthStore";
+
+const ZONA_FILTRO_STORAGE_KEY = "clientes_zona_filtro";
+
+const cargarZonaIdsGuardadas = () => {
+  try {
+    const stored = localStorage.getItem(
+      ZONA_FILTRO_STORAGE_KEY,
+    );
+
+    return stored ? JSON.parse(stored) : [];
+  } catch (error) {
+    return [];
+  }
+};
 
 export default function ClientsPage() {
   const ownerId = useAuthStore(
@@ -31,6 +50,12 @@ export default function ClientsPage() {
 
   const [collectors, setCollectors] =
     useState([]);
+
+  const [zonas, setZonas] =
+    useState([]);
+
+  const [selectedZoneIds, setSelectedZoneIds] =
+    useState(cargarZonaIdsGuardadas);
 
   const [page, setPage] =
     useState(1);
@@ -76,6 +101,7 @@ export default function ClientsPage() {
           page,
           limit,
           ownerId,
+          selectedZoneIds,
         );
 
       setClients(
@@ -117,11 +143,29 @@ export default function ClientsPage() {
     };
 
   useEffect(() => {
+    zoneService
+      .list()
+      .then((data) => setZonas(data || []))
+      .catch((err) => console.error(err));
+  }, []);
+
+  useEffect(() => {
     if (ownerId) {
       fetchClients();
       fetchCollectors();
     }
-  }, [page, ownerId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, ownerId, selectedZoneIds]);
+
+  const handleZoneChange = (zoneIds) => {
+    setSelectedZoneIds(zoneIds);
+    setPage(1);
+
+    localStorage.setItem(
+      ZONA_FILTRO_STORAGE_KEY,
+      JSON.stringify(zoneIds),
+    );
+  };
 
   const openCreateModal = () => {
     setModalMode("create");
@@ -507,6 +551,27 @@ export default function ClientsPage() {
             </div>
           </div>
 
+          <div className="md:w-64">
+            <label
+              className="
+                mb-2
+                block
+                text-sm
+                font-semibold
+                text-stone-700
+                dark:text-stone-300
+              "
+            >
+              Zona
+            </label>
+
+            <ZonaMultiSelect
+              zonas={zonas}
+              selectedZoneIds={selectedZoneIds}
+              onChange={handleZoneChange}
+            />
+          </div>
+
           <div
             className="
               flex
@@ -668,6 +733,10 @@ export default function ClientsPage() {
                       Cobrador
                     </th>
 
+                    <th className="px-4 py-3 text-left">
+                      Zona
+                    </th>
+
                     <th className="px-4 py-3 text-center">
                       Mapa
                     </th>
@@ -689,7 +758,7 @@ export default function ClientsPage() {
                   0 ? (
                     <tr>
                       <td
-                        colSpan="7"
+                        colSpan="8"
                         className="
                           px-5
                           py-12
@@ -811,6 +880,31 @@ export default function ClientsPage() {
                                 ? `${client.collector.apellido || ""}, ${client.collector.nombre || ""}`
                                 : "Sin asignar"}
                             </span>
+                          </td>
+
+                          <td className="px-4 py-4">
+                            {client.collector?.zone ? (
+                              <span
+                                className="
+                                  inline-flex
+                                  rounded-lg
+                                  bg-amber-50
+                                  px-2.5
+                                  py-1.5
+                                  text-xs
+                                  font-medium
+                                  text-amber-700
+                                  dark:bg-amber-950/40
+                                  dark:text-amber-300
+                                "
+                              >
+                                {client.collector.zone.nombre}
+                              </span>
+                            ) : (
+                              <span className="text-xs text-stone-400">
+                                Sin zona
+                              </span>
+                            )}
                           </td>
 
                           <td className="px-4 py-4 text-center">
@@ -1066,6 +1160,25 @@ function ClientCard({
         </div>
 
         <div>
+          <p className="text-xs text-stone-400">
+            Zona
+          </p>
+
+          <p
+            className="
+              mt-1
+              text-sm
+              font-medium
+              text-stone-700
+              dark:text-stone-200
+            "
+          >
+            {client.collector?.zone?.nombre ||
+              "Sin zona"}
+          </p>
+        </div>
+
+        <div className="col-span-2">
           <p className="text-xs text-stone-400">
             Cobrador
           </p>

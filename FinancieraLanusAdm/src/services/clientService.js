@@ -1,9 +1,10 @@
 import api from '../api/axios'
 
 export const clientService = {
-  list: async (page = 1, limit = 10, ownerId = null) => {
+  list: async (page = 1, limit = 10, ownerId = null, zoneIds = []) => {
     const params = { page, limit }
     if (ownerId) params.ownerId = ownerId
+    if (zoneIds.length) params.zoneIds = zoneIds.join(',')
     const response = await api.get('/clients', { params })
     return response.data.data
   },

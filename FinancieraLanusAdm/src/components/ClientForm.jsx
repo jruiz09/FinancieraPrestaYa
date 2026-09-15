@@ -39,6 +39,11 @@ export default function ClientForm({
   const [errors, setErrors] =
     useState({});
 
+  const cobradorSeleccionado =
+    collectors.find(
+      (c) => c.id === formData.cobradorId,
+    );
+
   useEffect(() => {
     setFormData({
       ...emptyForm,
@@ -504,7 +509,7 @@ export default function ClientForm({
               }
               valueField="id"
               labelField={(c) =>
-                `${c.apellido}, ${c.nombre}`
+                `${c.apellido}, ${c.nombre} — ${c.zone?.nombre || "Sin zona"}`
               }
               placeholder="Buscar cobrador..."
               onChange={
@@ -512,6 +517,31 @@ export default function ClientForm({
               }
             />
           </Field>
+
+          {cobradorSeleccionado && (
+            <p
+              className="
+                mt-2
+                inline-flex
+                items-center
+                gap-1.5
+                rounded-lg
+                bg-amber-50
+                px-3
+                py-1.5
+                text-xs
+                font-semibold
+                text-amber-700
+                dark:bg-amber-950/40
+                dark:text-amber-300
+              "
+            >
+              📍 Zona:{" "}
+              {cobradorSeleccionado.zone
+                ?.nombre ||
+                "Sin zona asignada"}
+            </p>
+          )}
         </section>
 
         <div

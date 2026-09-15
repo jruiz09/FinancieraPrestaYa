@@ -755,6 +755,11 @@ export default function InformeSemanalPage() {
                     />
 
                     <TotalCompacto
+                      label="ECU"
+                      value={money(zona.ecuSemanaTotal)}
+                    />
+
+                    <TotalCompacto
                       label="Ayuda"
                       value={money(zona.ayuda)}
                     />

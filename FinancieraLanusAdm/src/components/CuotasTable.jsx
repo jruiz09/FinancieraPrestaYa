@@ -468,6 +468,15 @@ export default function CuotasTable({
                 <th className="
                   px-4
                   py-3
+                  text-left
+                  font-semibold
+                ">
+                  Zona
+                </th>
+
+                <th className="
+                  px-4
+                  py-3
                   text-center
                   font-semibold
                 ">
@@ -576,6 +585,12 @@ export default function CuotasTable({
                   const cobrador =
                     `${cuota.credito?.cobrador?.apellido || ''} ${cuota.credito?.cobrador?.nombre || ''}`
                       .trim()
+
+                  const zona =
+                    cuota.credito
+                      ?.cobrador
+                      ?.zone
+                      ?.nombre
 
                   const observacionesCredito =
                     cuota.credito
@@ -728,6 +743,20 @@ export default function CuotasTable({
                           {cobrador || '-'}
 
                         </div>
+
+                      </td>
+
+
+                      {/* ZONA */}
+
+                      <td className="
+                        px-4
+                        py-4
+                        text-sm
+                        text-stone-600
+                      ">
+
+                        {zona || '-'}
 
                       </td>
 
@@ -1064,6 +1093,12 @@ export default function CuotasTable({
                 `${cuota.credito?.cobrador?.apellido || ''} ${cuota.credito?.cobrador?.nombre || ''}`
                   .trim()
 
+              const zona =
+                cuota.credito
+                  ?.cobrador
+                  ?.zone
+                  ?.nombre
+
               const observacionesCredito =
                 cuota.credito
                   ?.observaciones
@@ -1154,6 +1189,7 @@ export default function CuotasTable({
                           />
 
                           {cobrador}
+                          {zona ? ` · ${zona}` : ''}
 
                         </p>
 

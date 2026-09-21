@@ -912,11 +912,20 @@ export const registrarPagoCuota = async (
         data: {
           cuotasAfectadas:
             cuotasObjetivo.map(
-              ({ cuota: c, aPagar }) => ({
-                id: c.id,
-                numeroCuota: c.numeroCuota,
-                monto: aPagar
-              })
+              ({ cuota: c, aPagar }) => {
+
+                const saldoDeLaCuota =
+                  Number(c.monto) -
+                  Number(c.montoPago || 0);
+
+                return {
+                  id: c.id,
+                  numeroCuota: c.numeroCuota,
+                  monto: aPagar,
+                  completa: aPagar >= saldoDeLaCuota
+                };
+
+              }
             ),
           saldoAFavor
         }
@@ -1427,6 +1436,8 @@ export const listCuotas = async (
                   'nombre',
                   'apellido'
                 ],
+
+                include: ['zone'],
 
                 where: zoneIds.length
                   ? {

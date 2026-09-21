@@ -99,7 +99,7 @@ export default function CreditoForm() {
       interes: '',
       cantidadCuotas: '',
       diasGracia: 0,
-      tipoTransaccion: 'EFECTIVO',
+      montoEfectivo: '',
 
       fechaOtorgamiento:
         new Date()
@@ -142,6 +142,77 @@ export default function CreditoForm() {
         formData.tipoPlanId
       ]
     )
+
+  /*
+   * Split efectivo/transferencia de la entrega del crédito
+   * (mismo patrón que el split de pago de cuotas): mientras
+   * el usuario no toque "Efectivo", se asume 100% efectivo
+   * por defecto. El campo Transferencia nunca se guarda en
+   * el estado, siempre se deriva para que la suma cierre
+   * exacto contra montoCredito.
+   */
+
+  const montoCreditoNumero =
+    Number(formData.montoCredito) || 0
+
+  const montoEfectivoMostrado =
+    formData.montoEfectivo === ''
+      ? formData.montoCredito
+      : formData.montoEfectivo
+
+  const montoEfectivoNumero =
+    Math.min(
+      montoCreditoNumero,
+      Math.max(
+        0,
+        Number(montoEfectivoMostrado) || 0
+      )
+    )
+
+  const montoTransferenciaNumero =
+    Math.max(
+      0,
+      montoCreditoNumero - montoEfectivoNumero
+    )
+
+  const tipoTransaccionCalculada =
+    montoEfectivoNumero > 0 &&
+    montoTransferenciaNumero > 0
+      ? 'MIXTO'
+      : montoTransferenciaNumero > 0
+        ? 'TRANSFERENCIA'
+        : 'EFECTIVO'
+
+  const handleMontoEfectivoChange =
+    (event) => {
+
+      setFormData(prev => ({
+        ...prev,
+        montoEfectivo: event.target.value
+      }))
+
+    }
+
+  const handleMontoTransferenciaChange =
+    (event) => {
+
+      const transferenciaIngresada =
+        Math.min(
+          montoCreditoNumero,
+          Math.max(
+            0,
+            Number(event.target.value) || 0
+          )
+        )
+
+      setFormData(prev => ({
+        ...prev,
+        montoEfectivo: String(
+          montoCreditoNumero - transferenciaIngresada
+        )
+      }))
+
+    }
 
 
   /* ===================================================== */
@@ -408,7 +479,13 @@ export default function CreditoForm() {
             diasGracia:
               Number(
                 formData.diasGracia
-              )
+              ),
+
+            montoEfectivo:
+              montoEfectivoNumero,
+
+            montoTransferencia:
+              montoTransferenciaNumero
 
           })
 
@@ -1062,7 +1139,7 @@ export default function CreditoForm() {
               <div>
 
                 <Label>
-                  Tipo de transacción
+                  Cómo se entrega el dinero
                 </Label>
 
                 <div className="
@@ -1072,49 +1149,129 @@ export default function CreditoForm() {
                   gap-3
                 ">
 
-                  <TransactionButton
-                    active={
-                      formData
-                        .tipoTransaccion ===
-                      'EFECTIVO'
-                    }
-                    icon={Banknote}
-                    title="Efectivo"
-                    description="Entrega en mano"
-                    onClick={
-                      () =>
-                        setFormData(
-                          prev => ({
-                            ...prev,
-                            tipoTransaccion:
-                              'EFECTIVO'
-                          })
-                        )
-                    }
-                  />
+                  <div>
 
-                  <TransactionButton
-                    active={
-                      formData
-                        .tipoTransaccion ===
-                      'TRANSFERENCIA'
-                    }
-                    icon={Landmark}
-                    title="Transferencia"
-                    description="Transferencia bancaria"
-                    onClick={
-                      () =>
-                        setFormData(
-                          prev => ({
-                            ...prev,
-                            tipoTransaccion:
-                              'TRANSFERENCIA'
-                          })
-                        )
-                    }
-                  />
+                    <label className="
+                      flex
+                      items-center
+                      gap-1.5
+                      text-xs
+                      font-medium
+                      text-stone-500
+                      mb-1
+                    ">
+                      <Banknote className="w-3.5 h-3.5" />
+                      Efectivo
+                    </label>
+
+                    <div className="relative">
+
+                      <span className="
+                        absolute
+                        left-4
+                        top-1/2
+                        -translate-y-1/2
+                        text-stone-500
+                        font-semibold
+                      ">
+                        $
+                      </span>
+
+                      <input
+                        type="number"
+                        min="0"
+                        max={montoCreditoNumero || undefined}
+                        value={montoEfectivoMostrado}
+                        onChange={handleMontoEfectivoChange}
+                        placeholder="0"
+                        className="
+                          w-full
+                          h-11
+                          pl-8
+                          pr-4
+                          border
+                          border-stone-300
+                          rounded-xl
+                          bg-white
+                          outline-none
+                          transition
+                          focus:border-amber-500
+                          focus:ring-2
+                          focus:ring-amber-500/20
+                        "
+                      />
+
+                    </div>
+
+                  </div>
+
+                  <div>
+
+                    <label className="
+                      flex
+                      items-center
+                      gap-1.5
+                      text-xs
+                      font-medium
+                      text-stone-500
+                      mb-1
+                    ">
+                      <Landmark className="w-3.5 h-3.5" />
+                      Transferencia
+                    </label>
+
+                    <div className="relative">
+
+                      <span className="
+                        absolute
+                        left-4
+                        top-1/2
+                        -translate-y-1/2
+                        text-stone-500
+                        font-semibold
+                      ">
+                        $
+                      </span>
+
+                      <input
+                        type="number"
+                        min="0"
+                        max={montoCreditoNumero || undefined}
+                        value={montoTransferenciaNumero}
+                        onChange={handleMontoTransferenciaChange}
+                        placeholder="0"
+                        className="
+                          w-full
+                          h-11
+                          pl-8
+                          pr-4
+                          border
+                          border-stone-300
+                          rounded-xl
+                          bg-white
+                          outline-none
+                          transition
+                          focus:border-amber-500
+                          focus:ring-2
+                          focus:ring-amber-500/20
+                        "
+                      />
+
+                    </div>
+
+                  </div>
 
                 </div>
+
+                <p className="
+                  text-xs
+                  text-stone-400
+                  mt-2
+                ">
+                  La suma siempre se ajusta automáticamente
+                  al monto del crédito
+                  ($ {montoCreditoNumero.toLocaleString('es-AR')}).
+                </p>
 
               </div>
 
@@ -1448,10 +1605,11 @@ export default function CreditoForm() {
                 <SummaryRow
                   label="Entrega"
                   value={
-                    formData.tipoTransaccion ===
-                    'EFECTIVO'
-                      ? 'Efectivo'
-                      : 'Transferencia'
+                    tipoTransaccionCalculada === 'MIXTO'
+                      ? `Efectivo $${montoEfectivoNumero.toLocaleString('es-AR')} + Transferencia $${montoTransferenciaNumero.toLocaleString('es-AR')}`
+                      : tipoTransaccionCalculada === 'TRANSFERENCIA'
+                        ? 'Transferencia'
+                        : 'Efectivo'
                   }
                 />
 
@@ -2363,113 +2521,6 @@ function InfoItem({
       </p>
 
     </div>
-
-  )
-
-}
-
-
-function TransactionButton({
-  active,
-  icon: Icon,
-  title,
-  description,
-  onClick
-}) {
-
-  return (
-
-    <button
-      type="button"
-      onClick={onClick}
-      className={`
-        flex
-        items-center
-        gap-3
-        text-left
-        p-4
-        border
-        rounded-xl
-        transition
-
-        ${
-          active
-
-            ? `
-              border-amber-500
-              bg-amber-50
-              ring-1
-              ring-amber-500
-            `
-
-            : `
-              border-stone-200
-              hover:border-stone-300
-              hover:bg-stone-50
-            `
-        }
-      `}
-    >
-
-      <div className={`
-        w-9
-        h-9
-        rounded-lg
-        flex
-        items-center
-        justify-center
-
-        ${
-          active
-            ? `
-              bg-amber-100
-              text-amber-700
-            `
-            : `
-              bg-stone-100
-              text-stone-500
-            `
-        }
-      `}>
-
-        <Icon
-          className="w-4 h-4"
-        />
-
-      </div>
-
-      <div className="flex-1">
-
-        <p className="
-          text-sm
-          font-bold
-          text-stone-800
-        ">
-          {title}
-        </p>
-
-        <p className="
-          text-xs
-          text-stone-400
-        ">
-          {description}
-        </p>
-
-      </div>
-
-      {active && (
-
-        <CheckCircle2
-          className="
-            w-5
-            h-5
-            text-amber-600
-          "
-        />
-
-      )}
-
-    </button>
 
   )
 

@@ -41,6 +41,18 @@ export const CreditoModel = (sequelize, DataTypes) => {
       allowNull: false
     },
 
+    montoEfectivo: {
+      type: DataTypes.DECIMAL(12,2),
+      allowNull: false,
+      defaultValue: 0
+    },
+
+    montoTransferencia: {
+      type: DataTypes.DECIMAL(12,2),
+      allowNull: false,
+      defaultValue: 0
+    },
+
     interes: {
       type: DataTypes.DECIMAL(5,2),
       allowNull: false

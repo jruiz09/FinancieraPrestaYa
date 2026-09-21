@@ -368,10 +368,63 @@ export const createCredito = async (
       montoCredito,
       interes,
       diasGracia,
-      tipoTransaccion,
+      montoEfectivo,
+      montoTransferencia,
       fechaOtorgamiento,
       observaciones
     } = req.body;
+
+    /*
+    =====================================================
+    SPLIT EFECTIVO / TRANSFERENCIA DE LA ENTREGA
+    (mismo criterio que el split de pago de cuotas: se
+    valida que ambos montos sean numéricos, no negativos,
+    y que sumen exacto contra montoCredito)
+    =====================================================
+    */
+
+    const efectivo = Number(montoEfectivo || 0);
+    const transferencia = Number(montoTransferencia || 0);
+
+    if (
+      !Number.isFinite(efectivo) ||
+      !Number.isFinite(transferencia) ||
+      efectivo < 0 ||
+      transferencia < 0
+    ) {
+
+      await transaction.rollback();
+
+      return res.status(400).json({
+        success: false,
+        message:
+          'Los montos de efectivo y transferencia deben ser numéricos y no negativos.'
+      });
+    }
+
+    const sumaEntrega =
+      Math.round((efectivo + transferencia) * 100) / 100;
+
+    const montoCreditoRedondeado =
+      Math.round(Number(montoCredito) * 100) / 100;
+
+    if (sumaEntrega !== montoCreditoRedondeado) {
+
+      await transaction.rollback();
+
+      return res.status(400).json({
+        success: false,
+        message:
+          'La suma de efectivo y transferencia debe ser igual al monto del crédito.'
+      });
+    }
+
+    const tipoTransaccion =
+      efectivo > 0 && transferencia > 0
+        ? 'MIXTO'
+        : transferencia > 0
+          ? 'TRANSFERENCIA'
+          : 'EFECTIVO';
 
     const cliente =
       await Client.findByPk(

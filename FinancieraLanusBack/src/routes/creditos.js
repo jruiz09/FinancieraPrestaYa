@@ -64,7 +64,8 @@ router.post(
   body('montoCredito').isFloat({ min: 1 }),
   body('interes').isFloat({ min: 0 }),
   body('diasGracia').optional().isInt({ min: 0 }),
-  body('tipoTransaccion').notEmpty(),
+  body('montoEfectivo').isFloat({ min: 0 }),
+  body('montoTransferencia').isFloat({ min: 0 }),
   body('fechaOtorgamiento').isDate(),
   validateRequest,
   createCredito

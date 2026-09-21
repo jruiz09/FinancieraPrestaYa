@@ -71,14 +71,35 @@ export default function ConfirmCascadaModal({
                 key={c.id}
                 className="
                   flex
+                  items-center
                   justify-between
+                  gap-3
                   px-4
                   py-2
                   text-sm
                 "
               >
-                <span>
+                <span className="
+                  flex
+                  items-center
+                  gap-2
+                ">
                   Cuota #{c.numeroCuota}
+
+                  <span className={`
+                    px-2
+                    py-0.5
+                    rounded-full
+                    text-xs
+                    font-semibold
+
+                    ${c.completa
+                      ? 'bg-emerald-100 text-emerald-700'
+                      : 'bg-amber-100 text-amber-700'
+                    }
+                  `}>
+                    {c.completa ? 'Completa' : 'Parcial'}
+                  </span>
                 </span>
 
                 <strong>

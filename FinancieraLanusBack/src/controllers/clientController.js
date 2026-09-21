@@ -10,11 +10,26 @@ const canSetOwner = (user) => user.permissions?.includes('OWNERS_EDIT');
 /*
 =====================================================
 Resume el estado de credito de un cliente para el mapa:
-saldo pendiente y proxima cuota agregados entre todos
-sus creditos activos, y si tiene alguna cuota vencida.
+si tiene o no credito activo, saldo pendiente y proxima
+cuota agregados entre todos sus creditos activos, si tiene
+alguna cuota vencida, y el detalle del credito activo mas
+relevante (el primero encontrado; en la practica un cliente
+casi siempre tiene un solo credito activo a la vez).
 =====================================================
 */
 const calcularResumenCredito = (creditos = []) => {
+
+  if (creditos.length === 0) {
+
+    return {
+      tieneCreditoActivo: false,
+      saldoPendiente: 0,
+      proximaCuota: null,
+      tieneMora: false,
+      credito: null
+    };
+
+  }
 
   let saldoPendiente = 0;
   let proximaCuota = null;
@@ -55,7 +70,22 @@ const calcularResumenCredito = (creditos = []) => {
 
   });
 
-  return { saldoPendiente, proximaCuota, tieneMora };
+  const creditoPrincipal = creditos[0];
+
+  return {
+    tieneCreditoActivo: true,
+    saldoPendiente,
+    proximaCuota,
+    tieneMora,
+    credito: {
+      id: creditoPrincipal.id,
+      numeroCredito: creditoPrincipal.numeroCredito,
+      estado: creditoPrincipal.estado,
+      montoCredito: creditoPrincipal.montoCredito,
+      montoFinal: creditoPrincipal.montoFinal,
+      tipoPlan: creditoPrincipal.tipoPlan?.descripcion || null
+    }
+  };
 };
 
 /*
@@ -139,10 +169,18 @@ export const listClients = async (req, res, next) => {
       required: zoneIds.length > 0
     };
 
-    const soloConCreditoActivo =
+    /*
+    Antes este flag ("soloConCreditoActivo") ademas de agregar
+    el resumen de credito, EXCLUIA a los clientes sin credito
+    activo (required:true = INNER JOIN). El mapa de clientes
+    necesita ver TODOS los clientes, tengan o no credito, asi
+    que ahora el include es siempre LEFT JOIN (required:false)
+    y el flag solo controla si se calcula el resumen.
+    */
+    const incluirResumenCredito =
       req.query.soloConCreditoActivo === 'true';
 
-    const include = soloConCreditoActivo
+    const include = incluirResumenCredito
       ? [
           'owner',
           collectorInclude,
@@ -152,12 +190,22 @@ export const listClients = async (req, res, next) => {
               activo: true,
               estado: { [Op.in]: ['NUEVO', 'EN_CURSO'] }
             },
-            required: true,
-            attributes: ['id', 'estado', 'montoFinal'],
+            required: false,
+            attributes: [
+              'id',
+              'numeroCredito',
+              'estado',
+              'montoCredito',
+              'montoFinal'
+            ],
             include: [
               {
                 association: 'cuotas',
                 attributes: ['numeroCuota', 'monto', 'montoPago', 'estado', 'fechaVencimiento']
+              },
+              {
+                association: 'tipoPlan',
+                attributes: ['descripcion']
               }
             ]
           }
@@ -176,7 +224,7 @@ export const listClients = async (req, res, next) => {
       ]
     });
 
-    const clients = soloConCreditoActivo
+    const clients = incluirResumenCredito
       ? rows.map((client) => ({
           ...client.toJSON(),
           resumenCredito: calcularResumenCredito(client.creditos)

@@ -14,6 +14,7 @@ import {
   AlertTriangle,
   MapPin,
   MapPinOff,
+  UserRoundX,
   Wallet
 } from 'lucide-react'
 
@@ -134,9 +135,7 @@ export default function ClientesMapaPage() {
       )
 
       const clientesData =
-        await clientService.listConCreditoActivo(
-          1,
-          100,
+        await clientService.listTodosConResumenCredito(
           ownerId
         )
 
@@ -219,6 +218,11 @@ export default function ClientesMapaPage() {
   const clientesEnMora =
     clientesConCoordenadas.filter(
       c => c.resumenCredito?.tieneMora
+    ).length
+
+  const clientesSinCredito =
+    clientesConCoordenadas.filter(
+      c => !c.resumenCredito?.tieneCreditoActivo
     ).length
 
   const saldoPendienteTotal =
@@ -411,8 +415,8 @@ export default function ClientesMapaPage() {
                 sm:text-base
               "
             >
-              Clientes con créditos activos,
-              por zona y cobrador.
+              Todos los clientes, tengan o no
+              crédito activo, por zona y cobrador.
             </p>
           </div>
 
@@ -517,7 +521,7 @@ export default function ClientesMapaPage() {
           grid-cols-2
           gap-3
           md:gap-4
-          xl:grid-cols-4
+          xl:grid-cols-5
         "
       >
 
@@ -527,7 +531,7 @@ export default function ClientesMapaPage() {
           value={
             clientesConCoordenadas.length
           }
-          description="Con crédito activo y ubicación cargada"
+          description="Todos, tengan o no crédito activo"
           variant="blue"
         />
 
@@ -550,10 +554,18 @@ export default function ClientesMapaPage() {
         />
 
         <MetricCard
+          icon={UserRoundX}
+          title="Sin crédito activo"
+          value={clientesSinCredito}
+          description="Clientes cargados sin ningún crédito vigente"
+          variant="green"
+        />
+
+        <MetricCard
           icon={MapPinOff}
           title="Sin geolocalizar"
           value={sinGeolocalizar}
-          description="Clientes activos sin lat/long cargada"
+          description="Clientes sin lat/long cargada"
           variant="green"
         />
 
@@ -680,6 +692,11 @@ export default function ClientesMapaPage() {
                   ] ||
                   iconosPorZona.sinZona
                 }
+                opacity={
+                  resumen.tieneCreditoActivo
+                    ? 1
+                    : 0.5
+                }
               >
 
                 <Popup>
@@ -722,16 +739,20 @@ export default function ClientesMapaPage() {
                           font-bold
 
                           ${
-                            resumen.tieneMora
-                              ? 'bg-red-100 text-red-700'
-                              : 'bg-emerald-100 text-emerald-700'
+                            !resumen.tieneCreditoActivo
+                              ? 'bg-stone-100 text-stone-500'
+                              : resumen.tieneMora
+                                ? 'bg-red-100 text-red-700'
+                                : 'bg-emerald-100 text-emerald-700'
                           }
                         `}
                       >
                         {
-                          resumen.tieneMora
-                            ? 'En mora'
-                            : 'Al día'
+                          !resumen.tieneCreditoActivo
+                            ? 'Sin crédito'
+                            : resumen.tieneMora
+                              ? 'En mora'
+                              : 'Al día'
                         }
                       </span>
 
@@ -788,39 +809,84 @@ export default function ClientesMapaPage() {
                       "
                     >
 
-                      <p
-                        className="
-                          flex
-                          justify-between
-                        "
-                      >
-                        <span className="text-stone-500">
-                          Saldo pendiente
-                        </span>
+                      {resumen.tieneCreditoActivo ? (
 
-                        <span className="font-bold text-stone-800">
-                          ${money(resumen.saldoPendiente)}
-                        </span>
-                      </p>
+                        <>
 
-                      <p
-                        className="
-                          flex
-                          justify-between
-                        "
-                      >
-                        <span className="text-stone-500">
-                          Próxima cuota
-                        </span>
+                          <p
+                            className="
+                              flex
+                              justify-between
+                            "
+                          >
+                            <span className="text-stone-500">
+                              Plan
+                            </span>
 
-                        <span className="font-semibold text-stone-800">
-                          {
-                            resumen.proximaCuota
-                              ? `#${resumen.proximaCuota.numeroCuota} · ${formatDate(resumen.proximaCuota.fechaVencimiento)}`
-                              : 'Sin cuotas pendientes'
-                          }
-                        </span>
-                      </p>
+                            <span className="font-semibold text-stone-800">
+                              {resumen.credito?.tipoPlan || '-'}
+                            </span>
+                          </p>
+
+                          <p
+                            className="
+                              flex
+                              justify-between
+                            "
+                          >
+                            <span className="text-stone-500">
+                              Monto crédito
+                            </span>
+
+                            <span className="font-semibold text-stone-800">
+                              ${money(resumen.credito?.montoCredito)}
+                            </span>
+                          </p>
+
+                          <p
+                            className="
+                              flex
+                              justify-between
+                            "
+                          >
+                            <span className="text-stone-500">
+                              Saldo pendiente
+                            </span>
+
+                            <span className="font-bold text-stone-800">
+                              ${money(resumen.saldoPendiente)}
+                            </span>
+                          </p>
+
+                          <p
+                            className="
+                              flex
+                              justify-between
+                            "
+                          >
+                            <span className="text-stone-500">
+                              Próxima cuota
+                            </span>
+
+                            <span className="font-semibold text-stone-800">
+                              {
+                                resumen.proximaCuota
+                                  ? `#${resumen.proximaCuota.numeroCuota} · ${formatDate(resumen.proximaCuota.fechaVencimiento)}`
+                                  : 'Sin cuotas pendientes'
+                              }
+                            </span>
+                          </p>
+
+                        </>
+
+                      ) : (
+
+                        <p className="text-stone-500">
+                          Este cliente no tiene
+                          ningún crédito vigente.
+                        </p>
+
+                      )}
 
                     </div>
 

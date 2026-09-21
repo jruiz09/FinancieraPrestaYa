@@ -23,10 +23,9 @@ import {
   perfilMobile,
   ayudasMobile,
   crearAyudaMobile,
+  destinatariosAyudaMobile,
   aceptarAyudaMobile,
-  rechazarAyudaMobile,
-  valesMobile,
-  crearValeMobile
+  rechazarAyudaMobile
 
 }
 from '../controllers/mobileController.js'
@@ -86,6 +85,11 @@ router.get(
   ayudasMobile
 )
 
+router.get(
+  '/ayudas/destinatarios',
+  destinatariosAyudaMobile
+)
+
 router.post(
   '/ayudas',
   crearAyudaMobile
@@ -99,16 +103,6 @@ router.put(
 router.put(
   '/ayudas/:id/rechazar',
   rechazarAyudaMobile
-)
-
-router.get(
-  '/vales',
-  valesMobile
-)
-
-router.post(
-  '/vales',
-  crearValeMobile
 )
 
 export default router

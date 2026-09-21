@@ -7,18 +7,12 @@ import {
   CreditoDetalle,
   Client,
   Ayuda,
-  Vale,
-  Zone,
-  sequelize
+  Zone
 } from '../models/index.js'
 
 import {
   registrarPagoCuota
 } from './creditoController.js'
-
-import {
-  generarNumeroVale
-} from './valeController.js'
 
 const obtenerCollector =
   async (userId) => {
@@ -97,6 +91,34 @@ const obtenerStatusCollector =
   }
 
 const esSupervisor = (user) => user?.permissions?.includes('MOBILE_SUPERVISOR');
+
+/*
+Resuelve quién es el usuario logueado (cobrador o supervisor)
+para las ayudas, que ahora pueden enviarse y recibirse desde
+cualquiera de los dos roles.
+*/
+const obtenerOrigen =
+  async (user) => {
+
+    if (esSupervisor(user)) {
+
+      const supervisor =
+        await obtenerSupervisor(user.id)
+
+      return supervisor
+        ? { tipo: 'SUPERVISOR', registro: supervisor }
+        : null
+
+    }
+
+    const collector =
+      await obtenerCollector(user.id)
+
+    return collector
+      ? { tipo: 'COBRADOR', registro: collector }
+      : null
+
+  }
 
 const dashboardSupervisor =
   async (
@@ -1444,19 +1466,17 @@ async (
 
   try {
 
-    const collector =
-      await obtenerCollector(
-        req.user.id
-      )
+    const origen =
+      await obtenerOrigen(req.user)
 
-    if (!collector) {
+    if (!origen) {
 
       return res.status(404).json({
 
         success:false,
 
         message:
-          'Cobrador no encontrado'
+          'Usuario no encontrado'
 
       })
 
@@ -1467,9 +1487,9 @@ async (
 
         where:{
 
-          destinoTipo:'COBRADOR',
+          destinoTipo:origen.tipo,
 
-          destinoId:collector.id,
+          destinoId:origen.registro.id,
 
           activo:true
 
@@ -1518,9 +1538,9 @@ async (
 
         where:{
 
-          origenTipo:'COBRADOR',
+          origenTipo:origen.tipo,
 
-          origenId:collector.id,
+          origenId:origen.registro.id,
 
           activo:true
 
@@ -1597,18 +1617,16 @@ async (
 
   try {
 
-    const collector =
-      await obtenerCollector(
-        req.user.id
-      )
+    const origen =
+      await obtenerOrigen(req.user)
 
-    if (!collector) {
+    if (!origen) {
 
       return res.status(404).json({
 
         success:false,
 
-        message:'Cobrador no encontrado'
+        message:'Usuario no encontrado'
 
       })
 
@@ -1628,9 +1646,9 @@ async (
 
     if (
 
-      destinoTipo === 'COBRADOR' &&
+      destinoTipo === origen.tipo &&
 
-      destinoId === collector.id
+      destinoId === origen.registro.id
 
     ) {
 
@@ -1640,6 +1658,37 @@ async (
 
         message:
           'No puede enviarse una ayuda a usted mismo.'
+
+      })
+
+    }
+
+    /*
+    El destinatario tiene que pertenecer al mismo owner
+    que quien envía, sin importar el rol de cada uno.
+    */
+
+    const ownerId =
+      origen.registro.ownerId
+
+    const destinoValido =
+      destinoTipo === 'COBRADOR'
+        ? await Collector.findOne({
+            where: { id: destinoId, ownerId, activo: true }
+          })
+        : destinoTipo === 'SUPERVISOR'
+          ? await Supervisor.findOne({
+              where: { id: destinoId, ownerId }
+            })
+          : null
+
+    if (!destinoValido) {
+
+      return res.status(400).json({
+
+        success:false,
+
+        message: 'Destinatario inválido.'
 
       })
 
@@ -1668,10 +1717,10 @@ async (
           new Date(),
 
         origenTipo:
-          'COBRADOR',
+          origen.tipo,
 
         origenId:
-          collector.id,
+          origen.registro.id,
 
         destinoTipo,
 
@@ -1705,7 +1754,7 @@ async (
 }
 
 
-export const valesMobile =
+export const destinatariosAyudaMobile =
 async (
   req,
   res,
@@ -1714,236 +1763,65 @@ async (
 
   try {
 
-    const where = {
-      activo: true
-    }
+    const origen =
+      await obtenerOrigen(req.user)
 
-    if (esSupervisor(req.user)) {
+    if (!origen) {
 
-      const supervisor =
-        await obtenerSupervisor(
-          req.user.id
-        )
+      return res.status(404).json({
 
-      if (!supervisor) {
+        success:false,
 
-        return res.status(404).json({
-
-          success: false,
-
-          message: 'Supervisor no encontrado'
-
-        })
-
-      }
-
-      where.supervisorId =
-        supervisor.id
-
-    } else {
-
-      const collector =
-        await obtenerCollector(
-          req.user.id
-        )
-
-      if (!collector) {
-
-        return res.status(404).json({
-
-          success: false,
-
-          message: 'Cobrador no encontrado'
-
-        })
-
-      }
-
-      where.collectorId =
-        collector.id
-
-    }
-
-    const vales =
-      await Vale.findAll({
-
-        where,
-
-        order: [
-          ['fecha', 'DESC']
-        ]
+        message:'Usuario no encontrado'
 
       })
+
+    }
+
+    const ownerId =
+      origen.registro.ownerId
+
+    const cobradores =
+      await Collector.findAll({
+        where: { ownerId, activo: true },
+        attributes: ['id', 'nombre', 'apellido']
+      })
+
+    const supervisores =
+      await Supervisor.findAll({
+        where: { ownerId },
+        attributes: ['id', 'nombre', 'apellido']
+      })
+
+    const destinatarios = [
+
+      ...cobradores.map(c => ({
+        tipo: 'COBRADOR',
+        id: c.id,
+        nombre: `${c.apellido}, ${c.nombre}`
+      })),
+
+      ...supervisores.map(s => ({
+        tipo: 'SUPERVISOR',
+        id: s.id,
+        nombre: `${s.apellido}, ${s.nombre}`
+      }))
+
+    ].filter(
+      d => !(d.tipo === origen.tipo && d.id === origen.registro.id)
+    )
 
     return res.json({
 
-      success: true,
+      success:true,
 
-      data: vales
+      data: destinatarios
 
     })
-
-  } catch (error) {
-
-    next(error)
 
   }
 
-}
-
-
-const TIPOS_VALE_PERMITIDOS = [
-  'ADELANTO',
-  'COMBUSTIBLE',
-  'GASTOS',
-  'OTROS'
-]
-
-export const crearValeMobile =
-async (
-  req,
-  res,
-  next
-) => {
-
-  const transaction =
-    await sequelize.transaction()
-
-  try {
-
-    const {
-      tipo,
-      monto,
-      observaciones
-    } = req.body
-
-    if (!TIPOS_VALE_PERMITIDOS.includes(tipo)) {
-
-      await transaction.rollback()
-
-      return res.status(400).json({
-        success: false,
-        message: 'Tipo de vale inválido.'
-      })
-
-    }
-
-    const montoVale =
-      Number(monto)
-
-    if (
-      !Number.isFinite(montoVale) ||
-      montoVale <= 0
-    ) {
-
-      await transaction.rollback()
-
-      return res.status(400).json({
-        success: false,
-        message: 'El monto debe ser mayor a cero.'
-      })
-
-    }
-
-    /*
-    El origen del autovale se resuelve siempre desde
-    req.user.id, nunca desde el body, para que un cobrador
-    o supervisor no pueda cargar un vale a nombre de otro.
-    */
-
-    let collectorId = null
-    let supervisorId = null
-    let usuarioRecepcionId = null
-
-    if (esSupervisor(req.user)) {
-
-      const supervisor =
-        await obtenerSupervisor(
-          req.user.id
-        )
-
-      if (!supervisor) {
-
-        await transaction.rollback()
-
-        return res.status(404).json({
-          success: false,
-          message: 'Supervisor no encontrado'
-        })
-
-      }
-
-      supervisorId = supervisor.id
-      usuarioRecepcionId = req.user.id
-
-    } else {
-
-      const collector =
-        await obtenerCollector(
-          req.user.id
-        )
-
-      if (!collector) {
-
-        await transaction.rollback()
-
-        return res.status(404).json({
-          success: false,
-          message: 'Cobrador no encontrado'
-        })
-
-      }
-
-      collectorId = collector.id
-      usuarioRecepcionId = req.user.id
-
-    }
-
-    const numero =
-      await generarNumeroVale(transaction)
-
-    const vale =
-      await Vale.create(
-        {
-          numero,
-
-          fecha:
-            new Date(),
-
-          ownerId:
-            req.user.ownerId,
-
-          collectorId,
-
-          supervisorId,
-
-          tipo,
-
-          monto: montoVale,
-
-          observaciones:
-            observaciones || null,
-
-          usuarioEntregaId:
-            req.user.id,
-
-          usuarioRecepcionId
-        },
-        { transaction }
-      )
-
-    await transaction.commit()
-
-    return res.status(201).json({
-      success: true,
-      data: vale
-    })
-
-  } catch (error) {
-
-    if (!transaction.finished) {
-      await transaction.rollback()
-    }
+  catch(error){
 
     next(error)
 
@@ -1961,10 +1839,14 @@ async (
 
   try {
 
-    const collector =
-      await obtenerCollector(
-        req.user.id
-      )
+    const origen =
+      await obtenerOrigen(req.user)
+
+    if (!origen) {
+
+      return res.status(404).json({ success:false })
+
+    }
 
     const ayuda =
       await Ayuda.findByPk(
@@ -1975,9 +1857,9 @@ async (
 
       !ayuda ||
 
-      ayuda.destinoTipo !== 'COBRADOR' ||
+      ayuda.destinoTipo !== origen.tipo ||
 
-      ayuda.destinoId !== collector.id
+      ayuda.destinoId !== origen.registro.id
 
     ){
 
@@ -2025,10 +1907,14 @@ async (
 
   try {
 
-    const collector =
-      await obtenerCollector(
-        req.user.id
-      )
+    const origen =
+      await obtenerOrigen(req.user)
+
+    if (!origen) {
+
+      return res.status(404).json({ success:false })
+
+    }
 
     const ayuda =
       await Ayuda.findByPk(
@@ -2039,9 +1925,9 @@ async (
 
       !ayuda ||
 
-      ayuda.destinoTipo !== 'COBRADOR' ||
+      ayuda.destinoTipo !== origen.tipo ||
 
-      ayuda.destinoId !== collector.id
+      ayuda.destinoId !== origen.registro.id
 
     ){
 

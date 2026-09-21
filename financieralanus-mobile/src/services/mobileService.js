@@ -171,37 +171,19 @@ return data.data
 
 },
 
-vales:
+destinatariosAyuda:
   async () => {
 
     const {
       data
     } =
       await api.get(
-        '/mobile/vales'
+        '/mobile/ayudas/destinatarios'
       )
 
     return data.data
 
-  },
-
-  crearVale:
-    async payload => {
-
-      const {
-        data
-      } =
-        await api.post(
-
-          '/mobile/vales',
-
-          payload
-
-        )
-
-      return data.data
-
-    }
+  }
 
 }
 

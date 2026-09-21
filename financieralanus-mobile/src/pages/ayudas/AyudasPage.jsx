@@ -377,7 +377,7 @@ export default function AyudasPage() {
 
                   ? 'Cuando otro cobrador o un supervisor te envíe una ayuda aparecerá aquí.'
 
-                  : 'Presioná el botón + para solicitar una ayuda.'
+                  : 'Presioná el botón + para enviar una ayuda.'
 
               }
 

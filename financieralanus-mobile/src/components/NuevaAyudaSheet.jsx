@@ -1,4 +1,5 @@
 import {
+  useEffect,
   useState
 } from 'react'
 
@@ -12,6 +13,10 @@ import {
   HandCoins
 } from 'lucide-react'
 
+import {
+  mobileService
+} from '../services/mobileService'
+
 export default function NuevaAyudaSheet({
 
   onClose,
@@ -19,6 +24,15 @@ export default function NuevaAyudaSheet({
   onConfirm
 
 }) {
+
+  const [destinatarios, setDestinatarios] =
+    useState([])
+
+  const [cargandoDestinatarios, setCargandoDestinatarios] =
+    useState(true)
+
+  const [destino, setDestino] =
+    useState('')
 
   const [monto,
     setMonto] =
@@ -28,22 +42,41 @@ export default function NuevaAyudaSheet({
     setObservaciones] =
       useState('')
 
+  useEffect(() => {
+
+    mobileService
+      .destinatariosAyuda()
+      .then(data =>
+        setDestinatarios(data || [])
+      )
+      .finally(() =>
+        setCargandoDestinatarios(false)
+      )
+
+  }, [])
+
   const handleSubmit =
     e => {
 
       e.preventDefault()
 
       if (
-
-        monto <= 0
-
+        monto <= 0 ||
+        !destino
       ) {
 
         return
 
       }
 
+      const [destinoTipo, destinoId] =
+        destino.split('|')
+
       onConfirm({
+
+        destinoTipo,
+
+        destinoId,
 
         monto,
 
@@ -57,7 +90,7 @@ export default function NuevaAyudaSheet({
 
     <BottomSheet
 
-      title="Solicitar Ayuda"
+      title="Enviar Ayuda"
 
       onClose={onClose}
 
@@ -84,7 +117,78 @@ export default function NuevaAyudaSheet({
             "
           >
 
-            Importe solicitado
+            Enviar a
+
+          </label>
+
+          <select
+
+            value={destino}
+
+            onChange={e =>
+              setDestino(e.target.value)
+            }
+
+            disabled={cargandoDestinatarios}
+
+            className="
+              w-full
+              rounded-2xl
+              border
+              border-slate-700
+              bg-slate-800
+              p-4
+              outline-none
+              focus:border-cyan-500
+            "
+
+          >
+
+            <option value="">
+
+              {
+
+                cargandoDestinatarios
+
+                  ? 'Cargando...'
+
+                  : 'Seleccioná un destinatario...'
+
+              }
+
+            </option>
+
+            {destinatarios.map(d => (
+
+              <option
+                key={`${d.tipo}|${d.id}`}
+                value={`${d.tipo}|${d.id}`}
+              >
+                {
+                  d.tipo === 'SUPERVISOR'
+                    ? `Supervisor · ${d.nombre}`
+                    : `Cobrador · ${d.nombre}`
+                }
+              </option>
+
+            ))}
+
+          </select>
+
+        </div>
+
+        <div>
+
+          <label
+            className="
+              block
+              mb-2
+              text-sm
+              text-slate-400
+            "
+          >
+
+            Importe
 
           </label>
 
@@ -156,7 +260,8 @@ export default function NuevaAyudaSheet({
           type="submit"
 
           disabled={
-            monto <= 0
+            monto <= 0 ||
+            !destino
           }
 
           className={`
@@ -172,7 +277,7 @@ export default function NuevaAyudaSheet({
 
             ${
 
-              monto <= 0
+              monto <= 0 || !destino
 
                 ?
 
@@ -192,7 +297,7 @@ export default function NuevaAyudaSheet({
             size={22}
           />
 
-          Solicitar ayuda
+          Enviar ayuda
 
         </button>
 

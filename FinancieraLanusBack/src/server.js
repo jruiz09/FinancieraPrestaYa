@@ -10,6 +10,8 @@ import { seedColumnasMpDejaOverride } from './seeders/seedColumnasMpDejaOverride
 import { seedColumnasCreditoEntrega } from './seeders/seedColumnasCreditoEntrega.js';
 import { seedEliminarEmailUsuariosYSupervisores } from './seeders/seedEliminarEmailUsuariosYSupervisores.js';
 import { seedColumnasBajaCredito } from './seeders/seedColumnasBajaCredito.js';
+import { seedEliminarEstadoVale } from './seeders/seedEliminarEstadoVale.js';
+import { seedFixForeignKeysAyuda } from './seeders/seedFixForeignKeysAyuda.js';
 
 dotenv.config();
 
@@ -29,6 +31,10 @@ const startServer = async () => {
     await seedEliminarEmailUsuariosYSupervisores();
 
     await seedColumnasBajaCredito();
+
+    await seedEliminarEstadoVale();
+
+    await seedFixForeignKeysAyuda();
 
     await seedRoles();
 

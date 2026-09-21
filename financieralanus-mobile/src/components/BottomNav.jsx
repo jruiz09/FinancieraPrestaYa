@@ -5,8 +5,7 @@ import {
   Handshake,
   User,
   Users,
-  BarChart3,
-  Wallet
+  BarChart3
 } from 'lucide-react'
 
 import {
@@ -47,9 +46,9 @@ export default function BottomNav() {
             label: 'Indicadores'
           },
           {
-            to: '/vales',
-            icon: Wallet,
-            label: 'Vales'
+            to: '/ayudas',
+            icon: Handshake,
+            label: 'Ayudas'
           },
           {
             to: '/perfil',
@@ -77,11 +76,6 @@ export default function BottomNav() {
             to: '/ayudas',
             icon: Handshake,
             label: 'Ayudas'
-          },
-          {
-            to: '/vales',
-            icon: Wallet,
-            label: 'Vales'
           },
           {
             to: '/perfil',

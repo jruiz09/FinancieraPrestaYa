@@ -9,6 +9,7 @@ import {
   getCredito,
   createCredito,
   deleteCredito,
+  darDeBajaCredito,
   simularCredito,
   registrarPagoCuota,
   listCuotas
@@ -77,6 +78,16 @@ router.delete(
   param('id').isUUID(),
   validateRequest,
   deleteCredito
+);
+
+router.put(
+  '/:id/baja',
+  authorize('CREDITS_DELETE'),
+  param('id').isUUID(),
+  body('motivo').isIn(['ERROR', 'PAGO_COMPLETO', 'MAL_PAGO']),
+  body('observaciones').optional().isString(),
+  validateRequest,
+  darDeBajaCredito
 );
 
 

@@ -29,7 +29,8 @@ import {
   AlertTriangle,
   CalendarCheck,
   TrendingUp,
-  BadgeDollarSign
+  BadgeDollarSign,
+  Ban
 } from 'lucide-react'
 
 import {
@@ -41,6 +42,9 @@ import PagoCuotaModal
 
 import ConfirmCascadaModal
   from '../components/ConfirmCascadaModal'
+
+import BajaCreditoModal
+  from '../components/BajaCreditoModal'
 
 import Permission
   from '../components/Permission'
@@ -90,6 +94,16 @@ export default function CreditoDetallePage() {
     confirmacionPendiente,
     setConfirmacionPendiente
   ] = useState(null)
+
+  const [
+    bajaModalOpen,
+    setBajaModalOpen
+  ] = useState(false)
+
+  const [
+    guardandoBaja,
+    setGuardandoBaja
+  ] = useState(false)
 
 
   /* ===================================================== */
@@ -510,6 +524,46 @@ ${url}`
     }
 
 
+  const handleDarDeBaja =
+    async ({ motivo, observaciones }) => {
+
+      try {
+
+        setGuardandoBaja(true)
+
+        await creditoService.darDeBaja(
+          credito.id,
+          { motivo, observaciones }
+        )
+
+        setBajaModalOpen(false)
+
+        toast.success(
+          'Crédito dado de baja correctamente'
+        )
+
+        await cargarCredito()
+
+      } catch (error) {
+
+        console.error(error)
+
+        toast.error(
+          error?.response
+            ?.data
+            ?.message ||
+          'No se pudo dar de baja el crédito'
+        )
+
+      } finally {
+
+        setGuardandoBaja(false)
+
+      }
+
+    }
+
+
   /* ===================================================== */
   /* LOADING */
   /* ===================================================== */
@@ -814,6 +868,37 @@ ${url}`
 
                 </div>
 
+                {credito.motivoBaja && (
+
+                  <div className="
+                    mt-3
+                    inline-flex
+                    items-center
+                    gap-2
+                    px-3
+                    py-1.5
+                    bg-red-50
+                    border
+                    border-red-200
+                    rounded-lg
+                    text-xs
+                    text-red-700
+                  ">
+                    <Ban className="w-3.5 h-3.5" />
+                    Dado de baja el{' '}
+                    {formatDate(credito.fechaBaja)}
+                    {' — '}
+                    {
+                      {
+                        ERROR: 'Error de carga',
+                        PAGO_COMPLETO: 'Pago completo anticipado',
+                        MAL_PAGO: 'Mal pago'
+                      }[credito.motivoBaja]
+                    }
+                  </div>
+
+                )}
+
               </div>
 
             </div>
@@ -919,6 +1004,46 @@ ${url}`
                 Volver
 
               </button>
+
+              {(
+                credito.estado === 'NUEVO' ||
+                credito.estado === 'EN_CURSO'
+              ) && (
+
+                <Permission permission={PERMISSIONS.CREDITS_DELETE}>
+
+                  <button
+                    onClick={() =>
+                      setBajaModalOpen(true)
+                    }
+                    className="
+                      h-10
+                      px-3
+                      flex
+                      items-center
+                      gap-2
+                      border
+                      border-red-200
+                      text-red-600
+                      hover:bg-red-50
+                      rounded-xl
+                      text-sm
+                      font-semibold
+                      transition
+                    "
+                  >
+
+                    <Ban
+                      className="w-4 h-4"
+                    />
+
+                    Dar de baja
+
+                  </button>
+
+                </Permission>
+
+              )}
 
             </div>
 
@@ -2226,6 +2351,15 @@ ${url}`
         isLoading={
           loadingPago
         }
+      />
+
+      <BajaCreditoModal
+        isOpen={bajaModalOpen}
+        onClose={() =>
+          setBajaModalOpen(false)
+        }
+        onConfirm={handleDarDeBaja}
+        isLoading={guardandoBaja}
       />
 
     </div>

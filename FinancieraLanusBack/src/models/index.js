@@ -278,6 +278,22 @@ Credito.belongsTo(Owner, {
 });
 
 //
+// USUARIOS -> CREDITOS (quien dio de baja)
+//
+User.hasMany(Credito, {
+  foreignKey: {
+    name: 'usuarioBajaId',
+    allowNull: true,
+  },
+  as: 'creditosDadosDeBaja',
+});
+
+Credito.belongsTo(User, {
+  foreignKey: 'usuarioBajaId',
+  as: 'usuarioBaja',
+});
+
+//
 // CLIENTS -> CREDITOS
 //
 Client.hasMany(Credito, {

@@ -673,6 +673,242 @@ export const deleteCredito = async (
 };
 
 
+/*
+=====================================================
+BAJA DE CRÉDITO CON MOTIVO (ver nota en el modelo Credito
+para el detalle de cómo impacta cada motivo en %Cobranza/ECU).
+Reutiliza calcularCuotasAfectadas (la misma cascada que usa
+el pago de cuotas normal) para el motivo PAGO_COMPLETO, en
+vez de reimplementar la distribución del pago.
+=====================================================
+*/
+export const darDeBajaCredito = async (
+  req,
+  res,
+  next
+) => {
+
+  const transaction =
+    await sequelize.transaction();
+
+  try {
+
+    const { motivo, observaciones } = req.body;
+
+    const credito =
+      await Credito.findByPk(
+        req.params.id,
+        {
+          transaction,
+          lock: transaction.LOCK.UPDATE
+        }
+      );
+
+    if (
+      !credito ||
+      !credito.activo
+    ) {
+
+      await transaction.rollback();
+
+      return res.status(404).json({
+        success: false,
+        message: 'Crédito no encontrado.'
+      });
+    }
+
+    if (
+      !canViewAllOwners(req.user) &&
+      credito.ownerId !== req.user.ownerId
+    ) {
+
+      await transaction.rollback();
+
+      return res.status(403).json({
+        success: false,
+        message: 'Acceso denegado.'
+      });
+    }
+
+    if (
+      credito.estado === 'FINALIZADO' ||
+      credito.estado === 'CANCELADO'
+    ) {
+
+      await transaction.rollback();
+
+      return res.status(400).json({
+        success: false,
+        message:
+          'El crédito ya está finalizado o dado de baja.'
+      });
+    }
+
+    const fechaBaja =
+      new Date().toISOString().split('T')[0];
+
+    if (motivo === 'ERROR') {
+
+      /*
+      Reversión limpia: solo se permite si nunca se
+      registró ningún pago sobre este crédito.
+      */
+
+      const tienePagos =
+        await PagoCuota.findOne({
+          where: { activo: true },
+          include: [
+            {
+              model: CreditoDetalle,
+              as: 'cuota',
+              required: true,
+              attributes: [],
+              where: { creditoId: credito.id }
+            }
+          ],
+          transaction
+        });
+
+      if (tienePagos) {
+
+        await transaction.rollback();
+
+        return res.status(400).json({
+          success: false,
+          message:
+            'No se puede dar de baja por error: el crédito ya tiene pagos registrados.'
+        });
+      }
+
+      credito.activo = false;
+
+    } else if (motivo === 'PAGO_COMPLETO') {
+
+      /*
+      Paga el saldo restante con el mismo mecanismo de
+      cascada que un pago normal, para que ECU y %Cobranza
+      sigan viendo exactamente lo mismo que verían si el
+      cliente hubiese pagado todo de una vez por caja.
+      */
+
+      const cuotasImpagas =
+        await CreditoDetalle.findAll({
+          where: {
+            creditoId: credito.id,
+            estado: { [Op.ne]: 'PAGADA' }
+          },
+          order: [['numeroCuota', 'ASC']],
+          transaction,
+          lock: transaction.LOCK.UPDATE
+        });
+
+      const saldoTotal =
+        cuotasImpagas.reduce(
+          (total, c) =>
+            total +
+            Number(c.monto) -
+            Number(c.montoPago || 0),
+          0
+        );
+
+      if (cuotasImpagas.length > 0 && saldoTotal > 0) {
+
+        const { cuotasObjetivo } =
+          await calcularCuotasAfectadas({
+            cuota: cuotasImpagas[0],
+            montoIngresado: saldoTotal,
+            transaction
+          });
+
+        for (const { cuota: c, aPagar } of cuotasObjetivo) {
+
+          await PagoCuota.create(
+            {
+              cuotaId: c.id,
+              fecha: fechaBaja,
+              monto: aPagar,
+              tipoTransaccion: 'EFECTIVO',
+              observaciones:
+                `Pago registrado por baja de crédito (pago completo).${observaciones ? ' ' + observaciones : ''}`,
+              activo: true
+            },
+            { transaction }
+          );
+
+          c.montoPago =
+            Number(c.montoPago || 0) + aPagar;
+
+          c.tipoTransaccion = 'EFECTIVO';
+          c.fechaPago = fechaBaja;
+          c.estado = 'PAGADA';
+
+          await c.save({ transaction });
+        }
+      }
+
+      credito.estado = 'FINALIZADO';
+
+    } else if (motivo === 'MAL_PAGO') {
+
+      /*
+      Las cuotas ya vencidas/parciales quedan intactas
+      (el mal historial de cobranza no se borra). Solo se
+      desactivan las que todavía no vencieron, para que
+      dejen de aparecer en "A Recaudar" futuro. No se toca
+      ECU (no suma a Terminados): es una decisión tomada sin
+      confirmación explícita de negocio, fácil de invertir
+      si no es el criterio esperado.
+      */
+
+      await CreditoDetalle.update(
+        { activo: false },
+        {
+          where: {
+            creditoId: credito.id,
+            estado: 'PENDIENTE'
+          },
+          transaction
+        }
+      );
+
+      credito.estado = 'CANCELADO';
+
+    } else {
+
+      await transaction.rollback();
+
+      return res.status(400).json({
+        success: false,
+        message: 'Motivo de baja inválido.'
+      });
+    }
+
+    credito.motivoBaja = motivo;
+    credito.fechaBaja = fechaBaja;
+    credito.observacionesBaja = observaciones || null;
+
+    await credito.save({ transaction });
+
+    await transaction.commit();
+
+    return res.json({
+      success: true,
+      message: 'Crédito dado de baja correctamente.',
+      data: credito
+    });
+
+  } catch (error) {
+
+    if (!transaction.finished) {
+      await transaction.rollback();
+    }
+
+    next(error);
+  }
+
+};
+
+
 export const simularCredito = async (
   req,
   res,

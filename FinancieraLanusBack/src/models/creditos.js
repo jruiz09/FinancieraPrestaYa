@@ -106,6 +106,52 @@ tokenConsulta: {
     activo: {
       type: DataTypes.BOOLEAN,
       defaultValue: true
+    },
+
+    /*
+    =====================================================
+    BAJA DE CRÉDITO (con motivo). Ver diagnóstico: cada
+    motivo impacta distinto el cálculo de %Cobranza/ECU:
+
+    - ERROR: nunca se pagó nada, se marca activo=false
+      (sale de todos los cálculos, pasado y futuro, como si
+      nunca hubiera existido). Solo se permite si el crédito
+      no tiene ningún pago registrado.
+
+    - PAGO_COMPLETO: se paga el saldo restante vía la misma
+      cascada que un pago normal (calcularCuotasAfectadas),
+      así ECU/%Cobranza no cambian de fórmula, solo ven un
+      pago más, igual que si el cliente hubiese pagado todo
+      de una vez.
+
+    - MAL_PAGO: estado pasa a CANCELADO, las cuotas ya
+      vencidas/impagas quedan intactas (el mal historial de
+      cobranza no se borra), y las cuotas que todavía no
+      vencieron se desactivan para que dejen de aparecer en
+      "A Recaudar" futuro. No suma a Terminados en ECU (ver
+      nota en cajaController/creditoController: es una
+      decisión tomada sin confirmación explícita, fácil de
+      invertir si no es lo que se espera).
+    =====================================================
+    */
+
+    motivoBaja: {
+      type: DataTypes.ENUM(
+        'ERROR',
+        'PAGO_COMPLETO',
+        'MAL_PAGO'
+      ),
+      allowNull: true
+    },
+
+    fechaBaja: {
+      type: DataTypes.DATEONLY,
+      allowNull: true
+    },
+
+    observacionesBaja: {
+      type: DataTypes.TEXT,
+      allowNull: true
     }
   });
 };

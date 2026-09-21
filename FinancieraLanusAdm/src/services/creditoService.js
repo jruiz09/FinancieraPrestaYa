@@ -44,5 +44,14 @@ export const creditoService = {
     );
 
   return response.data;
-}
+},
+
+  darDeBaja: async (id, data) => {
+    const response = await api.put(
+      `/creditos/${id}/baja`,
+      data
+    )
+
+    return response.data
+  }
 }

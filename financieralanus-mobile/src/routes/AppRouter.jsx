@@ -29,9 +29,6 @@ import CobrosPage
 import AyudasPage
   from '../pages/ayudas/AyudasPage'
 
-import ValesPage
-  from '../pages/vales/ValesPage'
-
 import PerfilPage
   from '../pages/profile/PerfilPage'
 
@@ -129,13 +126,6 @@ export default function AppRouter() {
             path="/ayudas"
             element={
               <AyudasPage />
-            }
-          />
-
-          <Route
-            path="/vales"
-            element={
-              <ValesPage />
             }
           />
 

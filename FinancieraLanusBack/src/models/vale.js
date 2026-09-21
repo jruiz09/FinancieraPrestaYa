@@ -34,11 +34,6 @@ export const ValeModel = (sequelize, DataTypes) => {
       type: DataTypes.DECIMAL(12, 2),
       allowNull: false,
     },
-    estado: {
-      type: DataTypes.ENUM('PENDIENTE', 'RENDIDO', 'ANULADO'),
-      allowNull: false,
-      defaultValue: 'PENDIENTE',
-    },
     observaciones: {
       type: DataTypes.TEXT,
       allowNull: true,

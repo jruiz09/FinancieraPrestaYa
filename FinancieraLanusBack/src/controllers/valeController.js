@@ -168,8 +168,7 @@ export const listVales = async (req, res, next) => {
       await Vale.findAll({
 
         where: {
-          ownerId: req.user.ownerId,
-          activo: true
+          ownerId: req.user.ownerId
         },
 
         include: [
@@ -238,7 +237,7 @@ export const anularVale = async (req, res, next) => {
       });
     }
 
-    if (vale.estado === 'ANULADO') {
+    if (!vale.activo) {
 
       return res.status(400).json({
         success: false,
@@ -246,7 +245,7 @@ export const anularVale = async (req, res, next) => {
       });
     }
 
-    vale.estado = 'ANULADO';
+    vale.activo = false;
 
     await vale.save();
 

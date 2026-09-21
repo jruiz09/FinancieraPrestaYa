@@ -190,7 +190,7 @@ export default function ValesPage() {
 
   const totalMonto =
     vales
-      .filter(v => v.estado !== 'ANULADO')
+      .filter(v => v.activo)
       .reduce(
         (acc, item) =>
           acc +
@@ -215,30 +215,16 @@ export default function ValesPage() {
     }
 
   const badgeEstado =
-    (estado) => {
-
-      switch (estado) {
-
-        case 'RENDIDO':
-          return `
-            bg-emerald-100
-            text-emerald-700
-          `
-
-        case 'ANULADO':
-          return `
-            bg-red-100
-            text-red-700
-          `
-
-        default:
-          return `
-            bg-amber-100
-            text-amber-700
-          `
-      }
-
-    }
+    (activo) =>
+      activo
+        ? `
+          bg-emerald-100
+          text-emerald-700
+        `
+        : `
+          bg-red-100
+          text-red-700
+        `
 
   return (
 
@@ -516,6 +502,10 @@ export default function ValesPage() {
                   </th>
 
                   <th className="px-4 py-3 text-left">
+                    Observaciones
+                  </th>
+
+                  <th className="px-4 py-3 text-left">
                     Estado
                   </th>
 
@@ -582,6 +572,21 @@ export default function ValesPage() {
                         )}
                       </td>
 
+                      <td
+                        className="
+                          px-4
+                          py-4
+                          max-w-[220px]
+                          truncate
+                          text-stone-600
+                        "
+                        title={
+                          vale.observaciones || ''
+                        }
+                      >
+                        {vale.observaciones || '-'}
+                      </td>
+
                       <td className="px-4 py-4">
 
                         <span
@@ -593,12 +598,14 @@ export default function ValesPage() {
                             text-xs
                             font-bold
                             ${badgeEstado(
-                              vale.estado
+                              vale.activo
                             )}
                           `}
                         >
                           {
-                            vale.estado
+                            vale.activo
+                              ? 'ACTIVO'
+                              : 'ANULADO'
                           }
                         </span>
 
@@ -608,7 +615,7 @@ export default function ValesPage() {
 
                         <div className="flex justify-end">
 
-                          {vale.estado === 'PENDIENTE' && (
+                          {vale.activo && (
 
                             <Permission permission={PERMISSIONS.VALES_DELETE}>
                               <button

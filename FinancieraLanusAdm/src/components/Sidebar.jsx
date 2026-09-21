@@ -24,7 +24,8 @@ import {
   Wallet,
   ClipboardList,
   CalendarRange,
-  CalendarCheck2
+  CalendarCheck2,
+  PiggyBank
 } from 'lucide-react'
 
 import {
@@ -545,7 +546,8 @@ export default function Sidebar({
             permissions.includes('ZONES_VIEW') ||
             permissions.includes('CLIENTS_VIEW') ||
             permissions.includes('AYUDAS_VIEW') ||
-            permissions.includes('VALES_VIEW')
+            permissions.includes('VALES_VIEW') ||
+            permissions.includes('CAJA_VIEW')
           ) && (
 
           <SidebarSection
@@ -627,6 +629,19 @@ export default function Sidebar({
                 onClick={onMobileClose}
               >
                 Vales
+              </SidebarLink>
+
+            )}
+
+            {permissions.includes('CAJA_VIEW') && (
+
+              <SidebarLink
+                to="/caja"
+                icon={PiggyBank}
+                collapsed={collapsed}
+                onClick={onMobileClose}
+              >
+                Caja
               </SidebarLink>
 
             )}

@@ -21,6 +21,7 @@ import {
   PagoCuotaModel
 } from './pagoCuota.js';
 import { NotificacionModel } from './notificacion.js';
+import { MovimientoCajaModel } from './movimientoCaja.js';
 
 const Ayuda = AyudaModel(sequelize, DataTypes);
 const Zone = ZoneModel(sequelize, DataTypes);
@@ -41,6 +42,7 @@ const RolePermission = RolePermissionModel(sequelize, DataTypes);
 const Vale = ValeModel(sequelize, DataTypes);
 const RegistroDiarioZona = RegistroDiarioZonaModel(sequelize, DataTypes);
 const Notificacion = NotificacionModel(sequelize, DataTypes);
+const MovimientoCaja = MovimientoCajaModel(sequelize, DataTypes);
 
 
   Owner.hasMany(Zone, {
@@ -493,6 +495,55 @@ Notificacion.belongsTo(Credito, {
   as: 'credito',
 });
 
+//
+// OWNERS -> MOVIMIENTOS DE CAJA
+//
+Owner.hasMany(MovimientoCaja, {
+  foreignKey: {
+    name: 'ownerId',
+    allowNull: false,
+  },
+  as: 'movimientosCaja',
+});
+
+MovimientoCaja.belongsTo(Owner, {
+  foreignKey: 'ownerId',
+  as: 'owner',
+});
+
+//
+// ZONAS -> MOVIMIENTOS DE CAJA
+// (zona obligatoria: mismo criterio que Collector.zoneId)
+//
+Zone.hasMany(MovimientoCaja, {
+  foreignKey: {
+    name: 'zoneId',
+    allowNull: false,
+  },
+  as: 'movimientosCaja',
+});
+
+MovimientoCaja.belongsTo(Zone, {
+  foreignKey: 'zoneId',
+  as: 'zone',
+});
+
+//
+// USUARIOS -> MOVIMIENTOS DE CAJA (quien lo cargó)
+//
+User.hasMany(MovimientoCaja, {
+  foreignKey: {
+    name: 'usuarioId',
+    allowNull: false,
+  },
+  as: 'movimientosCaja',
+});
+
+MovimientoCaja.belongsTo(User, {
+  foreignKey: 'usuarioId',
+  as: 'usuario',
+});
+
 export {
   sequelize,
   Role,
@@ -513,4 +564,5 @@ export {
   Vale,
   RegistroDiarioZona,
   Notificacion,
+  MovimientoCaja,
 };

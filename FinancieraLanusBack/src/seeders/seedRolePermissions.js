@@ -50,6 +50,9 @@ export const seedRolePermissions = async () => {
 
       'AYUDAS_VIEW',
 
+      'CAJA_VIEW',
+      'CAJA_CREATE',
+
       'ZONES_VIEW',
 
       'PLAN_TYPES_VIEW',

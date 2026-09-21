@@ -18,6 +18,7 @@ import permissionsRoutes from './permissions.js';
 import reporteRoutes
 from './reporteRoutes.js';
 import notificacionRoutes from './notificaciones.js';
+import cajaRoutes from './caja.js';
 
 const router = Router();
 
@@ -40,5 +41,6 @@ router.use('/mobile', mobileRoutes);
 router.use(  '/reportes',
   reporteRoutes);
 router.use('/notificaciones', notificacionRoutes);
+router.use('/caja', cajaRoutes);
 
 export default router;

@@ -420,7 +420,7 @@ RECAUDADO (PagoCuota en el rango, via cobradorId)
 =====================================================
 */
 
-const calcularRecaudadoPorZona = async (
+export const calcularRecaudadoPorZona = async (
   todosLosCollectorIds,
   collectorZonaMap,
   fechaInicio,

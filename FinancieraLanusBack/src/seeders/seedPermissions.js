@@ -95,6 +95,13 @@ const MODULES = {
     'DELETE'
   ],
 
+  CAJA: [
+    'VIEW',
+    'CREATE',
+    'EDIT',
+    'DELETE'
+  ],
+
   MOBILE: [
     'SUPERVISOR'
   ]
@@ -146,6 +153,8 @@ const moduleName = {
   VALES: 'Vales',
 
   AYUDAS: 'Ayudas',
+
+  CAJA: 'Caja',
 
   MOBILE: 'Mobile'
 

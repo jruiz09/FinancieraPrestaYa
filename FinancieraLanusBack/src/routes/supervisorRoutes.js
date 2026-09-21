@@ -88,10 +88,6 @@ router.post(
   body('celular')
     .optional(),
 
-  body('email')
-    .optional()
-    .isEmail(),
-
   body('ownerId')
     .optional()
     .isUUID(),

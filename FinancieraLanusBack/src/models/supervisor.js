@@ -32,10 +32,6 @@ export const SupervisorModel = (
       celular: {
         type: DataTypes.STRING(30)
       },
-
-      email: {
-        type: DataTypes.STRING(150)
-      },
 userId: {
   type: DataTypes.UUID,
   allowNull: true,

@@ -199,32 +199,6 @@ export const createCollector = async (req, res, next) => {
 
       }
 
-      const existeMail =
-        await User.findOne({
-
-          where:{
-            email:
-              usuario.email
-          },
-
-          transaction
-
-        })
-
-      if (existeMail) {
-
-        await transaction.rollback()
-
-        return res.status(400).json({
-
-          success:false,
-
-          message:'El email ya existe'
-
-        })
-
-      }
-
       const nuevoUsuario =
         await User.create({
 
@@ -233,9 +207,6 @@ export const createCollector = async (req, res, next) => {
 
           username:
             usuario.username,
-
-          email:
-            usuario.email,
 
           password:
             usuario.password,
@@ -445,32 +416,6 @@ export const updateCollector = async (req, res, next) => {
 
       }
 
-      const existeMail =
-        await User.findOne({
-
-          where:{
-            email:
-              usuario.email
-          },
-
-          transaction
-
-        })
-
-      if (existeMail) {
-
-        await transaction.rollback()
-
-        return res.status(400).json({
-
-          success:false,
-
-          message:'El email ya existe'
-
-        })
-
-      }
-
       const nuevoUsuario =
         await User.create({
 
@@ -479,9 +424,6 @@ export const updateCollector = async (req, res, next) => {
 
           username:
             usuario.username,
-
-          email:
-            usuario.email,
 
           password:
             usuario.password,

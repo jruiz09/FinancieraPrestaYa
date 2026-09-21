@@ -7,16 +7,11 @@ const mapPermissions = (role) =>
 
 export const register = async (req, res, next) => {
   try {
-    const { name, username, email, password, ownerId } = req.body;
+    const { name, username, password, ownerId } = req.body;
     const existingUser = await User.findOne({ where: { username } });
 
     if (existingUser) {
       return res.status(400).json({ success: false, message: 'El username ya está registrado.' });
-    }
-
-    const existingEmail = await User.findOne({ where: { email } });
-    if (existingEmail) {
-      return res.status(400).json({ success: false, message: 'El email ya está registrado.' });
     }
 
     const role = await Role.findOne({ where: { name: ROLES.USER }, include: ['permissions'] });
@@ -34,7 +29,7 @@ export const register = async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'Owner inválido.' });
     }
 
-    const user = await User.create({ name, username, email, password, roleId: role.id, ownerId });
+    const user = await User.create({ name, username, password, roleId: role.id, ownerId });
     const permissions = mapPermissions(role);
     const token = signToken({ id: user.id, role: role.name, ownerId: user.ownerId });
 
@@ -45,7 +40,6 @@ export const register = async (req, res, next) => {
           id: user.id,
           name: user.name,
           username: user.username,
-          email: user.email,
           role: role.name,
           ownerId: user.ownerId,
           permissions,
@@ -87,7 +81,6 @@ export const login = async (req, res, next) => {
           id: user.id,
           name: user.name,
           username: user.username,
-          email: user.email,
           role: user.role?.name,
           ownerId: user.ownerId,
           permissions,
@@ -108,7 +101,6 @@ export const me = async (req, res) => {
       id: user.id,
       name: user.name,
       username: user.username,
-      email: user.email,
       role: user.role?.name,
       owner: user.owner
         ? {

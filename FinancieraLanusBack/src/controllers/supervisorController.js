@@ -160,7 +160,6 @@ export const createSupervisor =
         nombre,
         apellido,
         celular,
-        email,
         ownerId,
 
         crearUsuario,
@@ -224,7 +223,6 @@ export const createSupervisor =
             nombre,
             apellido,
             celular,
-            email,
 
             ownerId:
               finalOwnerId,
@@ -262,20 +260,6 @@ export const createSupervisor =
               success: false,
               message:
                 "El nombre de usuario es obligatorio.",
-            });
-        }
-
-        if (
-          !usuario.email?.trim()
-        ) {
-          await transaction.rollback();
-
-          return res
-            .status(400)
-            .json({
-              success: false,
-              message:
-                "El email del usuario es obligatorio.",
             });
         }
 
@@ -344,32 +328,6 @@ export const createSupervisor =
         }
 
         //////////////////////////////////////////////////////
-        // VALIDAR EMAIL
-        //////////////////////////////////////////////////////
-
-        const existeMail =
-          await User.findOne({
-            where: {
-              email:
-                usuario.email.trim(),
-            },
-
-            transaction,
-          });
-
-        if (existeMail) {
-          await transaction.rollback();
-
-          return res
-            .status(400)
-            .json({
-              success: false,
-              message:
-                "El email ya existe.",
-            });
-        }
-
-        //////////////////////////////////////////////////////
         // CREAR USER
         //////////////////////////////////////////////////////
 
@@ -381,9 +339,6 @@ export const createSupervisor =
 
               username:
                 usuario.username.trim(),
-
-              email:
-                usuario.email.trim(),
 
               password:
                 usuario.password,
@@ -498,7 +453,6 @@ export const updateSupervisor =
         nombre,
         apellido,
         celular,
-        email,
 
         crearUsuario,
         usuario,
@@ -521,11 +475,6 @@ export const updateSupervisor =
       if (celular !== undefined) {
         supervisor.celular =
           celular;
-      }
-
-      if (email !== undefined) {
-        supervisor.email =
-          email;
       }
 
       //////////////////////////////////////////////////////
@@ -559,20 +508,6 @@ export const updateSupervisor =
               success: false,
               message:
                 "El nombre de usuario es obligatorio.",
-            });
-        }
-
-        if (
-          !usuario.email?.trim()
-        ) {
-          await transaction.rollback();
-
-          return res
-            .status(400)
-            .json({
-              success: false,
-              message:
-                "El email del usuario es obligatorio.",
             });
         }
 
@@ -641,32 +576,6 @@ export const updateSupervisor =
         }
 
         //////////////////////////////////////////////////////
-        // VALIDAR EMAIL
-        //////////////////////////////////////////////////////
-
-        const existeMail =
-          await User.findOne({
-            where: {
-              email:
-                usuario.email.trim(),
-            },
-
-            transaction,
-          });
-
-        if (existeMail) {
-          await transaction.rollback();
-
-          return res
-            .status(400)
-            .json({
-              success: false,
-              message:
-                "El email ya existe.",
-            });
-        }
-
-        //////////////////////////////////////////////////////
         // CREAR USER
         //////////////////////////////////////////////////////
 
@@ -684,9 +593,6 @@ export const updateSupervisor =
 
               username:
                 usuario.username.trim(),
-
-              email:
-                usuario.email.trim(),
 
               password:
                 usuario.password,

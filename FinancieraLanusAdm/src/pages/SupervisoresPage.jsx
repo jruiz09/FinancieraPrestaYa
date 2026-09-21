@@ -182,7 +182,6 @@ export default function SupervisoresPage() {
             ${supervisor.nombre || ""}
             ${supervisor.apellido || ""}
             ${supervisor.celular || ""}
-            ${supervisor.email || ""}
             ${supervisor.user?.username || ""}
           `.toLowerCase();
 
@@ -459,7 +458,7 @@ export default function SupervisoresPage() {
                     e.target.value,
                   )
                 }
-                placeholder="Nombre, apellido, email o celular..."
+                placeholder="Nombre, apellido, usuario o celular..."
                 className="
                   w-full
                   rounded-xl
@@ -662,10 +661,6 @@ export default function SupervisoresPage() {
                       Celular
                     </th>
 
-                    <th className="px-4 py-3 text-left">
-                      Email
-                    </th>
-
                     <th className="px-4 py-3 text-center">
                       Acceso
                     </th>
@@ -687,7 +682,7 @@ export default function SupervisoresPage() {
                   0 ? (
                     <tr>
                       <td
-                        colSpan="5"
+                        colSpan="4"
                         className="
                           px-5
                           py-12
@@ -764,18 +759,6 @@ export default function SupervisoresPage() {
                             ) : (
                               "-"
                             )}
-                          </td>
-
-                          <td
-                            className="
-                              px-4
-                              py-4
-                              text-stone-600
-                              dark:text-stone-300
-                            "
-                          >
-                            {s.email ||
-                              "-"}
                           </td>
 
                           <td className="px-4 py-4 text-center">
@@ -1120,9 +1103,9 @@ function SupervisorCard({
         />
 
         <Info
-          label="Email"
+          label="Usuario"
           value={
-            supervisor.email ||
+            supervisor.user?.username ||
             "-"
           }
         />

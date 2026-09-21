@@ -14,7 +14,6 @@ export default function SupervisorModal({
     nombre: "",
     apellido: "",
     celular: "",
-    email: "",
   };
 
   const [
@@ -32,7 +31,6 @@ export default function SupervisorModal({
     setUsuario,
   ] = useState({
     username: "",
-    email: "",
     password: "",
     confirmPassword: "",
   });
@@ -58,9 +56,6 @@ export default function SupervisorModal({
 
         celular:
           supervisor.celular || "",
-
-        email:
-          supervisor.email || "",
       });
 
       setCrearUsuario(
@@ -71,12 +66,6 @@ export default function SupervisorModal({
         username:
           supervisor.user
             ?.username ||
-          "",
-
-        email:
-          supervisor.user
-            ?.email ||
-          supervisor.email ||
           "",
 
         password: "",
@@ -90,7 +79,6 @@ export default function SupervisorModal({
 
       setUsuario({
         username: "",
-        email: "",
         password: "",
         confirmPassword: "",
       });
@@ -199,9 +187,6 @@ export default function SupervisorModal({
       ...prev,
 
       username,
-
-      email:
-        `${username}@empresa.com`,
     }));
   };
 
@@ -307,29 +292,12 @@ export default function SupervisorModal({
         "Celular inválido";
     }
 
-    if (
-      form.email &&
-      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
-        form.email,
-      )
-    ) {
-      newErrors.email =
-        "Email inválido";
-    }
-
     if (crearUsuario) {
       if (
         !usuario.username.trim()
       ) {
         newErrors.username =
           "Usuario requerido";
-      }
-
-      if (
-        !usuario.email.trim()
-      ) {
-        newErrors.usuarioEmail =
-          "Email de acceso requerido";
       }
 
       if (
@@ -378,9 +346,6 @@ export default function SupervisorModal({
       usuario: {
         username:
           usuario.username,
-
-        email:
-          usuario.email,
 
         password:
           usuario.password,
@@ -656,31 +621,6 @@ export default function SupervisorModal({
                     }
                   />
                 </Field>
-
-                <Field
-                  label="Email"
-                  error={
-                    errors.email
-                  }
-                >
-                  <input
-                    type="email"
-                    name="email"
-                    value={
-                      form.email
-                    }
-                    onChange={
-                      handleChange
-                    }
-                    disabled={
-                      isLoading
-                    }
-                    placeholder="supervisor@email.com"
-                    className={
-                      inputClass
-                    }
-                  />
-                </Field>
               </div>
             </section>
 
@@ -846,9 +786,6 @@ export default function SupervisorModal({
 
                                 username:
                                   value,
-
-                                email:
-                                  `${value}@empresa.com`,
                               }),
                             );
 
@@ -864,34 +801,6 @@ export default function SupervisorModal({
                               );
                             }
                           }}
-                          className={
-                            inputClass
-                          }
-                        />
-                      </Field>
-
-                      <Field
-                        label="Email de acceso"
-                        error={
-                          errors.usuarioEmail
-                        }
-                      >
-                        <input
-                          type="email"
-                          value={
-                            usuario.email
-                          }
-                          disabled={
-                            !!supervisor?.userId ||
-                            isLoading
-                          }
-                          onChange={(e) =>
-                            handleUsuarioChange(
-                              "email",
-                              e.target
-                                .value,
-                            )
-                          }
                           className={
                             inputClass
                           }

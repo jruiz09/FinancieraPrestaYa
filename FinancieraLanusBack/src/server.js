@@ -8,6 +8,7 @@ import { seedOwners } from './seeders/seedOwners.js';
 import { seedPermisosValesAutogestion } from './seeders/seedPermisosValesAutogestion.js';
 import { seedColumnasMpDejaOverride } from './seeders/seedColumnasMpDejaOverride.js';
 import { seedColumnasCreditoEntrega } from './seeders/seedColumnasCreditoEntrega.js';
+import { seedEliminarEmailUsuariosYSupervisores } from './seeders/seedEliminarEmailUsuariosYSupervisores.js';
 
 dotenv.config();
 
@@ -23,6 +24,8 @@ const startServer = async () => {
     await seedColumnasMpDejaOverride();
 
     await seedColumnasCreditoEntrega();
+
+    await seedEliminarEmailUsuariosYSupervisores();
 
     await seedRoles();
 

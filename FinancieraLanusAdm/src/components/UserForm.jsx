@@ -4,7 +4,6 @@ export default function UserForm({ initialData = {}, roles = [], onSubmit, isLoa
   const [formData, setFormData] = useState({
     name: '',
     username: '',
-    email: '',
     password: '',
     roleId: '',
     ...initialData
@@ -15,7 +14,6 @@ export default function UserForm({ initialData = {}, roles = [], onSubmit, isLoa
     setFormData({
       name: '',
       username: '',
-      email: '',
       password: '',
       roleId: '',
       ...initialData
@@ -26,7 +24,6 @@ export default function UserForm({ initialData = {}, roles = [], onSubmit, isLoa
     const newErrors = {}
     if (!formData.name.trim()) newErrors.name = 'Nombre es requerido'
     if (!formData.username.trim()) newErrors.username = 'Username es requerido'
-    if (!formData.email.trim()) newErrors.email = 'Email es requerido'
     if (!initialData.id && !formData.password) newErrors.password = 'Contraseña es requerida'
     if (formData.password && formData.password.length < 6) newErrors.password = 'Mínimo 6 caracteres'
     if (!formData.roleId) newErrors.roleId = 'Rol es requerido'
@@ -46,8 +43,8 @@ export default function UserForm({ initialData = {}, roles = [], onSubmit, isLoa
       setErrors(newErrors)
       return
     }
-    const { name, username, email, password, roleId } = formData
-    onSubmit({ name, username, email, password, roleId })
+    const { name, username, password, roleId } = formData
+    onSubmit({ name, username, password, roleId })
   }
 
   const inputClass = (hasError) => `
@@ -103,19 +100,6 @@ export default function UserForm({ initialData = {}, roles = [], onSubmit, isLoa
           disabled={isLoading || !!initialData.id}
         />
         {errors.username && <p className={errorClass}>{errors.username}</p>}
-      </div>
-
-      <div>
-        <label className={labelClass}>Email</label>
-        <input
-          type="email"
-          name="email"
-          value={formData.email}
-          onChange={handleChange}
-          className={inputClass(errors.email)}
-          disabled={isLoading}
-        />
-        {errors.email && <p className={errorClass}>{errors.email}</p>}
       </div>
 
       <div>

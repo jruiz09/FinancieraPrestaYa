@@ -42,7 +42,6 @@ export default function CollectorForm({
   const [usuario, setUsuario] =
     useState({
       username: "",
-      email: "",
       password: "",
       confirmPassword: "",
     });
@@ -128,10 +127,6 @@ export default function CollectorForm({
           ?.username ||
         "",
 
-      email:
-        initialData.user?.email ||
-        "",
-
       password: "",
 
       confirmPassword: "",
@@ -195,13 +190,6 @@ export default function CollectorForm({
       ) {
         newErrors.username =
           "Usuario requerido";
-      }
-
-      if (
-        !usuario.email?.trim()
-      ) {
-        newErrors.email =
-          "Email requerido";
       }
 
       if (
@@ -371,9 +359,6 @@ export default function CollectorForm({
       ...prev,
 
       username,
-
-      email:
-        `${username}@empresa.com`,
     }));
   };
 
@@ -800,9 +785,6 @@ export default function CollectorForm({
 
                             username:
                               value,
-
-                            email:
-                              `${value}@empresa.com`,
                           }),
                         );
 
@@ -818,34 +800,6 @@ export default function CollectorForm({
                           );
                         }
                       }}
-                      className={
-                        inputClass
-                      }
-                    />
-                  </Field>
-
-                  <Field
-                    label="Email"
-                    error={
-                      errors.email
-                    }
-                  >
-                    <input
-                      type="email"
-                      value={
-                        usuario.email
-                      }
-                      disabled={
-                        !!initialData.userId ||
-                        isLoading
-                      }
-                      onChange={(e) =>
-                        handleUsuarioChange(
-                          "email",
-                          e.target
-                            .value,
-                        )
-                      }
                       className={
                         inputClass
                       }

@@ -10,7 +10,6 @@ router.post(
   '/register',
   body('name').notEmpty().withMessage('Nombre es requerido'),
   body('username').notEmpty().withMessage('Username es requerido'),
-  body('email').isEmail().withMessage('Email inválido'),
   body('password').isLength({ min: 6 }).withMessage('Password mínimo 6 caracteres'),
   body('ownerId').optional().isUUID().withMessage('ownerId inválido'),
   validateRequest,

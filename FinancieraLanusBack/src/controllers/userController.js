@@ -33,10 +33,10 @@ export const getUserById = async (req, res, next) => {
 
 export const createUser = async (req, res, next) => {
   try {
-    const { name, username, email, password, roleId, ownerId } = req.body;
+    const { name, username, password, roleId, ownerId } = req.body;
 
-    if (!name || !username || !email || !password || !roleId) {
-      return res.status(400).json({ success: false, message: 'Campos requeridos: name, username, email, password, roleId.' });
+    if (!name || !username || !password || !roleId) {
+      return res.status(400).json({ success: false, message: 'Campos requeridos: name, username, password, roleId.' });
     }
 
     const role = await Role.findByPk(roleId);
@@ -44,7 +44,7 @@ export const createUser = async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'Rol inválido.' });
     }
 
-    const user = await User.create({ name, username, email, password, roleId, ownerId });
+    const user = await User.create({ name, username, password, roleId, ownerId });
     res.status(201).json({ success: true, data: user });
   } catch (error) {
     next(error);
@@ -58,10 +58,9 @@ export const updateUser = async (req, res, next) => {
       return res.status(404).json({ success: false, message: 'Usuario no encontrado.' });
     }
 
-    const { name, email, password, roleId } = req.body;
+    const { name, password, roleId } = req.body;
 
     if (name) user.name = name;
-    if (email) user.email = email;
     if (password) user.password = password;
     if (roleId) {
       const role = await Role.findByPk(roleId);

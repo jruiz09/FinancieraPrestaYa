@@ -244,7 +244,7 @@ export default function UsersPage() {
         "
       >
         <SearchBar
-          placeholder="Buscar por nombre, username o email..."
+          placeholder="Buscar por nombre o username..."
           value={search}
           onChange={setSearch}
         />
@@ -304,7 +304,6 @@ export default function UsersPage() {
                   >
                     <th className="px-5 py-3 text-left">Nombre</th>
                     <th className="px-4 py-3 text-left">Username</th>
-                    <th className="px-4 py-3 text-left">Email</th>
                     <th className="px-4 py-3 text-left">Rol</th>
                     {
                       can(PERMISSIONS.USERS_EDIT) ||
@@ -321,7 +320,7 @@ export default function UsersPage() {
                 <tbody className="divide-y divide-stone-100">
                   {users.length === 0 ? (
                     <tr>
-                      <td colSpan="5" className="px-5 py-12 text-center text-stone-400">
+                      <td colSpan="4" className="px-5 py-12 text-center text-stone-400">
                         No se encontraron usuarios.
                       </td>
                     </tr>
@@ -333,9 +332,6 @@ export default function UsersPage() {
                         </td>
                         <td className="px-4 py-4 text-stone-600">
                           {u.username}
-                        </td>
-                        <td className="px-4 py-4 text-stone-600">
-                          {u.email}
                         </td>
                         <td className="px-4 py-4">
                           <span

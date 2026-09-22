@@ -533,6 +533,10 @@ const tokenConsulta =
 
           montoCredito,
 
+          montoEfectivo: efectivo,
+
+          montoTransferencia: transferencia,
+
           interes,
 
           diasGracia,

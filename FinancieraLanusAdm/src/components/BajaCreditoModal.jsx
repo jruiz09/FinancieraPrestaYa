@@ -36,6 +36,9 @@ export default function BajaCreditoModal({
   const [observaciones, setObservaciones] =
     useState('')
 
+  const [error, setError] =
+    useState('')
+
   if (!isOpen) {
     return null
   }
@@ -43,9 +46,19 @@ export default function BajaCreditoModal({
   const motivoSeleccionado =
     MOTIVOS.find(m => m.value === motivo)
 
+  const observacionesRequeridas =
+    motivo === 'ERROR'
+
   const handleConfirm = () => {
 
     if (!motivo) return
+
+    if (observacionesRequeridas && !observaciones.trim()) {
+      setError('Las observaciones son obligatorias al dar de baja por error de carga.')
+      return
+    }
+
+    setError('')
 
     onConfirm({ motivo, observaciones })
 
@@ -137,13 +150,20 @@ export default function BajaCreditoModal({
 
           <div>
             <label className="block text-sm font-medium text-stone-700 mb-1">
-              Observaciones (opcional)
+              Observaciones{observacionesRequeridas ? '' : ' (opcional)'}
             </label>
             <textarea
               value={observaciones}
-              onChange={e => setObservaciones(e.target.value)}
+              onChange={e => {
+                setObservaciones(e.target.value)
+                if (error) setError('')
+              }}
               rows={3}
-              placeholder="Detalle adicional sobre la baja..."
+              placeholder={
+                observacionesRequeridas
+                  ? 'Detallá qué pasó y por qué se da de baja por error...'
+                  : 'Detalle adicional sobre la baja...'
+              }
               className="
                 w-full
                 px-3
@@ -157,6 +177,11 @@ export default function BajaCreditoModal({
                 text-sm
               "
             />
+            {error && (
+              <p className="text-xs text-red-600 mt-1">
+                {error}
+              </p>
+            )}
           </div>
 
           <div className="flex justify-end gap-2 pt-2">

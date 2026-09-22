@@ -12,7 +12,8 @@ import {
   Banknote,
   Landmark,
   ArrowDownCircle,
-  ArrowUpCircle
+  ArrowUpCircle,
+  HandCoins
 } from 'lucide-react'
 
 import ZonaMultiSelect
@@ -263,6 +264,8 @@ export default function CajaPage() {
       (acc, zona) => ({
         recaudadoEfectivo: acc.recaudadoEfectivo + Number(zona.recaudadoEfectivo || 0),
         recaudadoTransferencia: acc.recaudadoTransferencia + Number(zona.recaudadoTransferencia || 0),
+        entregasEfectivo: acc.entregasEfectivo + Number(zona.entregasEfectivo || 0),
+        entregasTransferencia: acc.entregasTransferencia + Number(zona.entregasTransferencia || 0),
         ingresosManuales: acc.ingresosManuales + Number(zona.ingresosManuales || 0),
         egresosManuales: acc.egresosManuales + Number(zona.egresosManuales || 0),
         saldoCaja: acc.saldoCaja + Number(zona.saldoCaja || 0)
@@ -270,6 +273,8 @@ export default function CajaPage() {
       {
         recaudadoEfectivo: 0,
         recaudadoTransferencia: 0,
+        entregasEfectivo: 0,
+        entregasTransferencia: 0,
         ingresosManuales: 0,
         egresosManuales: 0,
         saldoCaja: 0
@@ -472,7 +477,7 @@ export default function CajaPage() {
         grid
         grid-cols-1
         sm:grid-cols-2
-        xl:grid-cols-5
+        xl:grid-cols-7
         gap-3
         md:gap-4
       ">
@@ -489,6 +494,20 @@ export default function CajaPage() {
           label="Recaudado transferencia"
           value={money(totales.recaudadoTransferencia)}
           variant="blue"
+        />
+
+        <ResumenCard
+          icon={HandCoins}
+          label="Créditos entregados efectivo"
+          value={money(totales.entregasEfectivo)}
+          variant="red"
+        />
+
+        <ResumenCard
+          icon={HandCoins}
+          label="Créditos entregados transferencia"
+          value={money(totales.entregasTransferencia)}
+          variant="red"
         />
 
         <ResumenCard
@@ -535,6 +554,8 @@ export default function CajaPage() {
                 <th className="px-5 py-3 text-left">Zona</th>
                 <th className="px-4 py-3 text-right">Efectivo</th>
                 <th className="px-4 py-3 text-right">Transferencia</th>
+                <th className="px-4 py-3 text-right">Créditos efectivo</th>
+                <th className="px-4 py-3 text-right">Créditos transferencia</th>
                 <th className="px-4 py-3 text-right">Ingresos</th>
                 <th className="px-4 py-3 text-right">Egresos</th>
                 <th className="px-4 py-3 text-right">Saldo</th>
@@ -556,6 +577,12 @@ export default function CajaPage() {
                   <td className="px-4 py-3 text-right text-stone-600">
                     {money(zona.recaudadoTransferencia)}
                   </td>
+                  <td className="px-4 py-3 text-right text-red-700">
+                    -{money(zona.entregasEfectivo)}
+                  </td>
+                  <td className="px-4 py-3 text-right text-red-700">
+                    -{money(zona.entregasTransferencia)}
+                  </td>
                   <td className="px-4 py-3 text-right text-emerald-700">
                     {money(zona.ingresosManuales)}
                   </td>
@@ -572,7 +599,7 @@ export default function CajaPage() {
               {!loading && resumen.length === 0 && (
 
                 <tr>
-                  <td colSpan="6" className="px-5 py-10 text-center text-stone-400">
+                  <td colSpan="8" className="px-5 py-10 text-center text-stone-400">
                     No hay datos para el rango seleccionado.
                   </td>
                 </tr>

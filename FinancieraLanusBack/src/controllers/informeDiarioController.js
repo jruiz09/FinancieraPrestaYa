@@ -324,6 +324,118 @@ const calcularEntregasPorZonaYDia = async (
 
 /*
 =====================================================
+ENTREGAS discriminadas por medio de pago (montoEfectivo /
+montoTransferencia del crédito, ver Cambio punto 3), para
+restarlas de MP/DEJA y de Caja: el capital que se entrega a
+un cliente sale de la plata que el cobrador tiene en mano
+(efectivo) o de la cuenta (transferencia), igual que un
+egreso. Mismo criterio "activo: true" que el resto: si el
+crédito se da de baja por ERROR, deja de restar acá también
+(el cálculo es en vivo, no requiere ajuste manual aparte).
+=====================================================
+*/
+
+export const calcularEntregasMedioPagoPorZona = async (
+  todosLosCollectorIds,
+  collectorZonaMap,
+  fechaInicio,
+  fechaFin
+) => {
+
+  const efectivoPorZona = new Map();
+  const transferenciaPorZona = new Map();
+
+  if (todosLosCollectorIds.length === 0) {
+    return { efectivoPorZona, transferenciaPorZona };
+  }
+
+  const creditos = await Credito.findAll({
+    where: {
+      activo: true,
+      fechaOtorgamiento: { [Op.between]: [fechaInicio, fechaFin] },
+      cobradorId: todosLosCollectorIds
+    },
+    attributes: ['cobradorId', 'montoEfectivo', 'montoTransferencia']
+  });
+
+  for (const credito of creditos) {
+
+    const zonaId = collectorZonaMap.get(credito.cobradorId);
+
+    if (!zonaId) continue;
+
+    efectivoPorZona.set(
+      zonaId,
+      numero(efectivoPorZona.get(zonaId)) + numero(credito.montoEfectivo)
+    );
+
+    transferenciaPorZona.set(
+      zonaId,
+      numero(transferenciaPorZona.get(zonaId)) + numero(credito.montoTransferencia)
+    );
+  }
+
+  return { efectivoPorZona, transferenciaPorZona };
+};
+
+const calcularEntregasMedioPagoPorZonaYDia = async (
+  todosLosCollectorIds,
+  collectorZonaMap,
+  fechaInicio,
+  fechaFin
+) => {
+
+  const efectivoPorZonaYDia = new Map();
+  const transferenciaPorZonaYDia = new Map();
+
+  if (todosLosCollectorIds.length === 0) {
+    return { efectivoPorZonaYDia, transferenciaPorZonaYDia };
+  }
+
+  const creditos = await Credito.findAll({
+    where: {
+      activo: true,
+      fechaOtorgamiento: { [Op.between]: [fechaInicio, fechaFin] },
+      cobradorId: todosLosCollectorIds
+    },
+    attributes: ['cobradorId', 'montoEfectivo', 'montoTransferencia', 'fechaOtorgamiento']
+  });
+
+  for (const credito of creditos) {
+
+    const zonaId = collectorZonaMap.get(credito.cobradorId);
+
+    if (!zonaId) continue;
+
+    const dia = fechaEfectivaSemana(credito.fechaOtorgamiento);
+
+    if (!efectivoPorZonaYDia.has(zonaId)) {
+      efectivoPorZonaYDia.set(zonaId, new Map());
+    }
+
+    if (!transferenciaPorZonaYDia.has(zonaId)) {
+      transferenciaPorZonaYDia.set(zonaId, new Map());
+    }
+
+    const efectivoPorDia = efectivoPorZonaYDia.get(zonaId);
+    const transferenciaPorDia = transferenciaPorZonaYDia.get(zonaId);
+
+    efectivoPorDia.set(
+      dia,
+      numero(efectivoPorDia.get(dia)) + numero(credito.montoEfectivo)
+    );
+
+    transferenciaPorDia.set(
+      dia,
+      numero(transferenciaPorDia.get(dia)) + numero(credito.montoTransferencia)
+    );
+  }
+
+  return { efectivoPorZonaYDia, transferenciaPorZonaYDia };
+};
+
+/*
+=====================================================
 CREDITOS TERMINADOS en el rango (última cuota pagada en
 el rango), por capital otorgado. Mismo desglose por día
 que Entregas, con la misma regla de "fin de semana suma
@@ -828,6 +940,16 @@ export const getInformeDiario = async (req, res, next) => {
       fecha
     );
 
+    const {
+      efectivoPorZona: entregasEfectivoPorZona,
+      transferenciaPorZona: entregasTransferenciaPorZona
+    } = await calcularEntregasMedioPagoPorZona(
+      todosLosCollectorIds,
+      collectorZonaMap,
+      fecha,
+      fecha
+    );
+
     const { ayudaPorZona, ayudaAPorZona } = await calcularAyudaPorZona(
       todosLosCollectorIds,
       collectorZonaMap,
@@ -866,13 +988,17 @@ export const getInformeDiario = async (req, res, next) => {
       const valeSup = numero(valeSupPorZona.get(zona.id));
       const pr = numero(registroHoy?.pr);
 
-      const mpCalculado = numero(mpCalculadoPorZona.get(zona.id));
+      const mpCalculado =
+        numero(mpCalculadoPorZona.get(zona.id)) -
+        numero(entregasTransferenciaPorZona.get(zona.id));
       const mpTieneOverride = registroHoy?.mpOverride != null;
       const mp = mpTieneOverride
         ? numero(registroHoy.mpOverride)
         : mpCalculado;
 
-      const dejaCalculado = numero(dejaCalculadoPorZona.get(zona.id));
+      const dejaCalculado =
+        numero(dejaCalculadoPorZona.get(zona.id)) -
+        numero(entregasEfectivoPorZona.get(zona.id));
       const dejaTieneOverride = registroHoy?.dejaOverride != null;
       const deja = dejaTieneOverride
         ? numero(registroHoy.dejaOverride)
@@ -1101,6 +1227,16 @@ export const getInformeSemanal = async (req, res, next) => {
       fechaDomingo
     );
 
+    const {
+      efectivoPorZonaYDia: entregasEfectivoPorZonaYDia,
+      transferenciaPorZonaYDia: entregasTransferenciaPorZonaYDia
+    } = await calcularEntregasMedioPagoPorZonaYDia(
+      todosLosCollectorIds,
+      collectorZonaMap,
+      fechaLunes,
+      fechaDomingo
+    );
+
     /*
     ===============================================
     RECAUDACIÓN DÍA SIG.: igual que en el informe
@@ -1137,6 +1273,8 @@ export const getInformeSemanal = async (req, res, next) => {
       const terminadosCalculadoPorDia = terminadosPorZonaYDia.get(zona.id) || new Map();
       const mpCalculadoPorDia = mpPorZonaYDia.get(zona.id) || new Map();
       const dejaCalculadoPorDia = dejaPorZonaYDia.get(zona.id) || new Map();
+      const entregasEfectivoPorDia = entregasEfectivoPorZonaYDia.get(zona.id) || new Map();
+      const entregasTransferenciaPorDia = entregasTransferenciaPorZonaYDia.get(zona.id) || new Map();
 
       let entregasSemanaTotal = 0;
       let ecuSemanaTotal = 0;
@@ -1164,13 +1302,17 @@ export const getInformeSemanal = async (req, res, next) => {
 
         const pr = numero(registroDia?.pr);
 
-        const mpCalculado = numero(mpCalculadoPorDia.get(fechaDia));
+        const mpCalculado =
+          numero(mpCalculadoPorDia.get(fechaDia)) -
+          numero(entregasTransferenciaPorDia.get(fechaDia));
         const mpTieneOverride = registroDia?.mpOverride != null;
         const mp = mpTieneOverride
           ? numero(registroDia.mpOverride)
           : mpCalculado;
 
-        const dejaCalculado = numero(dejaCalculadoPorDia.get(fechaDia));
+        const dejaCalculado =
+          numero(dejaCalculadoPorDia.get(fechaDia)) -
+          numero(entregasEfectivoPorDia.get(fechaDia));
         const dejaTieneOverride = registroDia?.dejaOverride != null;
         const deja = dejaTieneOverride
           ? numero(registroDia.dejaOverride)

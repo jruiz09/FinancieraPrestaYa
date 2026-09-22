@@ -8,7 +8,8 @@ import {
 
 import {
   obtenerZonasYCobradores,
-  calcularRecaudadoPorZona
+  calcularRecaudadoPorZona,
+  calcularEntregasMedioPagoPorZona
 } from './informeDiarioController.js';
 
 const numero = value => Number(value || 0);
@@ -203,8 +204,12 @@ RESUMEN DE CAJA POR ZONA
 Combina lo cobrado a clientes (recaudado, ya discriminado
 efectivo/transferencia via calcularRecaudadoPorZona, la
 misma función que usa el informe diario/semanal) con los
-movimientos manuales de ingreso/egreso, para un rango de
-fechas (por defecto: hoy).
+movimientos manuales de ingreso/egreso y el capital
+entregado en créditos nuevos (egreso, discriminado por
+montoEfectivo/montoTransferencia), para un rango de fechas
+(por defecto: hoy). Al ser todo cálculo en vivo sobre
+Credito.activo, una baja por ERROR revierte automáticamente
+su efecto en el saldo sin necesidad de un ajuste manual.
 =====================================================
 */
 export const getResumenCaja = async (req, res, next) => {
@@ -228,6 +233,16 @@ export const getResumenCaja = async (req, res, next) => {
       mpPorZona: transferenciaPorZona,
       dejaPorZona: efectivoPorZona
     } = await calcularRecaudadoPorZona(
+      todosLosCollectorIds,
+      collectorZonaMap,
+      fechaDesde,
+      fechaHasta
+    );
+
+    const {
+      efectivoPorZona: entregasEfectivoPorZona,
+      transferenciaPorZona: entregasTransferenciaPorZona
+    } = await calcularEntregasMedioPagoPorZona(
       todosLosCollectorIds,
       collectorZonaMap,
       fechaDesde,
@@ -266,6 +281,8 @@ export const getResumenCaja = async (req, res, next) => {
       const recaudadoTransferencia = numero(transferenciaPorZona.get(zona.id));
       const ingresosManuales = numero(ingresosManualesPorZona.get(zona.id));
       const egresosManuales = numero(egresosManualesPorZona.get(zona.id));
+      const entregasEfectivo = numero(entregasEfectivoPorZona.get(zona.id));
+      const entregasTransferencia = numero(entregasTransferenciaPorZona.get(zona.id));
 
       return {
         zoneId: zona.id,
@@ -273,13 +290,17 @@ export const getResumenCaja = async (req, res, next) => {
         recaudado: numero(recaudadoPorZona.get(zona.id)),
         recaudadoEfectivo,
         recaudadoTransferencia,
+        entregasEfectivo,
+        entregasTransferencia,
         ingresosManuales,
         egresosManuales,
         saldoCaja:
           recaudadoEfectivo +
           recaudadoTransferencia +
           ingresosManuales -
-          egresosManuales
+          egresosManuales -
+          entregasEfectivo -
+          entregasTransferencia
       };
     });
 

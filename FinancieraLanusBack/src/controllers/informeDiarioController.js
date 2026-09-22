@@ -677,7 +677,6 @@ const calcularValePorZona = async (
       where: {
         activo: true,
         fecha: { [Op.between]: [fechaInicio, fechaFin] },
-        estado: { [Op.ne]: 'ANULADO' },
         collectorId: todosLosCollectorIds
       },
       attributes: ['collectorId', 'monto']
@@ -704,7 +703,6 @@ const calcularValePorZona = async (
       where: {
         activo: true,
         fecha: { [Op.between]: [fechaInicio, fechaFin] },
-        estado: { [Op.ne]: 'ANULADO' },
         supervisorId: supervisorIds
       },
       attributes: ['supervisorId', 'monto']

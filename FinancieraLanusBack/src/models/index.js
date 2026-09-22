@@ -13,6 +13,7 @@ import { CreditoDetalleModel } from './creditodetalles.js';
 import { AyudaModel } from './ayuda.js';
 import { SupervisorModel } from './supervisor.js';
 import { ZoneModel } from './zonas.js';
+import { OficinaModel } from './oficina.js';
 import { PermissionModel } from './permission.js';
 import { RolePermissionModel } from './rolePermission.js';
 import { ValeModel } from './vale.js';
@@ -25,6 +26,7 @@ import { MovimientoCajaModel } from './movimientoCaja.js';
 
 const Ayuda = AyudaModel(sequelize, DataTypes);
 const Zone = ZoneModel(sequelize, DataTypes);
+const Oficina = OficinaModel(sequelize, DataTypes);
 
 const Role = RoleModel(sequelize, DataTypes);
 const User = UserModel(sequelize, DataTypes);
@@ -53,6 +55,55 @@ const MovimientoCaja = MovimientoCajaModel(sequelize, DataTypes);
 Zone.belongsTo(Owner, {
   foreignKey: 'ownerId',
   as: 'owner'
+})
+
+//
+// OFICINAS
+// Un Owner tiene varias Oficinas. Una Oficina agrupa Zonas
+// (muchos a muchos: una misma Zona puede pertenecer a más de
+// una Oficina). Un Usuario puede pertenecer a una o varias
+// Oficinas (muchos a muchos); eso determina qué Zonas puede
+// llegar a ver/elegir en el resto de la app. Si un usuario no
+// tiene ninguna Oficina asignada, no hay restricción (ve todo,
+// como antes de esta feature).
+//
+
+Owner.hasMany(Oficina, {
+  foreignKey: 'ownerId',
+  as: 'oficinas'
+})
+
+Oficina.belongsTo(Owner, {
+  foreignKey: 'ownerId',
+  as: 'owner'
+})
+
+Oficina.belongsToMany(Zone, {
+  through: 'OficinaZonas',
+  foreignKey: 'oficinaId',
+  otherKey: 'zoneId',
+  as: 'zonas'
+})
+
+Zone.belongsToMany(Oficina, {
+  through: 'OficinaZonas',
+  foreignKey: 'zoneId',
+  otherKey: 'oficinaId',
+  as: 'oficinas'
+})
+
+User.belongsToMany(Oficina, {
+  through: 'UsuarioOficinas',
+  foreignKey: 'userId',
+  otherKey: 'oficinaId',
+  as: 'oficinas'
+})
+
+Oficina.belongsToMany(User, {
+  through: 'UsuarioOficinas',
+  foreignKey: 'oficinaId',
+  otherKey: 'userId',
+  as: 'usuarios'
 })
 
 Zone.hasMany(
@@ -601,6 +652,7 @@ export {
   Supervisor,
   Ayuda,
   Zone,
+  Oficina,
   Permission,
   RolePermission,
   Vale,

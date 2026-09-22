@@ -269,6 +269,40 @@ const dashboardSupervisor =
           (c) => c.id
         )
 
+      /*
+      Las estadísticas del dashboard tienen que reflejar TODO
+      lo que el supervisor tiene a cargo: su propio equipo
+      (supervisorId) más los cobradores de las zonas que tenga
+      asignadas directamente (setZonas), ya que a veces cubre
+      zonas de otros supervisores sin tener a esos cobradores
+      como reportes directos. "team"/"ranking" (Equipo) siguen
+      siendo solo el equipo propio, sin cambios.
+      */
+
+      const zonasAsignadas =
+        await supervisor.getZonas()
+
+      const zoneIdsAsignados =
+        zonasAsignadas.map((z) => z.id)
+
+      const collectorsDeZonas =
+        zoneIdsAsignados.length > 0
+          ? await Collector.findAll({
+              where: {
+                zoneId: zoneIdsAsignados,
+                activo: true
+              }
+            })
+          : []
+
+      const statsCollectorIds =
+        Array.from(
+          new Set([
+            ...collectorIds,
+            ...collectorsDeZonas.map((c) => c.id)
+          ])
+        )
+
       const hoy =
         new Date()
 
@@ -298,23 +332,36 @@ const dashboardSupervisor =
       )
 
       const cuotas =
-        await CreditoDetalle.findAll({
-          include: [
-            {
-              model: Credito,
-              as: 'credito',
-              attributes: [
-                'id',
-                'cobradorId',
-                'clienteId'
+        statsCollectorIds.length > 0
+          ? await CreditoDetalle.findAll({
+              include: [
+                {
+                  model: Credito,
+                  as: 'credito',
+                  attributes: [
+                    'id',
+                    'cobradorId',
+                    'clienteId'
+                  ],
+                  where: {
+                    cobradorId:
+                      statsCollectorIds
+                  }
+                }
               ],
               where: {
-                cobradorId:
-                  collectorIds
+                activo: true
               }
-            }
-          ],
+            })
+          : []
+
+      const ayudasPendientes =
+        await Ayuda.count({
           where: {
+            destinoId:
+              supervisor.id,
+            estado:
+              'PENDIENTE',
             activo: true
           }
         })
@@ -353,14 +400,19 @@ const dashboardSupervisor =
             return
           }
 
+          /*
+          El detalle por cobrador (collector.*) solo existe
+          para el equipo propio (collectorMap). Los totales
+          generales (cobradoHoy, cuotasPendientes, etc.) suman
+          SIEMPRE, sea equipo propio o cobrador de una zona
+          cubierta, para que el dashboard no quede vacío
+          cuando el supervisor no tiene reportes directos.
+          */
+
           const collector =
             collectorMap.get(
               credito.cobradorId
             )
-
-          if (!collector) {
-            return
-          }
 
           const fechaPago =
             formatDate(
@@ -384,7 +436,7 @@ const dashboardSupervisor =
             'PAGADA'
           ) {
             cuotasPendientes++
-            collector.clientesPendientes.add(
+            collector?.clientesPendientes.add(
               credito.clienteId
             )
           }
@@ -394,11 +446,15 @@ const dashboardSupervisor =
             'VENCIDA'
           ) {
             cuotasVencidas++
-            collector.vencidas++
+
+            if (collector) {
+              collector.vencidas++
+            }
           }
 
           if (
-            fechaPago === hoyString
+            fechaPago === hoyString &&
+            collector
           ) {
             collector.cobradoHoy +=
               Number(
@@ -451,9 +507,10 @@ const dashboardSupervisor =
           cuotasPendientes,
           cuotasVencidas,
           cobradoresActivos:
-            collectors.length,
+            statsCollectorIds.length,
           clientesVisitadosHoy:
             clientesVisitadosHoy.size,
+          ayudasPendientes,
           team,
           ranking
         }

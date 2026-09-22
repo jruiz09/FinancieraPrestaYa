@@ -13,7 +13,9 @@ import {
   Landmark,
   ArrowDownCircle,
   ArrowUpCircle,
-  HandCoins
+  HandCoins,
+  Handshake,
+  Ticket
 } from 'lucide-react'
 
 import ZonaMultiSelect
@@ -60,6 +62,14 @@ const FORM_VACIO = {
   fecha: hoyString()
 }
 
+const ORIGEN_LABELS = {
+  COBRO_CUOTA: 'Cobro cuota',
+  CREDITO_ENTREGADO: 'Crédito entregado',
+  AYUDA_RECIBIDA: 'Ayuda recibida',
+  AYUDA_DADA: 'Ayuda dada',
+  VALE: 'Vale'
+}
+
 
 export default function CajaPage() {
 
@@ -79,6 +89,9 @@ export default function CajaPage() {
     useState([])
 
   const [movimientos, setMovimientos] =
+    useState([])
+
+  const [movimientosAutomaticos, setMovimientosAutomaticos] =
     useState([])
 
   const [loading, setLoading] =
@@ -115,10 +128,15 @@ export default function CajaPage() {
         setLoading(true)
         setError('')
 
-        const [resumenData, movimientosData] =
+        const [resumenData, movimientosData, automaticosData] =
           await Promise.all([
             cajaService.resumen(fechaDesde, fechaHasta),
             cajaService.listMovimientos(
+              selectedZoneIds,
+              fechaDesde,
+              fechaHasta
+            ),
+            cajaService.listMovimientosAutomaticos(
               selectedZoneIds,
               fechaDesde,
               fechaHasta
@@ -134,6 +152,7 @@ export default function CajaPage() {
 
         setResumen(zonasResumen)
         setMovimientos(movimientosData || [])
+        setMovimientosAutomaticos(automaticosData || [])
 
       } catch (error) {
 
@@ -266,6 +285,9 @@ export default function CajaPage() {
         recaudadoTransferencia: acc.recaudadoTransferencia + Number(zona.recaudadoTransferencia || 0),
         entregasEfectivo: acc.entregasEfectivo + Number(zona.entregasEfectivo || 0),
         entregasTransferencia: acc.entregasTransferencia + Number(zona.entregasTransferencia || 0),
+        ayudaRecibida: acc.ayudaRecibida + Number(zona.ayudaRecibida || 0),
+        ayudaDada: acc.ayudaDada + Number(zona.ayudaDada || 0),
+        vale: acc.vale + Number(zona.vale || 0),
         ingresosManuales: acc.ingresosManuales + Number(zona.ingresosManuales || 0),
         egresosManuales: acc.egresosManuales + Number(zona.egresosManuales || 0),
         saldoCaja: acc.saldoCaja + Number(zona.saldoCaja || 0)
@@ -275,6 +297,9 @@ export default function CajaPage() {
         recaudadoTransferencia: 0,
         entregasEfectivo: 0,
         entregasTransferencia: 0,
+        ayudaRecibida: 0,
+        ayudaDada: 0,
+        vale: 0,
         ingresosManuales: 0,
         egresosManuales: 0,
         saldoCaja: 0
@@ -511,6 +536,27 @@ export default function CajaPage() {
         />
 
         <ResumenCard
+          icon={Handshake}
+          label="Ayuda recibida"
+          value={money(totales.ayudaRecibida)}
+          variant="green"
+        />
+
+        <ResumenCard
+          icon={Handshake}
+          label="Ayuda dada"
+          value={money(totales.ayudaDada)}
+          variant="red"
+        />
+
+        <ResumenCard
+          icon={Ticket}
+          label="Vales"
+          value={money(totales.vale)}
+          variant="red"
+        />
+
+        <ResumenCard
           icon={ArrowUpCircle}
           label="Ingresos manuales"
           value={money(totales.ingresosManuales)}
@@ -556,6 +602,9 @@ export default function CajaPage() {
                 <th className="px-4 py-3 text-right">Transferencia</th>
                 <th className="px-4 py-3 text-right">Créditos efectivo</th>
                 <th className="px-4 py-3 text-right">Créditos transferencia</th>
+                <th className="px-4 py-3 text-right">Ayuda recibida</th>
+                <th className="px-4 py-3 text-right">Ayuda dada</th>
+                <th className="px-4 py-3 text-right">Vales</th>
                 <th className="px-4 py-3 text-right">Ingresos</th>
                 <th className="px-4 py-3 text-right">Egresos</th>
                 <th className="px-4 py-3 text-right">Saldo</th>
@@ -584,6 +633,15 @@ export default function CajaPage() {
                     -{money(zona.entregasTransferencia)}
                   </td>
                   <td className="px-4 py-3 text-right text-emerald-700">
+                    {money(zona.ayudaRecibida)}
+                  </td>
+                  <td className="px-4 py-3 text-right text-red-700">
+                    -{money(zona.ayudaDada)}
+                  </td>
+                  <td className="px-4 py-3 text-right text-red-700">
+                    -{money(zona.vale)}
+                  </td>
+                  <td className="px-4 py-3 text-right text-emerald-700">
                     {money(zona.ingresosManuales)}
                   </td>
                   <td className="px-4 py-3 text-right text-red-700">
@@ -599,7 +657,7 @@ export default function CajaPage() {
               {!loading && resumen.length === 0 && (
 
                 <tr>
-                  <td colSpan="8" className="px-5 py-10 text-center text-stone-400">
+                  <td colSpan="11" className="px-5 py-10 text-center text-stone-400">
                     No hay datos para el rango seleccionado.
                   </td>
                 </tr>
@@ -705,6 +763,108 @@ export default function CajaPage() {
                 <tr>
                   <td colSpan="8" className="px-5 py-10 text-center text-stone-400">
                     No hay movimientos manuales en este rango.
+                  </td>
+                </tr>
+
+              )}
+
+            </tbody>
+
+          </table>
+
+        </div>
+
+      </div>
+
+      {/* MOVIMIENTOS AUTOMÁTICOS */}
+
+      <div className="
+        bg-white
+        border
+        border-stone-200
+        rounded-2xl
+        shadow-sm
+        overflow-hidden
+      ">
+
+        <div className="px-5 py-4 border-b border-stone-100">
+          <h2 className="font-bold text-stone-800">
+            Movimientos automáticos
+          </h2>
+          <p className="text-xs text-stone-400 mt-0.5">
+            Cobros de cuotas, créditos entregados, ayudas y vales que ya afectan el saldo
+          </p>
+        </div>
+
+        <div className="overflow-x-auto">
+
+          <table className="w-full text-sm">
+
+            <thead className="bg-stone-50/80 text-stone-500">
+
+              <tr className="border-b border-stone-200 text-xs uppercase">
+                <th className="px-5 py-3 text-left">Fecha</th>
+                <th className="px-4 py-3 text-left">Zona</th>
+                <th className="px-4 py-3 text-left">Origen</th>
+                <th className="px-4 py-3 text-left">Tipo</th>
+                <th className="px-4 py-3 text-left">Medio</th>
+                <th className="px-4 py-3 text-left">Concepto</th>
+                <th className="px-5 py-3 text-right">Monto</th>
+              </tr>
+
+            </thead>
+
+            <tbody className="divide-y divide-stone-100">
+
+              {movimientosAutomaticos.map(movimiento => (
+
+                <tr key={movimiento.id}>
+                  <td className="px-5 py-3 text-stone-600">
+                    {movimiento.fecha}
+                  </td>
+                  <td className="px-4 py-3 text-stone-600">
+                    {movimiento.zona || '-'}
+                  </td>
+                  <td className="px-4 py-3">
+                    <span className="
+                      px-2 py-0.5 rounded-full text-xs font-semibold
+                      bg-stone-100 text-stone-600
+                    ">
+                      {ORIGEN_LABELS[movimiento.origen] || movimiento.origen}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    <span className={`
+                      px-2 py-0.5 rounded-full text-xs font-semibold
+                      ${movimiento.tipo === 'INGRESO'
+                        ? 'bg-emerald-100 text-emerald-700'
+                        : 'bg-red-100 text-red-700'
+                      }
+                    `}>
+                      {movimiento.tipo}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-stone-600">
+                    {movimiento.medioPago || '-'}
+                  </td>
+                  <td className="px-4 py-3 text-stone-600">
+                    {movimiento.concepto}
+                  </td>
+                  <td className={`
+                    px-5 py-3 text-right font-semibold
+                    ${movimiento.tipo === 'INGRESO' ? 'text-emerald-700' : 'text-red-700'}
+                  `}>
+                    {movimiento.tipo === 'INGRESO' ? '' : '-'}{money(movimiento.monto)}
+                  </td>
+                </tr>
+
+              ))}
+
+              {!loading && movimientosAutomaticos.length === 0 && (
+
+                <tr>
+                  <td colSpan="7" className="px-5 py-10 text-center text-stone-400">
+                    No hay movimientos automáticos en este rango.
                   </td>
                 </tr>
 

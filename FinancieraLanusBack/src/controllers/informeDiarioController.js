@@ -703,7 +703,7 @@ AYUDA recibida / AYUDA A dada (cobradores) en el rango
 =====================================================
 */
 
-const calcularAyudaPorZona = async (
+export const calcularAyudaPorZona = async (
   todosLosCollectorIds,
   collectorZonaMap,
   fechaInicio,
@@ -772,7 +772,7 @@ VALE (cobrador) / VALE SUP. (supervisor) en el rango
 =====================================================
 */
 
-const calcularValePorZona = async (
+export const calcularValePorZona = async (
   todosLosCollectorIds,
   collectorZonaMap,
   supervisorZonasMap,

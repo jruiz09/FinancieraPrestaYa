@@ -8,7 +8,8 @@ import {
   createMovimiento,
   listMovimientos,
   anularMovimiento,
-  getResumenCaja
+  getResumenCaja,
+  listMovimientosAutomaticos
 } from '../controllers/cajaController.js';
 
 const router = Router();
@@ -53,6 +54,16 @@ router.get(
   query('fechaHasta').optional().isDate(),
   validateRequest,
   getResumenCaja
+);
+
+router.get(
+  '/movimientos-automaticos',
+  authorize('CAJA_VIEW'),
+  query('zoneIds').optional().isString(),
+  query('fechaDesde').optional().isDate(),
+  query('fechaHasta').optional().isDate(),
+  validateRequest,
+  listMovimientosAutomaticos
 );
 
 export default router;

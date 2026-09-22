@@ -56,6 +56,25 @@ export const cajaService = {
       )
 
     return response.data.data
+  },
+
+  listMovimientosAutomaticos: async (zoneIds = [], fechaDesde = '', fechaHasta = '') => {
+
+    const response =
+      await api.get(
+        '/caja/movimientos-automaticos',
+        {
+          params: {
+            zoneIds: zoneIds.length
+              ? zoneIds.join(',')
+              : undefined,
+            fechaDesde: fechaDesde || undefined,
+            fechaHasta: fechaHasta || undefined
+          }
+        }
+      )
+
+    return response.data.data
   }
 
 }

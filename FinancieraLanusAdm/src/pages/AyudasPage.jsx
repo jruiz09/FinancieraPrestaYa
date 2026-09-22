@@ -551,6 +551,10 @@ export default function AyudasPage() {
                     Estado
                   </th>
 
+                  <th className="px-4 py-3 text-left">
+                    Observaciones
+                  </th>
+
                   <th className="px-5 py-3 text-right">
                     Acciones
                   </th>
@@ -633,6 +637,19 @@ export default function AyudasPage() {
                           }
                         </span>
 
+                      </td>
+
+                      <td
+                        className="
+                          max-w-[220px]
+                          truncate
+                          px-4
+                          py-4
+                          text-stone-600
+                        "
+                        title={ayuda.observaciones || ''}
+                      >
+                        {ayuda.observaciones || '-'}
                       </td>
 
                       <td className="px-5 py-4">

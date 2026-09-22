@@ -2,7 +2,18 @@ import { Ayuda, Collector, Supervisor } from '../models/index.js';
 
 export const createAyuda = async (req, res, next) => {
   try {
-    const ayuda = await Ayuda.create(req.body);
+    /*
+    Mismo esquema de numeración que crearAyudaMobile: sin esto,
+    las ayudas dadas de oficina quedaban con numeroAyuda en null.
+    */
+    const numeroAyuda = String(
+      (await Ayuda.count()) + 1
+    ).padStart(6, '0');
+
+    const ayuda = await Ayuda.create({
+      ...req.body,
+      numeroAyuda,
+    });
 
     return res.status(201).json({
       success: true,

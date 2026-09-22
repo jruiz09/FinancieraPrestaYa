@@ -13,22 +13,43 @@ export const mobileService = {
 
   },
 
-  cuotasHoy: async () => {
+  cuotasHoy: async (zoneId) => {
 
     const response =
       await api.get(
-        '/mobile/cuotas-hoy'
+        '/mobile/cuotas-hoy',
+        {
+          params: zoneId
+            ? { zoneId }
+            : {}
+        }
       )
 
     return response.data.data
 
   },
 
-  cuotasAtrasadas: async () => {
+  cuotasAtrasadas: async (zoneId) => {
 
     const response =
       await api.get(
-        '/mobile/cuotas-atrasadas'
+        '/mobile/cuotas-atrasadas',
+        {
+          params: zoneId
+            ? { zoneId }
+            : {}
+        }
+      )
+
+    return response.data.data
+
+  },
+
+  zonas: async () => {
+
+    const response =
+      await api.get(
+        '/mobile/zonas'
       )
 
     return response.data.data

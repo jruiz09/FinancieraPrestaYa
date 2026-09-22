@@ -41,6 +41,11 @@ export default function BottomNav() {
             label: 'Equipo'
           },
           {
+            to: '/cobros',
+            icon: DollarSign,
+            label: 'Cuotas'
+          },
+          {
             to: '/indicadores',
             icon: BarChart3,
             label: 'Indicadores'

@@ -92,6 +92,10 @@ router.post(
     .optional()
     .isUUID(),
 
+  body('zoneIds')
+    .optional()
+    .isArray(),
+
   validateRequest,
 
   createSupervisor
@@ -104,6 +108,10 @@ router.put(
 
   param('id')
     .isUUID(),
+
+  body('zoneIds')
+    .optional()
+    .isArray(),
 
   validateRequest,
 

@@ -21,6 +21,7 @@ import {
   getCreditoMobile,
   recorridoMobile,
   perfilMobile,
+  zonasMobile,
   ayudasMobile,
   crearAyudaMobile,
   destinatariosAyudaMobile,
@@ -77,6 +78,12 @@ router.get(
   '/perfil',
   authenticate,
   perfilMobile
+)
+
+router.get(
+  '/zonas',
+  authenticate,
+  zonasMobile
 )
 
 

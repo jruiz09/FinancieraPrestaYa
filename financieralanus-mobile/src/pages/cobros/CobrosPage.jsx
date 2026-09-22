@@ -28,7 +28,23 @@ import {
   mobileService
 } from '../../services/mobileService'
 
+import {
+  useAuthStore
+} from '../../store/useAuthStore'
+
 export default function CobrosPage() {
+
+  const user =
+    useAuthStore(
+      state => state.user
+    )
+
+  const role =
+    user?.role?.name ||
+    user?.role
+
+  const esSupervisor =
+    role === 'SUPERVISOR'
 
   const [toast,
     setToast] =
@@ -58,11 +74,33 @@ export default function CobrosPage() {
     setConfirmando] =
       useState(false)
 
+  const [zonas,
+    setZonas] =
+      useState([])
+
+  const [zonaSeleccionada,
+    setZonaSeleccionada] =
+      useState('')
+
+  useEffect(() => {
+
+    if (!esSupervisor) {
+      return
+    }
+
+    mobileService.zonas()
+      .then(setZonas)
+      .catch(
+        error => console.error(error)
+      )
+
+  }, [esSupervisor])
+
   useEffect(() => {
 
     cargar()
 
-  }, [tab])
+  }, [tab, zonaSeleccionada])
 
   const cargar =
     async () => {
@@ -71,13 +109,18 @@ export default function CobrosPage() {
 
         setLoading(true)
 
+        const zoneId =
+          esSupervisor
+            ? zonaSeleccionada
+            : undefined
+
         const data =
 
           tab === 'HOY'
 
-            ? await mobileService.cuotasHoy()
+            ? await mobileService.cuotasHoy(zoneId)
 
-            : await mobileService.cuotasAtrasadas()
+            : await mobileService.cuotasAtrasadas(zoneId)
 
         setCuotas(data)
 
@@ -266,11 +309,65 @@ export default function CobrosPage() {
 
         <SectionTitle
 
-          title="💰 Cobros"
+          title={
+            esSupervisor
+              ? '📋 Cuotas'
+              : '💰 Cobros'
+          }
 
-          subtitle="Gestioná las cuotas de tus clientes"
+          subtitle={
+            esSupervisor
+              ? 'Cuotas de los cobradores de tu zona'
+              : 'Gestioná las cuotas de tus clientes'
+          }
 
         />
+
+        {esSupervisor &&
+          zonas.length > 1 && (
+
+          <select
+
+            value={zonaSeleccionada}
+
+            onChange={e =>
+              setZonaSeleccionada(
+                e.target.value
+              )
+            }
+
+            className="
+              w-full
+              bg-slate-900
+              rounded-2xl
+              px-4
+              py-3
+              text-sm
+              font-medium
+              border
+              border-slate-800
+            "
+
+          >
+
+            <option value="">
+              Todas mis zonas
+            </option>
+
+            {zonas.map(
+              zona => (
+                <option
+                  key={zona.id}
+                  value={zona.id}
+                >
+                  {zona.nombre}
+                </option>
+              )
+            )}
+
+          </select>
+
+        )}
 
         <div
           className="
@@ -470,8 +567,14 @@ export default function CobrosPage() {
 
                 onCobrar={
 
-                  setCuotaSeleccionada
+                  esSupervisor
+                    ? undefined
+                    : setCuotaSeleccionada
 
+                }
+
+                mostrarCobrador={
+                  esSupervisor
                 }
 
               />

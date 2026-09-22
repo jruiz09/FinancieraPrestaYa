@@ -66,6 +66,7 @@ export const listSupervisores =
           include: [
             "owner",
             "user",
+            "zonas",
           ],
 
           limit,
@@ -106,6 +107,7 @@ export const getSupervisor =
             include: [
               "owner",
               "user",
+              "zonas",
             ],
           },
         );
@@ -164,6 +166,8 @@ export const createSupervisor =
 
         crearUsuario,
         usuario,
+
+        zoneIds,
       } = req.body;
 
       //////////////////////////////////////////////////////
@@ -367,6 +371,15 @@ export const createSupervisor =
       }
 
       //////////////////////////////////////////////////////
+      // ZONAS ASIGNADAS
+      //////////////////////////////////////////////////////
+
+      await supervisor.setZonas(
+        Array.isArray(zoneIds) ? zoneIds : [],
+        { transaction },
+      );
+
+      //////////////////////////////////////////////////////
       // COMMIT
       //////////////////////////////////////////////////////
 
@@ -383,6 +396,7 @@ export const createSupervisor =
             include: [
               "owner",
               "user",
+              "zonas",
             ],
           },
         );
@@ -456,6 +470,8 @@ export const updateSupervisor =
 
         crearUsuario,
         usuario,
+
+        zoneIds,
       } = req.body;
 
       //////////////////////////////////////////////////////
@@ -620,6 +636,19 @@ export const updateSupervisor =
         transaction,
       });
 
+      //////////////////////////////////////////////////////
+      // ZONAS ASIGNADAS
+      //////////////////////////////////////////////////////
+
+      if (zoneIds !== undefined) {
+
+        await supervisor.setZonas(
+          Array.isArray(zoneIds) ? zoneIds : [],
+          { transaction },
+        );
+
+      }
+
       await transaction.commit();
 
       //////////////////////////////////////////////////////
@@ -633,6 +662,7 @@ export const updateSupervisor =
             include: [
               "owner",
               "user",
+              "zonas",
             ],
           },
         );

@@ -120,6 +120,102 @@ const obtenerOrigen =
 
   }
 
+/*
+Resuelve los cobradorId sobre los que hay que buscar cuotas
+en /cuotas-hoy y /cuotas-atrasadas. Para un cobrador es
+siempre él mismo. Para un supervisor son todos los cobradores
+de las zonas que tiene asignadas (no solo los de su propio
+equipo), ya que a veces cubre zonas de otros supervisores.
+Si el supervisor tiene más de una zona, puede filtrar por una
+sola mandando ?zoneId=... (debe ser una de las suyas).
+*/
+const resolverCobradorIdsMobile =
+  async (req) => {
+
+    if (esSupervisor(req.user)) {
+
+      const supervisor =
+        await obtenerSupervisor(
+          req.user.id
+        )
+
+      if (!supervisor) {
+
+        return {
+          ok: false,
+          status: 404,
+          message: 'Supervisor no encontrado'
+        }
+
+      }
+
+      const zonas =
+        await supervisor.getZonas()
+
+      let zoneIds =
+        zonas.map((z) => z.id)
+
+      if (req.query.zoneId) {
+
+        if (
+          !zoneIds.includes(
+            req.query.zoneId
+          )
+        ) {
+
+          return {
+            ok: false,
+            status: 403,
+            message: 'La zona solicitada no está asignada a este supervisor.'
+          }
+
+        }
+
+        zoneIds = [req.query.zoneId]
+
+      }
+
+      if (zoneIds.length === 0) {
+
+        return { ok: true, collectorIds: [] }
+
+      }
+
+      const collectors =
+        await Collector.findAll({
+          where: {
+            zoneId: zoneIds,
+            activo: true
+          }
+        })
+
+      return {
+        ok: true,
+        collectorIds: collectors.map((c) => c.id)
+      }
+
+    }
+
+    const collector =
+      await obtenerCollector(req.user.id)
+
+    if (!collector) {
+
+      return {
+        ok: false,
+        status: 404,
+        message: 'Cobrador no encontrado'
+      }
+
+    }
+
+    return {
+      ok: true,
+      collectorIds: [collector.id]
+    }
+
+  }
+
 const dashboardSupervisor =
   async (
     req,
@@ -525,19 +621,34 @@ export const cuotasHoyMobile =
 
     try {
 
-      const collector =
-        await obtenerCollector(
-          req.user.id
+      const resolucion =
+        await resolverCobradorIdsMobile(
+          req
         )
 
-      if (!collector) {
+      if (!resolucion.ok) {
 
-        return res.status(404)
-          .json({
-            success: false,
-            message:
-              'Cobrador no encontrado'
-          })
+        return res.status(
+          resolucion.status
+        ).json({
+          success: false,
+          message:
+            resolucion.message
+        })
+
+      }
+
+      const { collectorIds } =
+        resolucion
+
+      if (
+        collectorIds.length === 0
+      ) {
+
+        return res.json({
+          success: true,
+          data: []
+        })
 
       }
 
@@ -572,7 +683,7 @@ export const cuotasHoyMobile =
               where: {
 
                 cobradorId:
-                  collector.id
+                  collectorIds
 
               },
 
@@ -583,6 +694,23 @@ export const cuotasHoyMobile =
                   model: Client,
 
                   as: 'cliente'
+
+                },
+
+                {
+
+                  model: Collector,
+
+                  as: 'cobrador',
+
+                  include: [
+
+                    {
+                      model: Zone,
+                      as: 'zone'
+                    }
+
+                  ]
 
                 }
 
@@ -651,19 +779,34 @@ export const cuotasAtrasadasMobile =
 
     try {
 
-      const collector =
-        await obtenerCollector(
-          req.user.id
+      const resolucion =
+        await resolverCobradorIdsMobile(
+          req
         )
 
-      if (!collector) {
+      if (!resolucion.ok) {
 
-        return res.status(404)
-          .json({
-            success: false,
-            message:
-              'Cobrador no encontrado'
-          })
+        return res.status(
+          resolucion.status
+        ).json({
+          success: false,
+          message:
+            resolucion.message
+        })
+
+      }
+
+      const { collectorIds } =
+        resolucion
+
+      if (
+        collectorIds.length === 0
+      ) {
+
+        return res.json({
+          success: true,
+          data: []
+        })
 
       }
 
@@ -681,7 +824,7 @@ export const cuotasAtrasadasMobile =
               where: {
 
                 cobradorId:
-                  collector.id
+                  collectorIds
 
               },
 
@@ -692,6 +835,23 @@ export const cuotasAtrasadasMobile =
                   model: Client,
 
                   as: 'cliente'
+
+                },
+
+                {
+
+                  model: Collector,
+
+                  as: 'cobrador',
+
+                  include: [
+
+                    {
+                      model: Zone,
+                      as: 'zone'
+                    }
+
+                  ]
 
                 }
 
@@ -1266,6 +1426,53 @@ export const perfilMobile =
           efectividad
         }
       })
+    } catch (error) {
+      next(error)
+    }
+  }
+
+export const zonasMobile =
+  async (
+    req,
+    res,
+    next
+  ) => {
+
+    try {
+
+      if (!esSupervisor(req.user)) {
+
+        return res.json({
+          success: true,
+          data: []
+        })
+
+      }
+
+      const supervisor =
+        await obtenerSupervisor(
+          req.user.id
+        )
+
+      if (!supervisor) {
+
+        return res.status(404).json({
+          success: false,
+          message: 'Supervisor no encontrado'
+        })
+
+      }
+
+      const zonas =
+        await supervisor.getZonas({
+          order: [['nombre', 'ASC']]
+        })
+
+      return res.json({
+        success: true,
+        data: zonas
+      })
+
     } catch (error) {
       next(error)
     }

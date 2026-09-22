@@ -212,6 +212,32 @@ Supervisor.belongsTo(
   }
 )
 
+//
+// SUPERVISORES <-> ZONAS (muchos a muchos)
+// Un supervisor puede tener asignadas varias zonas, más allá
+// de las zonas de sus propios cobradores (supervisorId), para
+// cubrir zonas de otros supervisores o de otros cobradores.
+//
+Supervisor.belongsToMany(
+  Zone,
+  {
+    through: 'SupervisorZonas',
+    foreignKey: 'supervisorId',
+    otherKey: 'zoneId',
+    as: 'zonas'
+  }
+)
+
+Zone.belongsToMany(
+  Supervisor,
+  {
+    through: 'SupervisorZonas',
+    foreignKey: 'zoneId',
+    otherKey: 'supervisorId',
+    as: 'supervisores'
+  }
+)
+
 
 //
 // OWNERS -> COLLECTORS

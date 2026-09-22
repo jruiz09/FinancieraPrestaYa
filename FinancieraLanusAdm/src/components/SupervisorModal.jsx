@@ -3,6 +3,10 @@ import React, {
   useState,
 } from "react";
 
+import {
+  zoneService,
+} from "../services/zoneService";
+
 export default function SupervisorModal({
   open,
   onClose,
@@ -45,6 +49,33 @@ export default function SupervisorModal({
     setErrors,
   ] = useState({});
 
+  const [
+    zonasDisponibles,
+    setZonasDisponibles,
+  ] = useState([]);
+
+  const [
+    zoneIds,
+    setZoneIds,
+  ] = useState([]);
+
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    zoneService
+      .list()
+      .then((data) =>
+        setZonasDisponibles(
+          data || [],
+        ),
+      )
+      .catch((err) =>
+        console.error(err),
+      );
+  }, [open]);
+
   useEffect(() => {
     if (supervisor) {
       setForm({
@@ -72,6 +103,12 @@ export default function SupervisorModal({
 
         confirmPassword: "",
       });
+
+      setZoneIds(
+        (
+          supervisor.zonas || []
+        ).map((z) => z.id),
+      );
     } else {
       setForm(emptyForm);
 
@@ -82,6 +119,8 @@ export default function SupervisorModal({
         password: "",
         confirmPassword: "",
       });
+
+      setZoneIds([]);
     }
 
     setUsuarioEditado(false);
@@ -90,6 +129,19 @@ export default function SupervisorModal({
     supervisor,
     open,
   ]);
+
+  const toggleZona = (
+    zoneId,
+  ) => {
+    setZoneIds((prev) =>
+      prev.includes(zoneId)
+        ? prev.filter(
+            (id) =>
+              id !== zoneId,
+          )
+        : [...prev, zoneId],
+    );
+  };
 
   useEffect(() => {
     if (!open) {
@@ -340,6 +392,8 @@ export default function SupervisorModal({
 
     onSave({
       ...form,
+
+      zoneIds,
 
       crearUsuario,
 
@@ -622,6 +676,94 @@ export default function SupervisorModal({
                   />
                 </Field>
               </div>
+            </section>
+
+            <Divider />
+
+            {/* ZONAS */}
+            <section>
+              <SectionTitle
+                title="Zonas asignadas"
+                description="Además de las zonas de sus cobradores, un supervisor puede cubrir zonas de otros equipos."
+              />
+
+              {zonasDisponibles.length ===
+              0 ? (
+                <p
+                  className="
+                    text-sm
+                    text-stone-400
+                  "
+                >
+                  No hay zonas
+                  disponibles.
+                </p>
+              ) : (
+                <div
+                  className="
+                    grid
+                    grid-cols-1
+                    gap-2
+                    sm:grid-cols-2
+                    md:grid-cols-3
+                  "
+                >
+                  {zonasDisponibles.map(
+                    (zona) => (
+                      <label
+                        key={
+                          zona.id
+                        }
+                        className="
+                          flex
+                          cursor-pointer
+                          items-center
+                          gap-2.5
+                          rounded-xl
+                          border
+                          border-stone-200
+                          bg-stone-50/70
+                          px-3.5
+                          py-2.5
+                          text-sm
+                          text-stone-700
+                          transition
+                          hover:bg-stone-100
+                          dark:border-stone-700
+                          dark:bg-stone-800/40
+                          dark:text-stone-200
+                          dark:hover:bg-stone-800
+                        "
+                      >
+                        <input
+                          type="checkbox"
+                          checked={zoneIds.includes(
+                            zona.id,
+                          )}
+                          disabled={
+                            isLoading
+                          }
+                          onChange={() =>
+                            toggleZona(
+                              zona.id,
+                            )
+                          }
+                          className="
+                            h-4
+                            w-4
+                            rounded
+                            accent-amber-500
+                          "
+                        />
+
+                        {
+                          zona.nombre
+                        }
+                      </label>
+                    ),
+                  )}
+                </div>
+              )}
             </section>
 
             <Divider />

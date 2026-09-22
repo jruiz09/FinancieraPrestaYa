@@ -43,7 +43,7 @@ Owner
 
 Notas clave que aplican en toda la plataforma:
 - La app **Mobile es una sola PWA** — no existen apps separadas para Cobrador y Supervisor. Se adapta por rol.
-- Un Supervisor **no tiene relación directa con una Zona**; administra territorio indirectamente a través de sus cobradores.
+- Un Supervisor administra territorio principalmente de forma indirecta, a través de sus cobradores, pero también puede tener **una o varias Zonas asignadas directamente** (relación muchos a muchos), para cubrir zonas de otros supervisores o de otros cobradores cuando sea necesario.
 - Los cobradores siempre usan `zoneId` (nunca un campo de texto libre "zona").
 - La autenticación Mobile usa siempre la entidad `User`.
 

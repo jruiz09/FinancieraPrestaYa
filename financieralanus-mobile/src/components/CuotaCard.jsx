@@ -23,7 +23,9 @@ export default function CuotaCard({
 
   detalle,
 
-  onCobrar
+  onCobrar,
+
+  mostrarCobrador
 
 }) {
 
@@ -139,6 +141,44 @@ export default function CuotaCard({
                   }
 
                 </p>
+
+                {mostrarCobrador &&
+                  cuota.credito
+                    ?.cobrador && (
+
+                  <p
+                    className="
+                      mt-0.5
+                      text-xs
+                      text-slate-500
+                    "
+                  >
+
+                    {
+                      cuota.credito
+                        .cobrador
+                        .nombre
+                    }
+                    {" "}
+                    {
+                      cuota.credito
+                        .cobrador
+                        .apellido
+                    }
+
+                    {cuota.credito
+                      .cobrador.zone
+                        ?.nombre &&
+                      ` · ${
+                        cuota.credito
+                          .cobrador
+                          .zone
+                          .nombre
+                      }`}
+
+                  </p>
+
+                )}
 
               </>
 
@@ -562,7 +602,7 @@ export default function CuotaCard({
 
           </div>
 
-          :
+          : onCobrar ?
 
           <button
 
@@ -602,6 +642,29 @@ export default function CuotaCard({
             Registrar Cobro
 
           </button>
+
+          :
+
+          <div
+            className="
+              mt-5
+              w-full
+              rounded-2xl
+              bg-slate-800
+              py-3.5
+              flex
+              justify-center
+              items-center
+              gap-2
+              text-slate-400
+              text-sm
+              font-medium
+            "
+          >
+
+            Pendiente de cobro
+
+          </div>
 
       }
 

@@ -20,6 +20,11 @@ import {
   calcularValePorZona
 } from './informeDiarioController.js';
 
+import {
+  obtenerZoneIdsPermitidos,
+  resolverZoneIdsEfectivos
+} from '../utils/oficinaScope.js';
+
 const numero = value => Number(value || 0);
 
 /*
@@ -56,6 +61,20 @@ export const createMovimiento = async (req, res, next) => {
       return res.status(400).json({
         success: false,
         message: 'Zona inválida.'
+      });
+    }
+
+    const zoneIdsPermitidos =
+      await obtenerZoneIdsPermitidos(req.user);
+
+    if (
+      zoneIdsPermitidos !== null &&
+      !zoneIdsPermitidos.includes(zona.id)
+    ) {
+
+      return res.status(403).json({
+        success: false,
+        message: 'No tenés acceso a esa zona.'
       });
     }
 
@@ -99,14 +118,17 @@ export const listMovimientos = async (req, res, next) => {
       activo: true
     };
 
-    const zoneIds = req.query.zoneIds
+    const zoneIdsSolicitados = req.query.zoneIds
       ? req.query.zoneIds
           .split(',')
           .map(id => id.trim())
           .filter(Boolean)
       : [];
 
-    if (zoneIds.length) {
+    const { zoneIds, restringido } =
+      await resolverZoneIdsEfectivos(req.user, zoneIdsSolicitados);
+
+    if (restringido) {
       where.zoneId = { [Op.in]: zoneIds };
     }
 
@@ -182,6 +204,20 @@ export const anularMovimiento = async (req, res, next) => {
       });
     }
 
+    const zoneIdsPermitidos =
+      await obtenerZoneIdsPermitidos(req.user);
+
+    if (
+      zoneIdsPermitidos !== null &&
+      !zoneIdsPermitidos.includes(movimiento.zoneId)
+    ) {
+
+      return res.status(403).json({
+        success: false,
+        message: 'No tenés acceso a esa zona.'
+      });
+    }
+
     if (!movimiento.activo) {
 
       return res.status(400).json({
@@ -234,11 +270,21 @@ export const getResumenCaja = async (req, res, next) => {
     const fechaHasta = req.query.fechaHasta || hoy;
 
     const {
-      zonas,
+      zonas: todasLasZonas,
       collectorZonaMap,
       supervisorZonasMap,
       todosLosCollectorIds
     } = await obtenerZonasYCobradores(req.user.ownerId);
+
+    const zoneIdsPermitidos =
+      await obtenerZoneIdsPermitidos(req.user);
+
+    const zonas =
+      zoneIdsPermitidos === null
+        ? todasLasZonas
+        : todasLasZonas.filter(
+            zona => zoneIdsPermitidos.includes(zona.id)
+          );
 
     const {
       porZona: recaudadoPorZona,
@@ -378,12 +424,15 @@ export const listMovimientosAutomaticos = async (req, res, next) => {
     const fechaDesde = req.query.fechaDesde || hoy;
     const fechaHasta = req.query.fechaHasta || hoy;
 
-    const zoneIdsFiltro = req.query.zoneIds
+    const zoneIdsFiltroSolicitado = req.query.zoneIds
       ? req.query.zoneIds
           .split(',')
           .map(id => id.trim())
           .filter(Boolean)
       : [];
+
+    const { zoneIds: zoneIdsFiltro, restringido } =
+      await resolverZoneIdsEfectivos(req.user, zoneIdsFiltroSolicitado);
 
     const {
       zonas,
@@ -648,7 +697,7 @@ export const listMovimientosAutomaticos = async (req, res, next) => {
       }
     }
 
-    const movimientosFiltrados = zoneIdsFiltro.length
+    const movimientosFiltrados = restringido
       ? movimientos.filter(m => zoneIdsFiltro.includes(m.zoneId))
       : movimientos;
 

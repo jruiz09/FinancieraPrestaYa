@@ -3,6 +3,9 @@ import { Client, Owner, Collector } from '../models/index.js';
 import {
   resolverUbicacion
 } from '../services/geocoder.service.js';
+import {
+  resolverZoneIdsEfectivos
+} from '../utils/oficinaScope.js';
 
 const canViewAllOwners = (user) => user.permissions?.includes('OWNERS_VIEW');
 const canSetOwner = (user) => user.permissions?.includes('OWNERS_EDIT');
@@ -153,20 +156,23 @@ export const listClients = async (req, res, next) => {
       where.cobradorId = req.query.cobradorId;
     }
 
-    const zoneIds = req.query.zoneIds
+    const zoneIdsSolicitados = req.query.zoneIds
       ? req.query.zoneIds
           .split(',')
           .map((id) => id.trim())
           .filter(Boolean)
       : [];
 
+    const { zoneIds, restringido } =
+      await resolverZoneIdsEfectivos(req.user, zoneIdsSolicitados);
+
     const collectorInclude = {
       association: 'collector',
       include: ['zone'],
-      where: zoneIds.length
+      where: restringido
         ? { zoneId: { [Op.in]: zoneIds } }
         : undefined,
-      required: zoneIds.length > 0
+      required: restringido
     };
 
     /*

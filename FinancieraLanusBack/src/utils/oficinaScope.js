@@ -83,3 +83,62 @@ export const filtrarZoneIdsPermitidos = (
 
   return zoneIdsCandidatos.filter(id => permitidos.has(id))
 }
+
+/*
+=====================================================
+Helper de conveniencia para el caso más común: un endpoint
+que ya recibe un filtro opcional `zoneIds` por query string
+(?zoneIds=a,b,c) y arma su where/include en base a eso.
+
+Combina lo que el usuario PIDIÓ (zoneIdsSolicitados, puede
+venir vacío = "todas") con lo que el usuario PUEDE ver
+(obtenerZoneIdsPermitidos). Devuelve:
+
+  - zoneIds: la lista efectiva a usar en el where/include.
+  - restringido: true si hay que aplicar el filtro de zona
+    sí o sí (antes el código typeaba esto como
+    `zoneIds.length > 0`; con oficinas, incluso sin pedir
+    ninguna zona explícita puede haber restricción).
+
+Casos:
+  - Sin oficinas asignadas y sin zoneIds pedidos: sin
+    restricción, ve todo (como hasta ahora).
+  - Sin oficinas asignadas y con zoneIds pedidos: filtra por
+    lo pedido, igual que hasta ahora.
+  - Con oficinas asignadas: siempre restringido. Si pidió
+    zonas puntuales, se intersectan contra lo permitido (para
+    que no pueda "pedir" una zona ajena); si no pidió nada,
+    ve todas SUS zonas permitidas.
+=====================================================
+*/
+
+export const resolverZoneIdsEfectivos = async (
+  user,
+  zoneIdsSolicitados = []
+) => {
+
+  const zoneIdsPermitidos =
+    await obtenerZoneIdsPermitidos(user)
+
+  if (zoneIdsPermitidos === null) {
+
+    return {
+      zoneIds: zoneIdsSolicitados,
+      restringido: zoneIdsSolicitados.length > 0
+    }
+
+  }
+
+  const zoneIds = zoneIdsSolicitados.length
+    ? filtrarZoneIdsPermitidos(
+        zoneIdsSolicitados,
+        zoneIdsPermitidos
+      )
+    : zoneIdsPermitidos
+
+  return {
+    zoneIds,
+    restringido: true
+  }
+
+}

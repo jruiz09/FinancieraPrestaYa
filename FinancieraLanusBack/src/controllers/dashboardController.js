@@ -14,6 +14,10 @@ import {
   calcularCobranzaPorZona
 } from './informeDiarioController.js';
 
+import {
+  resolverZoneIdsEfectivos
+} from '../utils/oficinaScope.js';
+
 const numero = value => Number(value || 0);
 
 export const getResumenDashboard =
@@ -34,7 +38,7 @@ export const getResumenDashboard =
 
       const ownerId = req.user.ownerId;
 
-      const zoneIds =
+      const zoneIdsSolicitados =
         req.query.zoneIds
           ? req.query.zoneIds
               .split(',')
@@ -42,11 +46,14 @@ export const getResumenDashboard =
               .filter(Boolean)
           : [];
 
+      const { zoneIds, restringido } =
+        await resolverZoneIdsEfectivos(req.user, zoneIdsSolicitados);
+
       const { zonas } =
         await obtenerZonasYCobradores(ownerId);
 
       const zonasFiltradas =
-        zoneIds.length
+        restringido
           ? zonas.filter(
               zona => zoneIds.includes(zona.id)
             )
@@ -61,7 +68,7 @@ export const getResumenDashboard =
         );
 
       const whereCobrador =
-        zoneIds.length
+        restringido
           ? { cobradorId: collectorIdsFiltro }
           : {};
 
@@ -93,7 +100,7 @@ export const getResumenDashboard =
           where: {
             ownerId,
             activo: true,
-            ...(zoneIds.length
+            ...(restringido
               ? { zoneId: zoneIds }
               : {})
           }
@@ -338,13 +345,19 @@ export const getResumenPorZona = async (
 
     await actualizarCuotasVencidas();
 
-    const zoneIdsFiltro =
+    const zoneIdsFiltroSolicitado =
       req.query.zoneIds
         ? req.query.zoneIds
             .split(',')
             .map(id => id.trim())
             .filter(Boolean)
         : [];
+
+    const { zoneIds: zoneIdsFiltro, restringido } =
+      await resolverZoneIdsEfectivos(
+        req.user,
+        zoneIdsFiltroSolicitado
+      );
 
     const hoy =
       new Date()
@@ -360,7 +373,7 @@ export const getResumenPorZona = async (
     );
 
     const zonasFiltradas =
-      zoneIdsFiltro.length
+      restringido
         ? zonas.filter(
             zona =>
               zoneIdsFiltro.includes(zona.id)

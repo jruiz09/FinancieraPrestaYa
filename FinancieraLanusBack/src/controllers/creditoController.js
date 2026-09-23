@@ -13,6 +13,7 @@ import crypto from 'crypto';
 import { Op } from 'sequelize';
 
 import { calcularCuotasAfectadas } from '../services/pagoCuotaService.js';
+import { resolverZoneIdsEfectivos } from '../utils/oficinaScope.js';
 
 const canViewAllOwners = (user) => user.permissions?.includes('OWNERS_VIEW');
 
@@ -122,14 +123,17 @@ export const listCreditos = async (
       where.ownerId = req.query.ownerId;
     }
 
-    const zoneIds = req.query.zoneIds
+    const zoneIdsSolicitados = req.query.zoneIds
       ? req.query.zoneIds
           .split(',')
           .map((id) => id.trim())
           .filter(Boolean)
       : [];
 
-    const cobradorInclude = zoneIds.length
+    const { zoneIds, restringido } =
+      await resolverZoneIdsEfectivos(req.user, zoneIdsSolicitados);
+
+    const cobradorInclude = restringido
       ? {
           association: 'cobrador',
           where: {
@@ -173,7 +177,7 @@ export const listCreditos = async (
           {
             association: 'cobrador',
             attributes: [],
-            where: zoneIds.length
+            where: restringido
               ? {
                   zoneId: {
                     [Op.in]: zoneIds
@@ -1601,14 +1605,17 @@ export const listCuotas = async (
       whereCredito.ownerId = req.query.ownerId;
     }
 
-    const zoneIds = req.query.zoneIds
+    const zoneIdsSolicitados = req.query.zoneIds
       ? req.query.zoneIds
           .split(',')
           .map((id) => id.trim())
           .filter(Boolean)
       : [];
 
-    const cobradorIncludeConteos = zoneIds.length
+    const { zoneIds, restringido } =
+      await resolverZoneIdsEfectivos(req.user, zoneIdsSolicitados);
+
+    const cobradorIncludeConteos = restringido
       ? [
           {
             association: 'cobrador',
@@ -1732,7 +1739,7 @@ export const listCuotas = async (
 
                 include: ['zone'],
 
-                where: zoneIds.length
+                where: restringido
                   ? {
                       zoneId: {
                         [Op.in]: zoneIds
@@ -1740,7 +1747,7 @@ export const listCuotas = async (
                     }
                   : undefined,
 
-                required: zoneIds.length > 0
+                required: restringido
               }
             ]
           }

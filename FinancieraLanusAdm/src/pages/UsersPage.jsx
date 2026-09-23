@@ -5,6 +5,7 @@ import ErrorAlert from '../components/ErrorAlert'
 import UserModal from '../components/UserModal'
 import { userService } from '../services/userService'
 import { roleService } from '../services/roleService'
+import { oficinaService } from '../services/oficinaService'
 import Permission from '../components/Permission'
 import usePermissions from '../hooks/usePermissions'
 import { PERMISSIONS } from '../constants/permissions'
@@ -13,6 +14,7 @@ export default function UsersPage() {
   const { can } = usePermissions()
   const [users, setUsers] = useState([])
   const [roles, setRoles] = useState([])
+  const [oficinas, setOficinas] = useState([])
   const [page, setPage] = useState(1)
   const [total, setTotal] = useState(0)
   const [limit] = useState(10)
@@ -48,9 +50,20 @@ export default function UsersPage() {
     }
   }
 
+  const fetchOficinas = async () => {
+    try {
+      const data = await oficinaService.list()
+      setOficinas(data || [])
+    } catch (err) {
+      console.error('Error cargando oficinas', err)
+      setOficinas([])
+    }
+  }
+
   useEffect(() => {
     fetchUsers()
     fetchRoles()
+    fetchOficinas()
   }, [page])
 
   const openCreateModal = () => {
@@ -418,6 +431,7 @@ export default function UsersPage() {
         title={modalMode === 'create' ? 'Nuevo Usuario' : 'Editar Usuario'}
         initialData={selectedUser}
         roles={roles}
+        oficinas={oficinas}
         onSubmit={handleSaveUser}
         onClose={closeModal}
         isLoading={isModalLoading}

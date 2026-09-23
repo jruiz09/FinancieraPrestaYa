@@ -16,6 +16,7 @@ router.post(
   body('username').notEmpty(),
   body('password').isLength({ min: 6 }),
   body('roleId').notEmpty(),
+  body('oficinaIds').optional().isArray(),
   validateRequest,
   createUser
 );
@@ -25,6 +26,7 @@ router.put(
   body('name').optional().notEmpty(),
   body('password').optional().isLength({ min: 6 }),
   body('roleId').optional().notEmpty(),
+  body('oficinaIds').optional().isArray(),
   validateRequest,
   updateUser
 );

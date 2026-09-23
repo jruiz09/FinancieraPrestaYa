@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 
-export default function UserForm({ initialData = {}, roles = [], onSubmit, isLoading }) {
+export default function UserForm({ initialData = {}, roles = [], oficinas = [], onSubmit, isLoading }) {
   const [formData, setFormData] = useState({
     name: '',
     username: '',
@@ -10,6 +10,10 @@ export default function UserForm({ initialData = {}, roles = [], onSubmit, isLoa
   })
   const [errors, setErrors] = useState({})
 
+  const [oficinaIds, setOficinaIds] = useState(
+    (initialData.oficinas || []).map(o => o.id)
+  )
+
   useEffect(() => {
     setFormData({
       name: '',
@@ -18,7 +22,19 @@ export default function UserForm({ initialData = {}, roles = [], onSubmit, isLoa
       roleId: '',
       ...initialData
     })
+
+    setOficinaIds(
+      (initialData.oficinas || []).map(o => o.id)
+    )
   }, [initialData])
+
+  const toggleOficina = (oficinaId) => {
+    setOficinaIds(prev =>
+      prev.includes(oficinaId)
+        ? prev.filter(id => id !== oficinaId)
+        : [...prev, oficinaId]
+    )
+  }
 
   const validateForm = () => {
     const newErrors = {}
@@ -44,7 +60,7 @@ export default function UserForm({ initialData = {}, roles = [], onSubmit, isLoa
       return
     }
     const { name, username, password, roleId } = formData
-    onSubmit({ name, username, password, roleId })
+    onSubmit({ name, username, password, roleId, oficinaIds })
   }
 
   const inputClass = (hasError) => `
@@ -132,6 +148,56 @@ export default function UserForm({ initialData = {}, roles = [], onSubmit, isLoa
           ))}
         </select>
         {errors.roleId && <p className={errorClass}>{errors.roleId}</p>}
+      </div>
+
+      <div>
+        <p className={labelClass}>
+          Oficinas
+        </p>
+
+        <p className="mb-2 text-xs text-stone-400">
+          Si no se asigna ninguna, el usuario ve todo (sin restricción).
+        </p>
+
+        {oficinas.length === 0 ? (
+          <p className="text-sm text-stone-400">
+            No hay oficinas disponibles.
+          </p>
+        ) : (
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+            {oficinas.map(oficina => (
+              <label
+                key={oficina.id}
+                className="
+                  flex
+                  cursor-pointer
+                  items-center
+                  gap-2.5
+                  rounded-xl
+                  border
+                  border-stone-200
+                  bg-stone-50/70
+                  px-3.5
+                  py-2.5
+                  text-sm
+                  text-stone-700
+                  transition
+                  hover:bg-stone-100
+                "
+              >
+                <input
+                  type="checkbox"
+                  checked={oficinaIds.includes(oficina.id)}
+                  disabled={isLoading}
+                  onChange={() => toggleOficina(oficina.id)}
+                  className="h-4 w-4 rounded accent-amber-500"
+                />
+
+                {oficina.nombre}
+              </label>
+            ))}
+          </div>
+        )}
       </div>
 
       <button

@@ -7,7 +7,7 @@ export const getUsers = async (req, res, next) => {
     const offset = (page - 1) * limit;
 
     const { count, rows } = await User.findAndCountAll({
-      include: ['role', 'owner'],
+      include: ['role', 'owner', 'oficinas'],
       limit,
       offset,
       order: [['name', 'ASC']],
@@ -21,7 +21,7 @@ export const getUsers = async (req, res, next) => {
 
 export const getUserById = async (req, res, next) => {
   try {
-    const user = await User.findByPk(req.params.id, { include: ['role', 'owner'] });
+    const user = await User.findByPk(req.params.id, { include: ['role', 'owner', 'oficinas'] });
     if (!user) {
       return res.status(404).json({ success: false, message: 'Usuario no encontrado.' });
     }
@@ -33,7 +33,7 @@ export const getUserById = async (req, res, next) => {
 
 export const createUser = async (req, res, next) => {
   try {
-    const { name, username, password, roleId, ownerId } = req.body;
+    const { name, username, password, roleId, ownerId, oficinaIds } = req.body;
 
     if (!name || !username || !password || !roleId) {
       return res.status(400).json({ success: false, message: 'Campos requeridos: name, username, password, roleId.' });
@@ -45,7 +45,14 @@ export const createUser = async (req, res, next) => {
     }
 
     const user = await User.create({ name, username, password, roleId, ownerId });
-    res.status(201).json({ success: true, data: user });
+
+    if (Array.isArray(oficinaIds)) {
+      await user.setOficinas(oficinaIds);
+    }
+
+    const resultado = await User.findByPk(user.id, { include: ['role', 'owner', 'oficinas'] });
+
+    res.status(201).json({ success: true, data: resultado });
   } catch (error) {
     next(error);
   }
@@ -58,7 +65,7 @@ export const updateUser = async (req, res, next) => {
       return res.status(404).json({ success: false, message: 'Usuario no encontrado.' });
     }
 
-    const { name, password, roleId } = req.body;
+    const { name, password, roleId, oficinaIds } = req.body;
 
     if (name) user.name = name;
     if (password) user.password = password;
@@ -71,7 +78,14 @@ export const updateUser = async (req, res, next) => {
     }
 
     await user.save();
-    res.json({ success: true, data: user });
+
+    if (Array.isArray(oficinaIds)) {
+      await user.setOficinas(oficinaIds);
+    }
+
+    const resultado = await User.findByPk(user.id, { include: ['role', 'owner', 'oficinas'] });
+
+    res.json({ success: true, data: resultado });
   } catch (error) {
     next(error);
   }

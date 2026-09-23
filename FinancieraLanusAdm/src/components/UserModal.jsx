@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react'
 import UserForm from './UserForm'
 
-export default function UserModal({ isOpen, title, initialData, roles, onSubmit, onClose, isLoading }) {
+export default function UserModal({ isOpen, title, initialData, roles, oficinas, onSubmit, onClose, isLoading }) {
   useEffect(() => {
     if (!isOpen) return
 
@@ -121,7 +121,7 @@ export default function UserModal({ isOpen, title, initialData, roles, onSubmit,
         </div>
 
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-5">
-          <UserForm initialData={initialData} roles={roles} onSubmit={onSubmit} isLoading={isLoading} />
+          <UserForm initialData={initialData} roles={roles} oficinas={oficinas} onSubmit={onSubmit} isLoading={isLoading} />
         </div>
       </div>
     </div>

@@ -12,6 +12,7 @@ import { seedEliminarEmailUsuariosYSupervisores } from './seeders/seedEliminarEm
 import { seedColumnasBajaCredito } from './seeders/seedColumnasBajaCredito.js';
 import { seedEliminarEstadoVale } from './seeders/seedEliminarEstadoVale.js';
 import { seedFixForeignKeysAyuda } from './seeders/seedFixForeignKeysAyuda.js';
+import { seedPermisoOficinasAdministrativo } from './seeders/seedPermisoOficinasAdministrativo.js';
 
 dotenv.config();
 
@@ -43,6 +44,8 @@ const startServer = async () => {
     await seedRolePermissions();
 
     await seedPermisosValesAutogestion();
+
+    await seedPermisoOficinasAdministrativo();
 
     await seedOwners();
 

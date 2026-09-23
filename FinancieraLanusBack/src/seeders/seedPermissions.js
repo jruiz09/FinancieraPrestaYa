@@ -60,6 +60,13 @@ const MODULES = {
     'DELETE'
   ],
 
+  OFICINAS: [
+    'VIEW',
+    'CREATE',
+    'EDIT',
+    'DELETE'
+  ],
+
   CREDITS: [
     'VIEW',
     'CREATE',
@@ -143,6 +150,8 @@ const moduleName = {
   OWNERS: 'Propietarios',
 
   ZONES: 'Zonas',
+
+  OFICINAS: 'Oficinas',
 
   CREDITS: 'Créditos',
 

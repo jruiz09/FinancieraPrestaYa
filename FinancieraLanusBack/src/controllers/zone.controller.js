@@ -1,8 +1,26 @@
 import {
   Zone,
-  Collector
+  Collector,
+  Oficina
 } from '../models/index.js'
 
+import { Op } from 'sequelize'
+
+import {
+  obtenerZoneIdsPermitidos,
+  filtrarZoneIdsPermitidos
+} from '../utils/oficinaScope.js'
+
+/*
+=====================================================
+Devuelve las zonas visibles para el usuario: primero se
+restringen por sus oficinas asignadas (obtenerZoneIdsPermitidos,
+null = sin restricción); si además mandó ?oficinaIds= (el switch
+del Header), se acota más todavía a solo esas oficinas puntuales
+(intersectado contra lo permitido, nunca puede "pedir" una
+oficina ajena).
+=====================================================
+*/
 export const listZones = async (
   req,
   res,
@@ -11,14 +29,70 @@ export const listZones = async (
 
   try {
 
+    const zoneIdsPermitidos =
+      await obtenerZoneIdsPermitidos(req.user)
+
+    let zoneIdsSwitch = null
+
+    if (req.query.oficinaIds) {
+
+      const oficinaIds =
+        req.query.oficinaIds
+          .split(',')
+          .map(id => id.trim())
+          .filter(Boolean)
+
+      const oficinas =
+        await Oficina.findAll({
+          where: {
+            id: oficinaIds,
+            ownerId: req.user.ownerId
+          },
+          include: [
+            {
+              model: Zone,
+              as: 'zonas',
+              attributes: ['id']
+            }
+          ]
+        })
+
+      const zoneIdsSet = new Set()
+
+      for (const oficina of oficinas) {
+        for (const zona of oficina.zonas || []) {
+          zoneIdsSet.add(zona.id)
+        }
+      }
+
+      zoneIdsSwitch = Array.from(zoneIdsSet)
+    }
+
+    let zoneIdsFinal = zoneIdsSwitch
+
+    if (zoneIdsPermitidos !== null) {
+
+      zoneIdsFinal =
+        zoneIdsSwitch === null
+          ? zoneIdsPermitidos
+          : filtrarZoneIdsPermitidos(zoneIdsSwitch, zoneIdsPermitidos)
+
+    }
+
+    const where = {
+      activa: true,
+      ownerId:
+        req.user.ownerId
+    }
+
+    if (zoneIdsFinal !== null) {
+      where.id = { [Op.in]: zoneIdsFinal }
+    }
+
     const zones =
       await Zone.findAll({
 
-        where: {
-          activa: true,
-          ownerId:
-            req.user.ownerId
-        },
+        where,
 
         include: [
           {

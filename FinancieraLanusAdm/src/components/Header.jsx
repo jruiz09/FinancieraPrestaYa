@@ -18,6 +18,9 @@ import {
 import NotificacionesBell
   from './NotificacionesBell'
 
+import OficinaSwitch
+  from './OficinaSwitch'
+
 export default function Header({
   sidebarCollapsed,
   onToggleSidebar,
@@ -152,6 +155,8 @@ export default function Header({
           )}
 
         </button>
+
+        <OficinaSwitch />
 
         <div className="
           hidden

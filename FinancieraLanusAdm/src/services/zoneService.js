@@ -1,11 +1,29 @@
 import api from '../api/axios'
 
+import { useAuthStore } from '../store/useAuthStore'
+
 export const zoneService = {
 
+  /*
+  Si el usuario eligió mirar una o más oficinas puntuales con
+  el switch del Header, se manda oficinaIds para que /zones
+  devuelva solo las zonas de esas oficinas (además del scoping
+  por permisos que ya aplica el backend siempre). Vacío = todas
+  sus oficinas.
+  */
   list: async () => {
 
+    const selectedOficinaIds =
+      useAuthStore.getState().selectedOficinaIds
+
     const response =
-      await api.get('/zones')
+      await api.get('/zones', {
+        params: {
+          oficinaIds: selectedOficinaIds?.length
+            ? selectedOficinaIds.join(',')
+            : undefined
+        }
+      })
 
     return response.data.data
 

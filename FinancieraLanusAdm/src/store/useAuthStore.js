@@ -17,7 +17,8 @@ const saveToLocalStorage = (state) => {
     JSON.stringify({
       user: state.user,
       token: state.token,
-      ownerId: state.ownerId
+      ownerId: state.ownerId,
+      selectedOficinaIds: state.selectedOficinaIds
     })
   )
 }
@@ -38,9 +39,38 @@ export const useAuthStore = create((set) => {
     ownerId:
       initialState?.ownerId || null,
 
+    /*
+    Oficinas que el usuario eligió mirar en este momento (vacío
+    = todas las suyas). Es solo un filtro de conveniencia en el
+    frontend: la restricción real de qué puede ver ya la aplica
+    el backend según las oficinas que tenga asignadas.
+    */
+    selectedOficinaIds:
+      initialState?.selectedOficinaIds || [],
+
     isLoading: false,
 
     error: null,
+
+    setSelectedOficinaIds: (oficinaIds) =>
+      set((state) => {
+
+        const newState = {
+
+          ...state,
+
+          selectedOficinaIds:
+            oficinaIds || []
+
+        }
+
+        saveToLocalStorage(
+          newState
+        )
+
+        return newState
+
+      }),
 
     setUser: (user) =>
       set((state) => {
@@ -111,6 +141,8 @@ export const useAuthStore = create((set) => {
           ownerId:
             user?.ownerId || null,
 
+          selectedOficinaIds: [],
+
           isLoading: false,
 
           error: null
@@ -138,6 +170,8 @@ export const useAuthStore = create((set) => {
         token: null,
 
         ownerId: null,
+
+        selectedOficinaIds: [],
 
         isLoading: false,
 

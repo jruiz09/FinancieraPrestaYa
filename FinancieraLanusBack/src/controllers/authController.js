@@ -74,6 +74,11 @@ export const login = async (req, res, next) => {
     const permissions = mapPermissions(user.role);
     const token = signToken({ id: user.id, role: user.role?.name, ownerId: user.ownerId });
 
+    const oficinas =
+      typeof user.getOficinas === 'function'
+        ? await user.getOficinas()
+        : [];
+
     res.json({
       success: true,
       data: {
@@ -84,6 +89,7 @@ export const login = async (req, res, next) => {
           role: user.role?.name,
           ownerId: user.ownerId,
           permissions,
+          oficinas: oficinas.map((o) => ({ id: o.id, nombre: o.nombre })),
         },
         token,
       },
@@ -95,6 +101,12 @@ export const login = async (req, res, next) => {
 
 export const me = async (req, res) => {
   const user = req.user;
+
+  const oficinas =
+    typeof user.getOficinas === 'function'
+      ? await user.getOficinas()
+      : [];
+
   res.json({
     success: true,
     data: {
@@ -109,6 +121,7 @@ export const me = async (req, res) => {
           }
         : null,
       permissions: user.permissions,
+      oficinas: oficinas.map((o) => ({ id: o.id, nombre: o.nombre })),
     },
   });
 };

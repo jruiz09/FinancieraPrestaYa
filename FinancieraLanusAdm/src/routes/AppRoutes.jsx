@@ -33,6 +33,7 @@ from '../pages/InformeSemanalPage';
 
 import ProtectedRoute from "./ProtectedRoute";
 import ZonesPage from "../pages/ZonesPage";
+import OficinasPage from "../pages/OficinasPage";
 import AyudasPage from "../pages/AyudasPage";
 import ValesPage from "../pages/ValesPage";
 import RolesPage from "../pages/RolePage";
@@ -129,6 +130,15 @@ export default function AppRoutes() {
   element= {
     <ProtectedRoute requiredPermissions={['ZONES_VIEW']}>
       <ZonesPage />
+    </ProtectedRoute>
+  }
+/>
+
+<Route
+  path= "/oficinas"
+  element= {
+    <ProtectedRoute requiredPermissions={['OFICINAS_VIEW']}>
+      <OficinasPage />
     </ProtectedRoute>
   }
 />

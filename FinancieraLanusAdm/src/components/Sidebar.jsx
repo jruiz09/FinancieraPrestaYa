@@ -25,7 +25,8 @@ import {
   ClipboardList,
   CalendarRange,
   CalendarCheck2,
-  PiggyBank
+  PiggyBank,
+  Building2
 } from 'lucide-react'
 
 import {
@@ -544,6 +545,7 @@ export default function Sidebar({
             permissions.includes('SUPERVISORS_VIEW') ||
             permissions.includes('COLLECTORS_VIEW') ||
             permissions.includes('ZONES_VIEW') ||
+            permissions.includes('OFICINAS_VIEW') ||
             permissions.includes('CLIENTS_VIEW') ||
             permissions.includes('AYUDAS_VIEW') ||
             permissions.includes('VALES_VIEW') ||
@@ -590,6 +592,19 @@ export default function Sidebar({
                 onClick={onMobileClose}
               >
                 Zonas
+              </SidebarLink>
+
+            )}
+
+            {permissions.includes('OFICINAS_VIEW') && (
+
+              <SidebarLink
+                to="/oficinas"
+                icon={Building2}
+                collapsed={collapsed}
+                onClick={onMobileClose}
+              >
+                Oficinas
               </SidebarLink>
 
             )}

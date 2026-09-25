@@ -1,10 +1,18 @@
+import fs from 'fs';
 import { Op } from 'sequelize';
-import { Client, Owner, Collector } from '../models/index.js';
+import { Client, Owner, Collector, ClientFoto } from '../models/index.js';
+import {
+  urlPublicaClienteFoto,
+  rutaAbsolutaDesdeUrl
+} from '../config/uploads.js';
 import {
   resolverUbicacion
 } from '../services/geocoder.service.js';
 import {
-  resolverZoneIdsEfectivos
+  resolverZoneIdsEfectivos,
+  obtenerOficinaIdsPermitidos,
+  resolverOficinaIdsEfectivos,
+  parseOficinaIdsQuery
 } from '../utils/oficinaScope.js';
 
 const canViewAllOwners = (user) => user.permissions?.includes('OWNERS_VIEW');
@@ -156,6 +164,27 @@ export const listClients = async (req, res, next) => {
       where.cobradorId = req.query.cobradorId;
     }
 
+    /*
+    Restricción real por Oficina: un cliente pertenece a UNA
+    sola oficina (heredada de su cobrador al darlo de alta), a
+    diferencia de la zona, que puede estar compartida entre
+    varias oficinas. Esto evita que un usuario restringido a
+    una oficina vea clientes de otra oficina que comparte zona.
+    Se resuelve la oficina efectiva = borde permitido ∩ switch
+    del Header (?oficinaIds=).
+    */
+    const {
+      oficinaIds: oficinaIdsEfectivos,
+      restringido: restringidoOficina
+    } = await resolverOficinaIdsEfectivos(
+      req.user,
+      parseOficinaIdsQuery(req.query.oficinaIds)
+    );
+
+    if (restringidoOficina) {
+      where.oficinaId = { [Op.in]: oficinaIdsEfectivos };
+    }
+
     const zoneIdsSolicitados = req.query.zoneIds
       ? req.query.zoneIds
           .split(',')
@@ -189,6 +218,8 @@ export const listClients = async (req, res, next) => {
     const include = incluirResumenCredito
       ? [
           'owner',
+          'oficina',
+          'fotos',
           collectorInclude,
           {
             association: 'creditos',
@@ -216,7 +247,7 @@ export const listClients = async (req, res, next) => {
             ]
           }
         ]
-      : ['owner', collectorInclude];
+      : ['owner', 'oficina', 'fotos', collectorInclude];
 
     const { count, rows } = await Client.findAndCountAll({
       where,
@@ -258,6 +289,8 @@ export const getClient = async (req, res, next) => {
       {
         include: [
           'owner',
+          'oficina',
+          'fotos',
           { association: 'collector', include: ['zone'] }
         ]
       }
@@ -273,6 +306,19 @@ export const getClient = async (req, res, next) => {
     if (
       !canViewAllOwners(req.user) &&
       client.ownerId !== req.user.ownerId
+    ) {
+      return res.status(403).json({
+        success: false,
+        message: 'Acceso denegado.'
+      });
+    }
+
+    const oficinaIdsPermitidos =
+      await obtenerOficinaIdsPermitidos(req.user);
+
+    if (
+      oficinaIdsPermitidos !== null &&
+      !oficinaIdsPermitidos.includes(client.oficinaId)
     ) {
       return res.status(403).json({
         success: false,
@@ -350,6 +396,19 @@ export const createClient = async (req, res, next) => {
       });
     }
 
+    const oficinaIdsPermitidosAlta =
+      await obtenerOficinaIdsPermitidos(req.user);
+
+    if (
+      oficinaIdsPermitidosAlta !== null &&
+      !oficinaIdsPermitidosAlta.includes(collector.oficinaId)
+    ) {
+      return res.status(403).json({
+        success: false,
+        message: 'No tenés acceso a la oficina de ese cobrador.'
+      });
+    }
+
     const ubicacion =
       await resolverCoordenadas({
         latitud,
@@ -380,7 +439,9 @@ export const createClient = async (req, res, next) => {
 
       ownerId: finalOwnerId,
 
-      cobradorId
+      cobradorId,
+
+      oficinaId: collector.oficinaId
 
     });
 
@@ -452,8 +513,24 @@ export const updateClient = async (req, res, next) => {
         });
       }
 
+      const oficinaIdsPermitidosEdicion =
+        await obtenerOficinaIdsPermitidos(req.user);
+
+      if (
+        oficinaIdsPermitidosEdicion !== null &&
+        !oficinaIdsPermitidosEdicion.includes(collector.oficinaId)
+      ) {
+        return res.status(403).json({
+          success: false,
+          message: 'No tenés acceso a la oficina de ese cobrador.'
+        });
+      }
+
       client.cobradorId =
         cobradorId;
+
+      client.oficinaId =
+        collector.oficinaId;
 
     }
 
@@ -582,3 +659,129 @@ export const geolocalizarDireccion =
     }
 
   };
+
+/*
+=====================================================
+FOTOS DE CLIENTE (una o varias por cliente)
+
+Verifica que el cliente exista y que el usuario tenga acceso
+(mismo owner + oficina permitida), reutilizando la misma lógica
+que getClient.
+=====================================================
+*/
+const buscarClienteConAcceso = async (req) => {
+  const client = await Client.findByPk(req.params.id);
+
+  if (!client || !client.activo) {
+    return { ok: false, status: 404, message: 'Cliente no encontrado.' };
+  }
+
+  if (
+    !canViewAllOwners(req.user) &&
+    client.ownerId !== req.user.ownerId
+  ) {
+    return { ok: false, status: 403, message: 'Acceso denegado.' };
+  }
+
+  const oficinaIdsPermitidos =
+    await obtenerOficinaIdsPermitidos(req.user);
+
+  if (
+    oficinaIdsPermitidos !== null &&
+    !oficinaIdsPermitidos.includes(client.oficinaId)
+  ) {
+    return { ok: false, status: 403, message: 'Acceso denegado.' };
+  }
+
+  return { ok: true, client };
+};
+
+export const listClientFotos = async (req, res, next) => {
+  try {
+    const acceso = await buscarClienteConAcceso(req);
+
+    if (!acceso.ok) {
+      return res
+        .status(acceso.status)
+        .json({ success: false, message: acceso.message });
+    }
+
+    const fotos = await ClientFoto.findAll({
+      where: { clientId: acceso.client.id },
+      order: [['createdAt', 'ASC']]
+    });
+
+    res.json({ success: true, data: fotos });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const uploadClientFotos = async (req, res, next) => {
+  try {
+    const acceso = await buscarClienteConAcceso(req);
+
+    if (!acceso.ok) {
+      // Se limpian los archivos ya subidos por multer si no hay acceso.
+      (req.files || []).forEach((file) => {
+        fs.promises.unlink(file.path).catch(() => {});
+      });
+      return res
+        .status(acceso.status)
+        .json({ success: false, message: acceso.message });
+    }
+
+    if (!req.files || req.files.length === 0) {
+      return res
+        .status(400)
+        .json({ success: false, message: 'No se recibieron imágenes.' });
+    }
+
+    const fotos = await ClientFoto.bulkCreate(
+      req.files.map((file) => ({
+        clientId: acceso.client.id,
+        url: urlPublicaClienteFoto(file.filename)
+      }))
+    );
+
+    res.status(201).json({ success: true, data: fotos });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deleteClientFoto = async (req, res, next) => {
+  try {
+    const acceso = await buscarClienteConAcceso(req);
+
+    if (!acceso.ok) {
+      return res
+        .status(acceso.status)
+        .json({ success: false, message: acceso.message });
+    }
+
+    const foto = await ClientFoto.findOne({
+      where: {
+        id: req.params.fotoId,
+        clientId: acceso.client.id
+      }
+    });
+
+    if (!foto) {
+      return res
+        .status(404)
+        .json({ success: false, message: 'Foto no encontrada.' });
+    }
+
+    // Se borra el archivo del disco (si existe) y luego el registro.
+    fs.promises
+      .unlink(rutaAbsolutaDesdeUrl(foto.url))
+      .catch(() => {});
+
+    await foto.destroy();
+
+    res.json({ success: true, message: 'Foto eliminada.' });
+  } catch (error) {
+    next(error);
+  }
+};

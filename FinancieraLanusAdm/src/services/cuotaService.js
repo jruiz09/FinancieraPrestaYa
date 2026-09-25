@@ -10,7 +10,8 @@ export const cuotaService = {
     limit = 20,
     zoneIds = [],
     fechaDesde = '',
-    fechaHasta = ''
+    fechaHasta = '',
+    oficinaIds = []
   ) => {
 
     const response =
@@ -25,7 +26,10 @@ export const cuotaService = {
               ? zoneIds.join(',')
               : undefined,
             fechaDesde: fechaDesde || undefined,
-            fechaHasta: fechaHasta || undefined
+            fechaHasta: fechaHasta || undefined,
+            oficinaIds: oficinaIds.length
+              ? oficinaIds.join(',')
+              : undefined
           }
         }
       )

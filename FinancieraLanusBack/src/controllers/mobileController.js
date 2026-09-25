@@ -386,8 +386,11 @@ const dashboardSupervisor =
       )
 
       let cobradoHoy = 0
+      let cuotasCobradas = 0
       let cuotasPendientes = 0
       let cuotasVencidas = 0
+      let cuotasVencenHoy = 0
+      let pendienteCobro = 0
       const clientesVisitadosHoy =
         new Set()
 
@@ -399,6 +402,10 @@ const dashboardSupervisor =
           if (!credito) {
             return
           }
+
+          const saldo =
+            Number(cuota.monto) -
+            Number(cuota.montoPago)
 
           /*
           El detalle por cobrador (collector.*) solo existe
@@ -426,6 +433,7 @@ const dashboardSupervisor =
               Number(
                 cuota.montoPago
               )
+            cuotasCobradas++
             clientesVisitadosHoy.add(
               credito.clienteId
             )
@@ -435,10 +443,22 @@ const dashboardSupervisor =
             cuota.estado !==
             'PAGADA'
           ) {
-            cuotasPendientes++
             collector?.clientesPendientes.add(
               credito.clienteId
             )
+          }
+
+          // Pendiente/vencen del día: cuotas que vencen hoy y
+          // no están pagas (pendiente de cobrar del día).
+          if (
+            formatDate(cuota.fechaPagoEsperada) === hoyString
+          ) {
+            cuotasVencenHoy++
+
+            if (cuota.estado !== 'PAGADA') {
+              cuotasPendientes++
+              pendienteCobro += saldo
+            }
           }
 
           if (
@@ -500,12 +520,23 @@ const dashboardSupervisor =
           )
           .slice(0, 3)
 
+      const efectividad =
+        cuotasVencenHoy === 0
+          ? 0
+          : Math.round(
+              (cuotasCobradas * 100) / cuotasVencenHoy
+            )
+
       return res.json({
         success: true,
         data: {
           cobradoHoy,
+          cuotasCobradas,
           cuotasPendientes,
           cuotasVencidas,
+          cuotasVencenHoy,
+          pendienteCobro,
+          efectividad,
           cobradoresActivos:
             statsCollectorIds.length,
           clientesVisitadosHoy:
@@ -1360,19 +1391,18 @@ export const perfilMobile =
               clientesVisitadosHoy.add(credito.clienteId)
             }
 
-            if (cuota.estado !== 'PAGADA') {
-              pendienteCobro += saldo
-            }
-
             if (cuota.estado === 'VENCIDA') {
               cuotasVencidas++
             }
 
+            // Pendiente de cobrar del día: saldo de las cuotas
+            // que vencen hoy y todavía no están pagas.
             if (cuota.fechaPagoEsperada === hoy) {
               cuotasVencenHoy++
 
               if (cuota.estado !== 'PAGADA') {
                 cuotasPendientes++
+                pendienteCobro += saldo
               }
             }
           })
@@ -1445,19 +1475,18 @@ export const perfilMobile =
             cuotasCobradas++
           }
 
-          if (cuota.estado !== 'PAGADA') {
-            pendienteCobro += saldo
-          }
-
           if (cuota.estado === 'VENCIDA') {
             cuotasVencidas++
           }
 
+          // Pendiente de cobrar del día: saldo de las cuotas que
+          // vencen hoy y todavía no están pagas.
           if (cuota.fechaPagoEsperada === hoy) {
             cuotasVencenHoy++
 
             if (cuota.estado !== 'PAGADA') {
               cuotasPendientes++
+              pendienteCobro += saldo
             }
           }
         })

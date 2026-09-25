@@ -8,6 +8,7 @@ import {
 
 import Sidebar from '../components/Sidebar'
 import Header from '../components/Header'
+import { useAuthStore } from '../store/useAuthStore'
 
 export default function AppLayout() {
 
@@ -16,6 +17,18 @@ export default function AppLayout() {
 
   const [mobileSidebarOpen, setMobileSidebarOpen] =
     useState(false)
+
+  /*
+  Oficina activa (switch del Header). Se usa como key del Outlet
+  para que, al cambiarla, la página actual se remonte y vuelva a
+  pedir sus datos con la nueva oficina. Sin esto, los listados ya
+  cargados no se refrescan al cambiar de oficina.
+  */
+  const selectedOficinaIds =
+    useAuthStore(state => state.selectedOficinaIds)
+
+  const oficinaKey =
+    (selectedOficinaIds || []).join(',')
 
   return (
 
@@ -73,7 +86,7 @@ export default function AppLayout() {
           2xl:p-8
         ">
 
-          <Outlet />
+          <Outlet key={oficinaKey} />
 
         </main>
 

@@ -2,13 +2,18 @@ import api from '../api/axios'
 
 export const informeDiarioService = {
 
-  obtener: async (fecha) => {
+  obtener: async (fecha, oficinaIds = []) => {
 
     const response =
       await api.get(
         '/reportes/informe-diario',
         {
-          params: { fecha }
+          params: {
+            fecha,
+            oficinaIds: oficinaIds.length
+              ? oficinaIds.join(',')
+              : undefined
+          }
         }
       )
 
@@ -26,13 +31,18 @@ export const informeDiarioService = {
     return response.data.data
   },
 
-  obtenerSemanal: async (lunes) => {
+  obtenerSemanal: async (lunes, oficinaIds = []) => {
 
     const response =
       await api.get(
         '/reportes/informe-semanal',
         {
-          params: { lunes }
+          params: {
+            lunes,
+            oficinaIds: oficinaIds.length
+              ? oficinaIds.join(',')
+              : undefined
+          }
         }
       )
 

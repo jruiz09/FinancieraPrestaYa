@@ -26,6 +26,8 @@ import { zoneService } from '../services/zoneService'
 
 import DashboardZonasSection from '../components/DashboardZonasSection'
 import ZonaMultiSelect from '../components/ZonaMultiSelect'
+import OficinaVistaSelector from '../components/OficinaVistaSelector'
+import { useOficinaVista } from '../hooks/useOficinaVista'
 
 export default function DashboardPage() {
 
@@ -44,6 +46,17 @@ export default function DashboardPage() {
   const [selectedZoneIds, setSelectedZoneIds] =
     useState([])
 
+  const {
+    oficinasActivas,
+    oficinaVista,
+    setOficinaVista,
+    oficinaIdsFetch,
+    mostrarSubtotales
+  } = useOficinaVista()
+
+  const [subtotales, setSubtotales] =
+    useState([])
+
   useEffect(() => {
     zoneService
       .list()
@@ -54,7 +67,7 @@ export default function DashboardPage() {
   useEffect(() => {
     cargarDashboard()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedZoneIds])
+  }, [selectedZoneIds, oficinaVista])
 
   const cargarDashboard =
     async () => {
@@ -65,9 +78,27 @@ export default function DashboardPage() {
       try {
 
         const data =
-          await dashboardService.resumen(selectedZoneIds)
+          await dashboardService.resumen(
+            selectedZoneIds,
+            oficinaIdsFetch
+          )
 
         setResumen(data)
+
+        // Subtotales por oficina (una consulta por oficina activa).
+        if (mostrarSubtotales) {
+          const resultados = await Promise.all(
+            oficinasActivas.map((oficina) =>
+              dashboardService
+                .resumen(selectedZoneIds, [oficina.id])
+                .then((d) => ({ oficina, data: d }))
+                .catch(() => ({ oficina, data: null }))
+            )
+          )
+          setSubtotales(resultados)
+        } else {
+          setSubtotales([])
+        }
 
       } catch (error) {
 
@@ -367,6 +398,87 @@ export default function DashboardPage() {
       {/* ========================================= */}
       {/* FILTRO DE ZONA */}
       {/* ========================================= */}
+
+      {oficinasActivas.length > 1 && (
+        <OficinaVistaSelector
+          oficinas={oficinasActivas}
+          value={oficinaVista}
+          onChange={setOficinaVista}
+        />
+      )}
+
+      {subtotales.length > 0 && (
+        <section className="space-y-3">
+          <div>
+            <h2 className="text-lg font-bold text-stone-900">
+              Subtotales por oficina
+            </h2>
+            <p className="mt-0.5 text-sm text-stone-500">
+              Comparativa rápida entre tus oficinas. Elegí una arriba para ver su detalle completo.
+            </p>
+          </div>
+
+          <div className="
+            grid
+            grid-cols-1
+            gap-3
+            sm:grid-cols-2
+            xl:grid-cols-3
+          ">
+            {subtotales.map(({ oficina, data }) => (
+              <button
+                key={oficina.id}
+                type="button"
+                onClick={() => setOficinaVista(oficina.id)}
+                className="
+                  rounded-2xl
+                  border
+                  border-stone-200
+                  bg-white
+                  p-4
+                  text-left
+                  shadow-sm
+                  transition
+                  hover:border-amber-300
+                  hover:shadow-md
+                "
+              >
+                <div className="mb-3 flex items-center justify-between gap-2">
+                  <span className="truncate font-bold text-stone-800">
+                    {oficina.nombre}
+                  </span>
+                  {data?.moraTotal > 0 && (
+                    <span className="shrink-0 rounded-full bg-red-100 px-2 py-0.5 text-[11px] font-bold text-red-700">
+                      Mora ${money(data.moraTotal)}
+                    </span>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <SubtotalItem
+                    label="Cobrado hoy"
+                    value={`$ ${money(data?.cobradoHoy)}`}
+                    accent="emerald"
+                  />
+                  <SubtotalItem
+                    label="Saldo a cobrar"
+                    value={`$ ${money(data?.saldoCobrar)}`}
+                  />
+                  <SubtotalItem
+                    label="Créditos activos"
+                    value={data?.creditosActivos ?? 0}
+                  />
+                  <SubtotalItem
+                    label="Cuotas vencidas"
+                    value={data?.cuotasVencidas ?? 0}
+                    accent={data?.cuotasVencidas ? 'red' : undefined}
+                  />
+                </div>
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
 
       <div className="
         rounded-2xl
@@ -1136,6 +1248,31 @@ export default function DashboardPage() {
 /* ===================================================== */
 /* METRIC CARD */
 /* ===================================================== */
+
+function SubtotalItem({
+  label,
+  value,
+  accent
+}) {
+
+  const valueColor =
+    accent === 'emerald'
+      ? 'text-emerald-600'
+      : accent === 'red'
+        ? 'text-red-600'
+        : 'text-stone-800'
+
+  return (
+    <div>
+      <p className="text-xs text-stone-400">
+        {label}
+      </p>
+      <p className={`mt-0.5 text-base font-bold ${valueColor}`}>
+        {value}
+      </p>
+    </div>
+  )
+}
 
 function MetricCard({
   title,

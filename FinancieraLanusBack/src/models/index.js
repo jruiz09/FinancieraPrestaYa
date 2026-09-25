@@ -6,6 +6,7 @@ import { RoleModel } from './role.js';
 import { OwnerModel } from './owner.js';
 import { CollectorModel } from './collector.js';
 import { ClientModel } from './client.js';
+import { ClientFotoModel } from './clientFoto.js';
 import { TipoPlanModel } from './tipoPlan.js';
 import { DiaNoLaborableModel } from './diasnolaborales.js';
 import { CreditoModel } from './creditos.js';
@@ -33,6 +34,7 @@ const User = UserModel(sequelize, DataTypes);
 const Owner = OwnerModel(sequelize, DataTypes);
 const Collector = CollectorModel(sequelize, DataTypes);
 const Client = ClientModel(sequelize, DataTypes);
+const ClientFoto = ClientFotoModel(sequelize, DataTypes);
 const TipoPlan = TipoPlanModel(sequelize, DataTypes);
 const DiaNoLaborable = DiaNoLaborableModel(sequelize, DataTypes);
 const Credito = CreditoModel(sequelize, DataTypes);
@@ -104,6 +106,43 @@ Oficina.belongsToMany(User, {
   foreignKey: 'oficinaId',
   otherKey: 'userId',
   as: 'usuarios'
+})
+
+//
+// Un Cobrador, Supervisor o Cliente pertenece a UNA sola
+// Oficina (a diferencia de Zone, que puede estar en varias).
+// Si la misma persona trabaja para dos oficinas, se da de
+// alta como dos registros separados, uno por oficina.
+//
+
+Oficina.hasMany(Collector, {
+  foreignKey: 'oficinaId',
+  as: 'collectors'
+})
+
+Collector.belongsTo(Oficina, {
+  foreignKey: 'oficinaId',
+  as: 'oficina'
+})
+
+Oficina.hasMany(Supervisor, {
+  foreignKey: 'oficinaId',
+  as: 'supervisores'
+})
+
+Supervisor.belongsTo(Oficina, {
+  foreignKey: 'oficinaId',
+  as: 'oficina'
+})
+
+Oficina.hasMany(Client, {
+  foreignKey: 'oficinaId',
+  as: 'clients'
+})
+
+Client.belongsTo(Oficina, {
+  foreignKey: 'oficinaId',
+  as: 'oficina'
 })
 
 Zone.hasMany(
@@ -320,6 +359,23 @@ Owner.hasMany(Client, {
 Client.belongsTo(Owner, {
   foreignKey: 'ownerId',
   as: 'owner',
+});
+
+//
+// CLIENT -> FOTOS (una o varias fotos por cliente)
+//
+Client.hasMany(ClientFoto, {
+  foreignKey: {
+    name: 'clientId',
+    allowNull: false,
+  },
+  as: 'fotos',
+  onDelete: 'CASCADE',
+});
+
+ClientFoto.belongsTo(Client, {
+  foreignKey: 'clientId',
+  as: 'client',
 });
 
 //
@@ -644,6 +700,7 @@ export {
   Owner,
   Collector,
   Client,
+  ClientFoto,
   TipoPlan,
   DiaNoLaborable,
   Credito,

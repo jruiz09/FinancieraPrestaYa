@@ -1,4 +1,4 @@
-import { Zone } from '../models/index.js'
+import { Zone, Oficina } from '../models/index.js'
 
 /*
 =====================================================
@@ -111,6 +111,171 @@ Casos:
     ve todas SUS zonas permitidas.
 =====================================================
 */
+
+/*
+=====================================================
+SCOPING DIRECTO POR OFICINA (Collector/Supervisor/Client)
+
+A diferencia de Zone (que puede estar compartida entre
+varias oficinas), un Collector/Supervisor/Client pertenece a
+UNA sola Oficina de forma directa. obtenerOficinaIdsPermitidos
+devuelve los ids de oficina del usuario (null = sin
+restricción, ve todo, mismo contrato que
+obtenerZoneIdsPermitidos).
+=====================================================
+*/
+
+export const obtenerOficinaIdsPermitidos = async (user) => {
+
+  if (typeof user?.getOficinas !== 'function') {
+    return null
+  }
+
+  const oficinas = await user.getOficinas({
+    attributes: ['id']
+  })
+
+  if (!oficinas || oficinas.length === 0) {
+    return null
+  }
+
+  return oficinas.map(oficina => oficina.id)
+
+}
+
+/*
+Valida que un oficinaId recibido en un alta/edición
+(Collector, Supervisor, Client) sea una Oficina real del
+owner correspondiente, y que el usuario que hace el pedido
+tenga acceso a ella (si el usuario tiene oficinas asignadas,
+no puede dar de alta nada en una oficina ajena).
+*/
+
+export const validarOficinaParaAlta = async (
+  user,
+  ownerId,
+  oficinaId
+) => {
+
+  if (!oficinaId) {
+    return {
+      ok: false,
+      status: 400,
+      message: 'Oficina es requerida'
+    }
+  }
+
+  const oficina = await Oficina.findByPk(oficinaId)
+
+  if (
+    !oficina ||
+    oficina.ownerId !== ownerId ||
+    !oficina.activa
+  ) {
+    return {
+      ok: false,
+      status: 400,
+      message: 'Oficina inválida'
+    }
+  }
+
+  const oficinaIdsPermitidos =
+    await obtenerOficinaIdsPermitidos(user)
+
+  if (
+    oficinaIdsPermitidos !== null &&
+    !oficinaIdsPermitidos.includes(oficinaId)
+  ) {
+    return {
+      ok: false,
+      status: 403,
+      message: 'No tenés acceso a esa oficina'
+    }
+  }
+
+  return {
+    ok: true,
+    oficina
+  }
+
+}
+
+/*
+=====================================================
+OFICINA ACTIVA (switch del Header) + BORDE DE SEGURIDAD
+
+Gemelo de resolverZoneIdsEfectivos pero para oficinas.
+Combina lo que el usuario PIDIÓ mirar (oficinaIdsSolicitados,
+el switch del Header; vacío = todas) con lo que PUEDE ver
+(obtenerOficinaIdsPermitidos). Siempre intersecta contra lo
+permitido para que el switch nunca pueda pedir una oficina
+ajena.
+
+Devuelve:
+  - oficinaIds: lista efectiva para el where (o null = sin
+    restricción, cuando el usuario no tiene oficinas asignadas
+    y no pidió ninguna).
+  - restringido: true si hay que aplicar el filtro sí o sí.
+
+Casos:
+  - Sin oficinas asignadas y sin selección: null / false
+    (ve todo, como hasta ahora).
+  - Sin oficinas asignadas pero con selección: filtra por lo
+    pedido (no hay borde que intersectar).
+  - Con oficinas asignadas: siempre restringido. Si seleccionó
+    puntuales, se intersectan contra lo permitido; si no
+    seleccionó, ve todas SUS oficinas.
+=====================================================
+*/
+
+/*
+Parsea el query param ?oficinaIds=a,b,c (el switch del Header)
+a un array de ids limpio. Vacío/ausente => [].
+*/
+export const parseOficinaIdsQuery = (raw) => {
+
+  if (!raw) {
+    return []
+  }
+
+  return raw
+    .split(',')
+    .map(id => id.trim())
+    .filter(Boolean)
+
+}
+
+export const resolverOficinaIdsEfectivos = async (
+  user,
+  oficinaIdsSolicitados = []
+) => {
+
+  const oficinaIdsPermitidos =
+    await obtenerOficinaIdsPermitidos(user)
+
+  if (oficinaIdsPermitidos === null) {
+
+    return {
+      oficinaIds: oficinaIdsSolicitados.length
+        ? oficinaIdsSolicitados
+        : null,
+      restringido: oficinaIdsSolicitados.length > 0
+    }
+
+  }
+
+  const permitidos = new Set(oficinaIdsPermitidos)
+
+  const oficinaIds = oficinaIdsSolicitados.length
+    ? oficinaIdsSolicitados.filter(id => permitidos.has(id))
+    : oficinaIdsPermitidos
+
+  return {
+    oficinaIds,
+    restringido: true
+  }
+
+}
 
 export const resolverZoneIdsEfectivos = async (
   user,

@@ -337,6 +337,13 @@ export default function CreditosTable({
                     {credito.cobrador?.nombre}
                   </span>
 
+                  <span>
+                    Oficina:{" "}
+                    {credito.cobrador
+                      ?.oficina?.nombre ||
+                      "Sin oficina"}
+                  </span>
+
                   {credito.tipoPlan?.descripcion && (
                     <span>
                       Plan:{" "}
@@ -719,6 +726,21 @@ export default function CreditosTable({
                           credito.cobrador
                             ?.nombre
                         }
+                      </div>
+
+                      <div
+                        className="
+                          mt-1
+                          max-w-[190px]
+                          truncate
+                          text-xs
+                          text-amber-600
+                          dark:text-amber-400
+                        "
+                      >
+                        {credito.cobrador
+                          ?.oficina?.nombre ||
+                          "Sin oficina"}
                       </div>
                     </td>
 

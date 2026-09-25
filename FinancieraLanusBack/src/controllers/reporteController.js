@@ -9,6 +9,11 @@ import {
   Op
 } from 'sequelize';
 
+import {
+  resolverOficinaIdsEfectivos,
+  parseOficinaIdsQuery
+} from '../utils/oficinaScope.js';
+
 
 /*
 =====================================================
@@ -125,6 +130,54 @@ export const getResumenRecaudacion =
 
         whereCredito.cobradorId =
           cobradorId;
+      }
+
+
+      /*
+      =================================================
+      SCOPE POR OFICINA
+
+      Se acota a los créditos cuyo cobrador pertenece a
+      las oficinas efectivas (borde permitido ∩ switch).
+      =================================================
+      */
+
+      const {
+        oficinaIds: oficinaIdsEfectivos,
+        restringido: restringidoOficina
+      } = await resolverOficinaIdsEfectivos(
+        req.user,
+        parseOficinaIdsQuery(req.query.oficinaIds)
+      );
+
+      if (restringidoOficina) {
+
+        const cobradoresOficina =
+          await Collector.findAll({
+            where: {
+              ownerId: req.user.ownerId,
+              oficinaId: {
+                [Op.in]: oficinaIdsEfectivos
+              }
+            },
+            attributes: ['id']
+          });
+
+        const idsOficina =
+          cobradoresOficina.map(c => c.id);
+
+        if (cobradorId) {
+          // Si el cobrador pedido no es de la oficina, no hay datos.
+          if (!idsOficina.includes(cobradorId)) {
+            whereCredito.cobradorId = {
+              [Op.in]: []
+            };
+          }
+        } else {
+          whereCredito.cobradorId = {
+            [Op.in]: idsOficina
+          };
+        }
       }
 
 

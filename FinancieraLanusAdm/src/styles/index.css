@@ -8,3 +8,16 @@
 
 /* small helpers for dark theme */
 .dark body { background-color: #0b1220 }
+
+/* Popup de cliente en el mapa: contenido a borde completo
+   (carrusel + header con gradiente) sin el padding por defecto
+   de Leaflet. Scopeado para no afectar otros popups. */
+.cliente-popup .leaflet-popup-content-wrapper {
+  padding: 0;
+  overflow: hidden;
+  border-radius: 16px;
+}
+.cliente-popup .leaflet-popup-content {
+  margin: 0;
+  width: auto !important;
+}

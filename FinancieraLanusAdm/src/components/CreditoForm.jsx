@@ -129,6 +129,73 @@ export default function CreditoForm() {
       ]
     )
 
+  /*
+  Filtro de oficina para no mezclar clientes de oficinas
+  distintas al elegir a quién dar el crédito. Las opciones salen
+  de las oficinas presentes entre los clientes disponibles.
+  */
+  const [oficinaFiltro, setOficinaFiltro] =
+    useState('')
+
+  const oficinasDeClientes =
+    useMemo(
+      () =>
+        Array.from(
+          new Map(
+            clientes
+              .filter(c => c.oficina)
+              .map(c => [
+                c.oficina.id,
+                c.oficina
+              ])
+          ).values()
+        ),
+      [clientes]
+    )
+
+  const oficinaFiltroEfectivo =
+    oficinaFiltro ||
+    clienteSeleccionado?.oficina?.id ||
+    (oficinasDeClientes.length === 1
+      ? oficinasDeClientes[0].id
+      : '')
+
+  const clientesFiltrados =
+    useMemo(
+      () =>
+        oficinaFiltroEfectivo
+          ? clientes.filter(
+              c =>
+                c.oficina?.id ===
+                oficinaFiltroEfectivo
+            )
+          : clientes,
+      [
+        clientes,
+        oficinaFiltroEfectivo
+      ]
+    )
+
+  const handleOficinaFiltroChange = (
+    id
+  ) => {
+    setOficinaFiltro(id || '')
+
+    if (
+      formData.clienteId &&
+      !clientes.some(
+        c =>
+          c.id === formData.clienteId &&
+          c.oficina?.id === id
+      )
+    ) {
+      setFormData(prev => ({
+        ...prev,
+        clienteId: ''
+      }))
+    }
+  }
+
   const planSeleccionado =
     useMemo(
       () =>
@@ -669,6 +736,29 @@ export default function CreditoForm() {
               description="Seleccioná quién recibirá el crédito"
             >
 
+              {oficinasDeClientes.length > 1 && (
+                <div className="mb-4">
+
+                  <Label>
+                    Oficina
+                  </Label>
+
+                  <SearchSelect
+                    items={oficinasDeClientes}
+                    value={
+                      oficinaFiltroEfectivo
+                    }
+                    valueField="id"
+                    labelField="nombre"
+                    placeholder="Elegí la oficina..."
+                    onChange={
+                      handleOficinaFiltroChange
+                    }
+                  />
+
+                </div>
+              )}
+
               <div>
 
                 <Label>
@@ -676,7 +766,7 @@ export default function CreditoForm() {
                 </Label>
 
                 <SearchSelect
-                  items={clientes}
+                  items={clientesFiltrados}
                   value={
                     formData.clienteId
                   }
@@ -685,7 +775,16 @@ export default function CreditoForm() {
                     cliente =>
                       `${cliente.apellido}, ${cliente.nombre} - DNI ${cliente.dni}`
                   }
-                  placeholder="Nombre, apellido o DNI..."
+                  placeholder={
+                    oficinasDeClientes.length > 1 &&
+                    !oficinaFiltroEfectivo
+                      ? 'Elegí una oficina primero'
+                      : 'Nombre, apellido o DNI...'
+                  }
+                  isDisabled={
+                    oficinasDeClientes.length > 1 &&
+                    !oficinaFiltroEfectivo
+                  }
                   onChange={
                     id =>
                       setFormData(

@@ -42,6 +42,10 @@ userId: {
   type: DataTypes.UUID,
   allowNull: true,
   unique: true
+},
+oficinaId: {
+  type: DataTypes.UUID,
+  allowNull: false
 }
   });
 };

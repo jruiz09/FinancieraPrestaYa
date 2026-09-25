@@ -55,6 +55,10 @@ export const ClientModel = (sequelize, DataTypes) => {
       type: DataTypes.UUID,
       allowNull: false,
     },
+    oficinaId: {
+      type: DataTypes.UUID,
+      allowNull: false,
+    },
     ubicacionOriginal: {
   type: DataTypes.TEXT,
   allowNull: true

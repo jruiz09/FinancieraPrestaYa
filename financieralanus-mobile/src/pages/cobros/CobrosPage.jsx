@@ -3,6 +3,10 @@ import {
   useState
 } from 'react'
 
+import {
+  useLocation
+} from 'react-router-dom'
+
 import Toast
   from '../../components/Toast'
 
@@ -50,13 +54,24 @@ export default function CobrosPage() {
     setToast] =
       useState(null)
 
+  const location =
+    useLocation()
+
   const [tab,
     setTab] =
-      useState('HOY')
+      useState(
+        location.state?.tab === 'ATRASADAS'
+          ? 'ATRASADAS'
+          : 'HOY'
+      )
 
   const [cuotas,
     setCuotas] =
       useState([])
+
+  const [conteos,
+    setConteos] =
+      useState({ hoy: 0, atrasadas: 0 })
 
   const [loading,
     setLoading] =
@@ -114,15 +129,25 @@ export default function CobrosPage() {
             ? zonaSeleccionada
             : undefined
 
-        const data =
+        // Se traen ambas listas para poder mostrar el conteo en
+        // los dos botones del switch, no solo el de la pestaña
+        // activa.
+        const [cuotasHoy, cuotasAtrasadas] =
+          await Promise.all([
+            mobileService.cuotasHoy(zoneId),
+            mobileService.cuotasAtrasadas(zoneId)
+          ])
 
+        setConteos({
+          hoy: cuotasHoy.length,
+          atrasadas: cuotasAtrasadas.length
+        })
+
+        setCuotas(
           tab === 'HOY'
-
-            ? await mobileService.cuotasHoy(zoneId)
-
-            : await mobileService.cuotasAtrasadas(zoneId)
-
-        setCuotas(data)
+            ? cuotasHoy
+            : cuotasAtrasadas
+        )
 
       } catch (error) {
 
@@ -462,7 +487,7 @@ export default function CobrosPage() {
             `}
           >
 
-            Hoy
+            Hoy ({conteos.hoy})
 
           </button>
 
@@ -497,7 +522,7 @@ export default function CobrosPage() {
             `}
           >
 
-            Atrasadas
+            Atrasadas ({conteos.atrasadas})
 
           </button>
 

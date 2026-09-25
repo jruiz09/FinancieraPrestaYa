@@ -6,6 +6,12 @@ import {
   Role
 } from '../models/index.js'
 import { ROLES } from '../config/auth.js'
+import {
+  validarOficinaParaAlta,
+  resolverOficinaIdsEfectivos,
+  parseOficinaIdsQuery
+} from '../utils/oficinaScope.js'
+import { Op } from 'sequelize'
 
 const canSetOwner = (user) => user.permissions?.includes('OWNERS_EDIT');
 
@@ -22,9 +28,24 @@ export const listCollectors = async (req, res, next) => {
       where.ownerId = req.query.ownerId;
     }
 
+    /*
+    Scope por Oficina: borde de seguridad (oficinas asignadas al
+    usuario) intersectado con la oficina activa del switch
+    (?oficinaIds=). Un cobrador pertenece a UNA oficina directa.
+    */
+    const { oficinaIds, restringido } =
+      await resolverOficinaIdsEfectivos(
+        req.user,
+        parseOficinaIdsQuery(req.query.oficinaIds)
+      );
+
+    if (restringido) {
+      where.oficinaId = { [Op.in]: oficinaIds };
+    }
+
     const { count, rows } = await Collector.findAndCountAll({
       where,
-      include: ["owner", "supervisor", "zone", "user"],
+      include: ["owner", "supervisor", "zone", "user", "oficina"],
       limit,
       offset,
       order: [
@@ -45,7 +66,7 @@ export const listCollectors = async (req, res, next) => {
 export const getCollector = async (req, res, next) => {
   try {
     const collector = await Collector.findByPk(req.params.id, {
-      include: ["owner", "supervisor", "zone", "user"],
+      include: ["owner", "supervisor", "zone", "user", "oficina"],
     });
     if (!collector || !collector.activo)
       return res
@@ -80,6 +101,7 @@ export const createCollector = async (req, res, next) => {
       zoneId,
       supervisorId,
       ownerId,
+      oficinaId,
 
       crearUsuario,
       usuario
@@ -126,6 +148,27 @@ export const createCollector = async (req, res, next) => {
 
     }
 
+    const validacionOficina =
+      await validarOficinaParaAlta(
+        req.user,
+        finalOwnerId,
+        oficinaId
+      )
+
+    if (!validacionOficina.ok) {
+
+      await transaction.rollback()
+
+      return res.status(validacionOficina.status).json({
+
+        success:false,
+
+        message:validacionOficina.message
+
+      })
+
+    }
+
     const collector =
       await Collector.create({
 
@@ -140,7 +183,9 @@ export const createCollector = async (req, res, next) => {
         supervisorId:
           supervisorId || null,
 
-        zoneId
+        zoneId,
+
+        oficinaId
 
       },{
         transaction
@@ -241,7 +286,8 @@ export const createCollector = async (req, res, next) => {
             'owner',
             'supervisor',
             'zone',
-            'user'
+            'user',
+            'oficina'
           ]
 
         }
@@ -319,6 +365,7 @@ export const updateCollector = async (req, res, next) => {
       celular,
       supervisorId,
       zoneId,
+      oficinaId,
 
       crearUsuario,
       usuario
@@ -334,6 +381,27 @@ export const updateCollector = async (req, res, next) => {
         success:false,
 
         message:'Zona es requerida'
+
+      })
+
+    }
+
+    const validacionOficina =
+      await validarOficinaParaAlta(
+        req.user,
+        collector.ownerId,
+        oficinaId
+      )
+
+    if (!validacionOficina.ok) {
+
+      await transaction.rollback()
+
+      return res.status(validacionOficina.status).json({
+
+        success:false,
+
+        message:validacionOficina.message
 
       })
 
@@ -356,6 +424,9 @@ export const updateCollector = async (req, res, next) => {
 
     collector.zoneId =
       zoneId
+
+    collector.oficinaId =
+      oficinaId
 
     if (
 
@@ -462,7 +533,8 @@ export const updateCollector = async (req, res, next) => {
             'owner',
             'supervisor',
             'zone',
-            'user'
+            'user',
+            'oficina'
           ]
 
         }

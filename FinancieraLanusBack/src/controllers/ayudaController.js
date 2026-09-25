@@ -1,4 +1,5 @@
 import { Ayuda, Collector, Supervisor } from '../models/index.js';
+import { obtenerOficinaIdsPermitidos } from '../utils/oficinaScope.js';
 
 export const createAyuda = async (req, res, next) => {
   try {
@@ -69,11 +70,52 @@ export const listAyudas = async (
 
       })
 
+    /*
+    origenId/destinoId son polimórficos (Collector o
+    Supervisor, según origenTipo/destinoTipo) y Ayuda no tiene
+    ownerId propio, así que el filtro de owner/oficina se hace
+    acá, contra la entidad real resuelta en el include. Una
+    ayuda es visible si CUALQUIERA de sus dos lados (origen o
+    destino) cae en una oficina permitida, igual criterio que
+    ya usa el resumen de Caja para "ayuda recibida"/"ayuda
+    dada".
+    */
+    const oficinaIdsPermitidos =
+      await obtenerOficinaIdsPermitidos(req.user)
+
+    const ayudasVisibles = ayudas.filter(ayuda => {
+
+      const origen =
+        ayuda.origenCobrador || ayuda.origenSupervisor
+
+      const destino =
+        ayuda.destinoCobrador || ayuda.destinoSupervisor
+
+      const entidadOwner = origen || destino
+
+      if (
+        !entidadOwner ||
+        entidadOwner.ownerId !== req.user.ownerId
+      ) {
+        return false
+      }
+
+      if (oficinaIdsPermitidos === null) {
+        return true
+      }
+
+      return (
+        (origen && oficinaIdsPermitidos.includes(origen.oficinaId)) ||
+        (destino && oficinaIdsPermitidos.includes(destino.oficinaId))
+      )
+
+    })
+
     return res.json({
 
       success: true,
 
-      data: ayudas
+      data: ayudasVisibles
 
     })
 

@@ -19,6 +19,7 @@
     "helmet": "^7.0.0",
     "jsonwebtoken": "^9.0.0",
     "morgan": "^1.10.0",
+    "multer": "^2.4.0",
     "mysql2": "^3.6.0",
     "node-geocoder": "^4.4.1",
     "sequelize": "^6.32.1",

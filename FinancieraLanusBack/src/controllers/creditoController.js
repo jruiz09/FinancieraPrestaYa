@@ -13,7 +13,11 @@ import crypto from 'crypto';
 import { Op } from 'sequelize';
 
 import { calcularCuotasAfectadas } from '../services/pagoCuotaService.js';
-import { resolverZoneIdsEfectivos } from '../utils/oficinaScope.js';
+import {
+  resolverZoneIdsEfectivos,
+  resolverOficinaIdsEfectivos,
+  parseOficinaIdsQuery
+} from '../utils/oficinaScope.js';
 
 const canViewAllOwners = (user) => user.permissions?.includes('OWNERS_VIEW');
 
@@ -133,16 +137,42 @@ export const listCreditos = async (
     const { zoneIds, restringido } =
       await resolverZoneIdsEfectivos(req.user, zoneIdsSolicitados);
 
-    const cobradorInclude = restringido
-      ? {
-          association: 'cobrador',
-          where: {
-            zoneId: {
-              [Op.in]: zoneIds
-            }
-          }
-        }
-      : 'cobrador';
+    /*
+    Restricción real por Oficina, además del filtro por zona:
+    Credito no tiene oficinaId propio, se llega siempre vía su
+    cobrador. Un cobrador pertenece a UNA sola oficina (a
+    diferencia de la zona, que puede estar compartida entre
+    varias), así que esto evita ver créditos de cobradores de
+    otra oficina aunque compartan zona.
+    */
+    const {
+      oficinaIds: oficinaIdsEfectivos,
+      restringido: restringidoOficina
+    } = await resolverOficinaIdsEfectivos(
+      req.user,
+      parseOficinaIdsQuery(req.query.oficinaIds)
+    );
+
+    const cobradorWhere = {};
+
+    if (restringido) {
+      cobradorWhere.zoneId = { [Op.in]: zoneIds };
+    }
+
+    if (restringidoOficina) {
+      cobradorWhere.oficinaId = { [Op.in]: oficinaIdsEfectivos };
+    }
+
+    const hayFiltroCobrador =
+      Object.keys(cobradorWhere).length > 0;
+
+    const cobradorInclude = {
+      association: 'cobrador',
+      include: ['oficina'],
+      ...(hayFiltroCobrador
+        ? { where: cobradorWhere }
+        : {})
+    };
 
     const { count, rows } =
       await Credito.findAndCountAll({
@@ -177,12 +207,8 @@ export const listCreditos = async (
           {
             association: 'cobrador',
             attributes: [],
-            where: restringido
-              ? {
-                  zoneId: {
-                    [Op.in]: zoneIds
-                  }
-                }
+            where: hayFiltroCobrador
+              ? cobradorWhere
               : undefined
           }
         ],
@@ -1615,20 +1641,37 @@ export const listCuotas = async (
     const { zoneIds, restringido } =
       await resolverZoneIdsEfectivos(req.user, zoneIdsSolicitados);
 
-    const cobradorIncludeConteos = restringido
-      ? [
-          {
-            association: 'cobrador',
-            attributes: [],
-            where: {
-              zoneId: {
-                [Op.in]: zoneIds
-              }
-            },
-            required: true
-          }
-        ]
-      : [];
+    const {
+      oficinaIds: oficinaIdsEfectivosConteos,
+      restringido: restringidoOficinaConteos
+    } = await resolverOficinaIdsEfectivos(
+      req.user,
+      parseOficinaIdsQuery(req.query.oficinaIds)
+    );
+
+    const cobradorWhereConteos = {};
+
+    if (restringido) {
+      cobradorWhereConteos.zoneId = { [Op.in]: zoneIds };
+    }
+
+    if (restringidoOficinaConteos) {
+      cobradorWhereConteos.oficinaId = {
+        [Op.in]: oficinaIdsEfectivosConteos
+      };
+    }
+
+    const cobradorIncludeConteos =
+      Object.keys(cobradorWhereConteos).length > 0
+        ? [
+            {
+              association: 'cobrador',
+              attributes: [],
+              where: cobradorWhereConteos,
+              required: true
+            }
+          ]
+        : [];
 
     const estadosPosibles = [
       'PENDIENTE',
@@ -1737,17 +1780,31 @@ export const listCuotas = async (
                   'apellido'
                 ],
 
-                include: ['zone'],
+                include: ['zone', 'oficina'],
 
-                where: restringido
-                  ? {
-                      zoneId: {
-                        [Op.in]: zoneIds
+                where:
+                  restringido || restringidoOficinaConteos
+                    ? {
+                        ...(restringido
+                          ? {
+                              zoneId: {
+                                [Op.in]: zoneIds
+                              }
+                            }
+                          : {}),
+                        ...(restringidoOficinaConteos
+                          ? {
+                              oficinaId: {
+                                [Op.in]:
+                                  oficinaIdsEfectivosConteos
+                              }
+                            }
+                          : {})
                       }
-                    }
-                  : undefined,
+                    : undefined,
 
-                required: restringido
+                required:
+                  restringido || restringidoOficinaConteos
               }
             ]
           }

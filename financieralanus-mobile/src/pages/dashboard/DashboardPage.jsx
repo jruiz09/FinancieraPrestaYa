@@ -195,11 +195,21 @@ export default function DashboardPage() {
         "
       >
 
-        <div
+        <button
+          type="button"
+          onClick={() =>
+            !isSupervisor &&
+            navigate('/cobros', {
+              state: { tab: 'HOY' }
+            })
+          }
           className="
             bg-slate-900
             rounded-2xl
             p-5
+            text-left
+            active:scale-95
+            transition
           "
         >
 
@@ -222,13 +232,23 @@ export default function DashboardPage() {
             {firstCard.value}
           </h2>
 
-        </div>
+        </button>
 
-        <div
+        <button
+          type="button"
+          onClick={() =>
+            !isSupervisor &&
+            navigate('/cobros', {
+              state: { tab: 'ATRASADAS' }
+            })
+          }
           className="
             bg-slate-900
             rounded-2xl
             p-5
+            text-left
+            active:scale-95
+            transition
           "
         >
 
@@ -252,7 +272,7 @@ export default function DashboardPage() {
             {secondCard.value}
           </h2>
 
-        </div>
+        </button>
 
       </div>
 
@@ -322,13 +342,21 @@ export default function DashboardPage() {
         )
       }
 
-      <div
+      <button
+        type="button"
+        onClick={() =>
+          navigate('/ayudas')
+        }
         className="
+          w-full
           bg-orange-500/15
           border
           border-orange-500/40
           rounded-2xl
           p-5
+          text-left
+          active:scale-95
+          transition
         "
       >
 
@@ -376,7 +404,7 @@ export default function DashboardPage() {
 
         </div>
 
-      </div>
+      </button>
 
       <div>
 

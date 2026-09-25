@@ -10,6 +10,14 @@ import {
   ROLES,
 } from "../config/auth.js";
 
+import {
+  validarOficinaParaAlta,
+  resolverOficinaIdsEfectivos,
+  parseOficinaIdsQuery,
+} from "../utils/oficinaScope.js";
+
+import { Op } from "sequelize";
+
 const canViewAllOwners = (user) =>
   user.permissions?.includes(
     "OWNERS_VIEW",
@@ -56,6 +64,22 @@ export const listSupervisores =
           req.query.ownerId;
       }
 
+      /*
+      Scope por Oficina: borde permitido ∩ switch del Header
+      (?oficinaIds=). Un supervisor pertenece a UNA oficina.
+      */
+      const {
+        oficinaIds,
+        restringido,
+      } = await resolverOficinaIdsEfectivos(
+        req.user,
+        parseOficinaIdsQuery(req.query.oficinaIds),
+      );
+
+      if (restringido) {
+        where.oficinaId = { [Op.in]: oficinaIds };
+      }
+
       const {
         count,
         rows,
@@ -67,6 +91,7 @@ export const listSupervisores =
             "owner",
             "user",
             "zonas",
+            "oficina",
           ],
 
           limit,
@@ -108,6 +133,7 @@ export const getSupervisor =
               "owner",
               "user",
               "zonas",
+              "oficina",
             ],
           },
         );
@@ -163,6 +189,7 @@ export const createSupervisor =
         apellido,
         celular,
         ownerId,
+        oficinaId,
 
         crearUsuario,
         usuario,
@@ -218,6 +245,28 @@ export const createSupervisor =
       }
 
       //////////////////////////////////////////////////////
+      // OFICINA
+      //////////////////////////////////////////////////////
+
+      const validacionOficina =
+        await validarOficinaParaAlta(
+          req.user,
+          finalOwnerId,
+          oficinaId,
+        );
+
+      if (!validacionOficina.ok) {
+        await transaction.rollback();
+
+        return res
+          .status(validacionOficina.status)
+          .json({
+            success: false,
+            message: validacionOficina.message,
+          });
+      }
+
+      //////////////////////////////////////////////////////
       // CREAR SUPERVISOR
       //////////////////////////////////////////////////////
 
@@ -230,6 +279,8 @@ export const createSupervisor =
 
             ownerId:
               finalOwnerId,
+
+            oficinaId,
           },
           {
             transaction,
@@ -397,6 +448,7 @@ export const createSupervisor =
               "owner",
               "user",
               "zonas",
+              "oficina",
             ],
           },
         );
@@ -467,6 +519,7 @@ export const updateSupervisor =
         nombre,
         apellido,
         celular,
+        oficinaId,
 
         crearUsuario,
         usuario,
@@ -491,6 +544,29 @@ export const updateSupervisor =
       if (celular !== undefined) {
         supervisor.celular =
           celular;
+      }
+
+      if (oficinaId !== undefined) {
+        const validacionOficina =
+          await validarOficinaParaAlta(
+            req.user,
+            supervisor.ownerId,
+            oficinaId,
+          );
+
+        if (!validacionOficina.ok) {
+          await transaction.rollback();
+
+          return res
+            .status(validacionOficina.status)
+            .json({
+              success: false,
+              message: validacionOficina.message,
+            });
+        }
+
+        supervisor.oficinaId =
+          oficinaId;
       }
 
       //////////////////////////////////////////////////////
@@ -663,6 +739,7 @@ export const updateSupervisor =
               "owner",
               "user",
               "zonas",
+              "oficina",
             ],
           },
         );

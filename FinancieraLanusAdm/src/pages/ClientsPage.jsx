@@ -191,22 +191,56 @@ export default function ClientsPage() {
       setIsModalLoading(true);
       setError("");
 
+      /*
+      El form separa los datos del cliente de las fotos: fotos
+      nuevas (File[]) a subir y fotos existentes a eliminar (ids).
+      */
+      const {
+        nuevasFotos = [],
+        fotosAEliminar = [],
+        ...datosCliente
+      } = formData;
+
       try {
         const payload = {
-          ...formData,
+          ...datosCliente,
           ownerId,
         };
+
+        let clienteId;
 
         if (
           modalMode === "create"
         ) {
-          await clientService.create(
-            payload,
-          );
+          const creado =
+            await clientService.create(
+              payload,
+            );
+          clienteId = creado?.id;
         } else {
           await clientService.update(
             selectedClient.id,
             payload,
+          );
+          clienteId = selectedClient.id;
+        }
+
+        // Eliminar fotos marcadas.
+        for (const fotoId of fotosAEliminar) {
+          await clientService.deleteFoto(
+            clienteId,
+            fotoId,
+          );
+        }
+
+        // Subir fotos nuevas.
+        if (
+          clienteId &&
+          nuevasFotos.length
+        ) {
+          await clientService.uploadFotos(
+            clienteId,
+            nuevasFotos,
           );
         }
 
@@ -737,6 +771,10 @@ export default function ClientsPage() {
                       Zona
                     </th>
 
+                    <th className="px-4 py-3 text-left">
+                      Oficina
+                    </th>
+
                     <th className="px-4 py-3 text-center">
                       Mapa
                     </th>
@@ -758,7 +796,7 @@ export default function ClientsPage() {
                   0 ? (
                     <tr>
                       <td
-                        colSpan="8"
+                        colSpan="9"
                         className="
                           px-5
                           py-12
@@ -903,6 +941,31 @@ export default function ClientsPage() {
                             ) : (
                               <span className="text-xs text-stone-400">
                                 Sin zona
+                              </span>
+                            )}
+                          </td>
+
+                          <td className="px-4 py-4">
+                            {client.oficina ? (
+                              <span
+                                className="
+                                  inline-flex
+                                  rounded-lg
+                                  bg-stone-100
+                                  px-2.5
+                                  py-1.5
+                                  text-xs
+                                  font-medium
+                                  text-stone-600
+                                  dark:bg-stone-800
+                                  dark:text-stone-300
+                                "
+                              >
+                                {client.oficina.nombre}
+                              </span>
+                            ) : (
+                              <span className="text-xs text-stone-400">
+                                Sin oficina
                               </span>
                             )}
                           </td>
@@ -1175,6 +1238,25 @@ function ClientCard({
           >
             {client.collector?.zone?.nombre ||
               "Sin zona"}
+          </p>
+        </div>
+
+        <div>
+          <p className="text-xs text-stone-400">
+            Oficina
+          </p>
+
+          <p
+            className="
+              mt-1
+              text-sm
+              font-medium
+              text-stone-700
+              dark:text-stone-200
+            "
+          >
+            {client.oficina?.nombre ||
+              "Sin oficina"}
           </p>
         </div>
 

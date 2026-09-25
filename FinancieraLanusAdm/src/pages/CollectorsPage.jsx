@@ -713,6 +713,10 @@ export default function CollectorsPage() {
                     </th>
 
                     <th className="px-4 py-3 text-left">
+                      Oficina
+                    </th>
+
+                    <th className="px-4 py-3 text-left">
                       Supervisor
                     </th>
 
@@ -737,7 +741,7 @@ export default function CollectorsPage() {
                   0 ? (
                     <tr>
                       <td
-                        colSpan="7"
+                        colSpan="8"
                         className="
                           px-5
                           py-12
@@ -863,6 +867,28 @@ export default function CollectorsPage() {
                               {collector.zone
                                 ?.nombre ||
                                 "Sin zona"}
+                            </span>
+                          </td>
+
+                          {/* OFICINA */}
+                          <td className="px-4 py-4">
+                            <span
+                              className="
+                                inline-flex
+                                rounded-lg
+                                bg-amber-50
+                                px-2.5
+                                py-1.5
+                                text-xs
+                                font-medium
+                                text-amber-700
+                                dark:bg-amber-950/40
+                                dark:text-amber-300
+                              "
+                            >
+                              {collector.oficina
+                                ?.nombre ||
+                                "Sin oficina"}
                             </span>
                           </td>
 
@@ -1256,6 +1282,17 @@ function CollectorCard({
             "Sin zona"
           }
         />
+
+        <div className="col-span-2">
+          <Info
+            label="Oficina"
+            value={
+              collector.oficina
+                ?.nombre ||
+              "Sin oficina"
+            }
+          />
+        </div>
 
         <div className="col-span-2">
           <Info

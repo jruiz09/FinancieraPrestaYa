@@ -38,6 +38,7 @@ import AyudasPage from "../pages/AyudasPage";
 import ValesPage from "../pages/ValesPage";
 import RolesPage from "../pages/RolePage";
 import SinAccesoPage from "../pages/SinAccesoPage";
+import SeleccionarOficinaPage from "../pages/SeleccionarOficinaPage";
 
 export default function AppRoutes() {
 
@@ -99,6 +100,11 @@ export default function AppRoutes() {
         <Route
           path="sin-acceso"
           element={<SinAccesoPage />}
+        />
+
+        <Route
+          path="seleccionar-oficina"
+          element={<SeleccionarOficinaPage />}
         />
 
         <Route

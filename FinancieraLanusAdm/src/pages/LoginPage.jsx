@@ -31,7 +31,12 @@ export default function LoginPage() {
 
       login(user, token);
 
-      navigate("/bienvenida", {
+      const destino =
+        (user?.oficinas?.length || 0) > 1
+          ? "/seleccionar-oficina"
+          : "/bienvenida";
+
+      navigate(destino, {
         replace: true,
       });
     } catch (err) {

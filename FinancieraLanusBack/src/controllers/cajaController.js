@@ -22,7 +22,9 @@ import {
 
 import {
   obtenerZoneIdsPermitidos,
-  resolverZoneIdsEfectivos
+  resolverZoneIdsEfectivos,
+  resolverOficinaIdsEfectivos,
+  parseOficinaIdsQuery
 } from '../utils/oficinaScope.js';
 
 const numero = value => Number(value || 0);
@@ -272,12 +274,22 @@ export const getResumenCaja = async (req, res, next) => {
     const {
       zonas: todasLasZonas,
       collectorZonaMap,
+      collectorOficinaMap,
       supervisorZonasMap,
       todosLosCollectorIds
     } = await obtenerZonasYCobradores(req.user.ownerId);
 
     const zoneIdsPermitidos =
       await obtenerZoneIdsPermitidos(req.user);
+
+    const { oficinaIds: oficinaIdsEfectivos, restringido: restringidoOficina } =
+      await resolverOficinaIdsEfectivos(
+        req.user,
+        parseOficinaIdsQuery(req.query.oficinaIds)
+      );
+
+    const oficinaIdsPermitidos =
+      restringidoOficina ? oficinaIdsEfectivos : null;
 
     const zonas =
       zoneIdsPermitidos === null
@@ -286,12 +298,26 @@ export const getResumenCaja = async (req, res, next) => {
             zona => zoneIdsPermitidos.includes(zona.id)
           );
 
+    /*
+    Los totales por zona se calculan a partir de sus
+    cobradores. Una zona puede estar compartida entre
+    oficinas, pero un cobrador pertenece a una sola, así que
+    acá también se excluyen los cobradores de otra oficina
+    para no sumar su actividad en los totales de esta.
+    */
+    const collectorIdsPermitidos =
+      oficinaIdsPermitidos === null
+        ? todosLosCollectorIds
+        : todosLosCollectorIds.filter(
+            id => oficinaIdsPermitidos.includes(collectorOficinaMap.get(id))
+          );
+
     const {
       porZona: recaudadoPorZona,
       mpPorZona: transferenciaPorZona,
       dejaPorZona: efectivoPorZona
     } = await calcularRecaudadoPorZona(
-      todosLosCollectorIds,
+      collectorIdsPermitidos,
       collectorZonaMap,
       fechaDesde,
       fechaHasta
@@ -301,21 +327,21 @@ export const getResumenCaja = async (req, res, next) => {
       efectivoPorZona: entregasEfectivoPorZona,
       transferenciaPorZona: entregasTransferenciaPorZona
     } = await calcularEntregasMedioPagoPorZona(
-      todosLosCollectorIds,
+      collectorIdsPermitidos,
       collectorZonaMap,
       fechaDesde,
       fechaHasta
     );
 
     const { ayudaPorZona, ayudaAPorZona } = await calcularAyudaPorZona(
-      todosLosCollectorIds,
+      collectorIdsPermitidos,
       collectorZonaMap,
       fechaDesde,
       fechaHasta
     );
 
     const { valePorZona, valeSupPorZona } = await calcularValePorZona(
-      todosLosCollectorIds,
+      collectorIdsPermitidos,
       collectorZonaMap,
       supervisorZonasMap,
       fechaDesde,
@@ -437,9 +463,19 @@ export const listMovimientosAutomaticos = async (req, res, next) => {
     const {
       zonas,
       collectorZonaMap,
+      collectorOficinaMap,
       supervisorZonasMap,
       todosLosCollectorIds
     } = await obtenerZonasYCobradores(req.user.ownerId);
+
+    const { oficinaIds: oficinaIdsEfectivos, restringido: restringidoOficina } =
+      await resolverOficinaIdsEfectivos(
+        req.user,
+        parseOficinaIdsQuery(req.query.oficinaIds)
+      );
+
+    const oficinaIdsPermitidos =
+      restringidoOficina ? oficinaIdsEfectivos : null;
 
     const nombreZona = new Map(
       zonas.map(zona => [zona.id, zona.nombre])
@@ -501,6 +537,7 @@ export const listMovimientosAutomaticos = async (req, res, next) => {
           id: `pago-${pago.id}`,
           fecha: pago.fecha,
           zoneId,
+          oficinaId: collectorOficinaMap.get(pago.cuota.credito.cobradorId),
           zona: nombreZona.get(zoneId) || '-',
           tipo: 'INGRESO',
           medioPago: pago.tipoTransaccion,
@@ -548,6 +585,7 @@ export const listMovimientosAutomaticos = async (req, res, next) => {
             id: `credito-efectivo-${credito.id}`,
             fecha: credito.fechaOtorgamiento,
             zoneId,
+            oficinaId: collectorOficinaMap.get(credito.cobradorId),
             zona: nombreZona.get(zoneId) || '-',
             tipo: 'EGRESO',
             medioPago: 'EFECTIVO',
@@ -563,6 +601,7 @@ export const listMovimientosAutomaticos = async (req, res, next) => {
             id: `credito-transferencia-${credito.id}`,
             fecha: credito.fechaOtorgamiento,
             zoneId,
+            oficinaId: collectorOficinaMap.get(credito.cobradorId),
             zona: nombreZona.get(zoneId) || '-',
             tipo: 'EGRESO',
             medioPago: 'TRANSFERENCIA',
@@ -594,6 +633,7 @@ export const listMovimientosAutomaticos = async (req, res, next) => {
           id: `ayuda-recibida-${ayuda.id}`,
           fecha: ayuda.fecha,
           zoneId,
+          oficinaId: collectorOficinaMap.get(ayuda.destinoId),
           zona: nombreZona.get(zoneId) || '-',
           tipo: 'INGRESO',
           medioPago: null,
@@ -624,6 +664,7 @@ export const listMovimientosAutomaticos = async (req, res, next) => {
           id: `ayuda-dada-${ayuda.id}`,
           fecha: ayuda.fecha,
           zoneId,
+          oficinaId: collectorOficinaMap.get(ayuda.origenId),
           zona: nombreZona.get(zoneId) || '-',
           tipo: 'EGRESO',
           medioPago: null,
@@ -652,6 +693,7 @@ export const listMovimientosAutomaticos = async (req, res, next) => {
           id: `vale-cobrador-${vale.id}`,
           fecha: vale.fecha,
           zoneId,
+          oficinaId: collectorOficinaMap.get(vale.collectorId),
           zona: nombreZona.get(zoneId) || '-',
           tipo: 'EGRESO',
           medioPago: null,
@@ -697,9 +739,28 @@ export const listMovimientosAutomaticos = async (req, res, next) => {
       }
     }
 
-    const movimientosFiltrados = restringido
-      ? movimientos.filter(m => zoneIdsFiltro.includes(m.zoneId))
-      : movimientos;
+    /*
+    m.oficinaId solo está presente en movimientos derivados de
+    un Collector (pagos, créditos, ayudas/vales de cobrador);
+    los de un Supervisor (más abajo) no tienen esa atribución
+    todavía, así que solo se les aplica el filtro de zona.
+    */
+    const movimientosFiltrados = movimientos.filter(m => {
+
+      if (restringido && !zoneIdsFiltro.includes(m.zoneId)) {
+        return false;
+      }
+
+      if (
+        oficinaIdsPermitidos !== null &&
+        m.oficinaId !== undefined &&
+        !oficinaIdsPermitidos.includes(m.oficinaId)
+      ) {
+        return false;
+      }
+
+      return true;
+    });
 
     movimientosFiltrados.sort((a, b) => {
       if (a.fecha === b.fecha) return 0;

@@ -2,7 +2,7 @@ import api from '../api/axios'
 
 export const dashboardService = {
 
-  resumen: async (zoneIds = []) => {
+  resumen: async (zoneIds = [], oficinaIds = []) => {
 
     const response =
       await api.get(
@@ -11,6 +11,9 @@ export const dashboardService = {
           params: {
             zoneIds: zoneIds.length
               ? zoneIds.join(',')
+              : undefined,
+            oficinaIds: oficinaIds.length
+              ? oficinaIds.join(',')
               : undefined
           }
         }

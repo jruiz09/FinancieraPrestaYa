@@ -477,6 +477,15 @@ export default function CuotasTable({
                 <th className="
                   px-4
                   py-3
+                  text-left
+                  font-semibold
+                ">
+                  Oficina
+                </th>
+
+                <th className="
+                  px-4
+                  py-3
                   text-center
                   font-semibold
                 ">
@@ -590,6 +599,12 @@ export default function CuotasTable({
                     cuota.credito
                       ?.cobrador
                       ?.zone
+                      ?.nombre
+
+                  const oficina =
+                    cuota.credito
+                      ?.cobrador
+                      ?.oficina
                       ?.nombre
 
                   const observacionesCredito =
@@ -757,6 +772,20 @@ export default function CuotasTable({
                       ">
 
                         {zona || '-'}
+
+                      </td>
+
+
+                      {/* OFICINA */}
+
+                      <td className="
+                        px-4
+                        py-4
+                        text-sm
+                        text-amber-700
+                      ">
+
+                        {oficina || 'Sin oficina'}
 
                       </td>
 
@@ -1099,6 +1128,12 @@ export default function CuotasTable({
                   ?.zone
                   ?.nombre
 
+              const oficina =
+                cuota.credito
+                  ?.cobrador
+                  ?.oficina
+                  ?.nombre
+
               const observacionesCredito =
                 cuota.credito
                   ?.observaciones
@@ -1190,6 +1225,7 @@ export default function CuotasTable({
 
                           {cobrador}
                           {zona ? ` · ${zona}` : ''}
+                          {oficina ? ` · ${oficina}` : ''}
 
                         </p>
 

@@ -10,6 +10,10 @@ import CalculadoManualCell, { inputClass }
 
 import { informeDiarioService }
   from '../services/informeDiarioService'
+import OficinaVistaSelector
+  from '../components/OficinaVistaSelector'
+import { useOficinaVista }
+  from '../hooks/useOficinaVista'
 
 const COLUMNAS_EXCEL = [
   { header: 'Zona', key: 'zona', width: 22 },
@@ -55,6 +59,13 @@ export default function InformeDiarioPage() {
   const [fecha, setFecha] =
     useState(hoyString())
 
+  const {
+    oficinasActivas,
+    oficinaVista,
+    setOficinaVista,
+    oficinaIdsFetch
+  } = useOficinaVista()
+
   const [zonas, setZonas] =
     useState([])
 
@@ -76,8 +87,8 @@ export default function InformeDiarioPage() {
   useEffect(() => {
 
     cargar()
-
-  }, [fecha])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fecha, oficinaVista])
 
   const cargar =
     async () => {
@@ -87,7 +98,10 @@ export default function InformeDiarioPage() {
         setLoading(true)
 
         const data =
-          await informeDiarioService.obtener(fecha)
+          await informeDiarioService.obtener(
+            fecha,
+            oficinaIdsFetch
+          )
 
         setZonas(data.zonas || [])
 
@@ -390,6 +404,14 @@ export default function InformeDiarioPage() {
           setError('')
         }
       />
+
+      {oficinasActivas.length > 1 && (
+        <OficinaVistaSelector
+          oficinas={oficinasActivas}
+          value={oficinaVista}
+          onChange={setOficinaVista}
+        />
+      )}
 
       {loading ? (
 

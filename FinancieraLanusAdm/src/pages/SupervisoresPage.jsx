@@ -661,6 +661,10 @@ export default function SupervisoresPage() {
                       Celular
                     </th>
 
+                    <th className="px-4 py-3 text-left">
+                      Oficina
+                    </th>
+
                     <th className="px-4 py-3 text-center">
                       Acceso
                     </th>
@@ -682,7 +686,7 @@ export default function SupervisoresPage() {
                   0 ? (
                     <tr>
                       <td
-                        colSpan="4"
+                        colSpan="5"
                         className="
                           px-5
                           py-12
@@ -759,6 +763,26 @@ export default function SupervisoresPage() {
                             ) : (
                               "-"
                             )}
+                          </td>
+
+                          <td className="px-4 py-4">
+                            <span
+                              className="
+                                inline-flex
+                                rounded-lg
+                                bg-amber-50
+                                px-2.5
+                                py-1.5
+                                text-xs
+                                font-medium
+                                text-amber-700
+                                dark:bg-amber-950/40
+                                dark:text-amber-300
+                              "
+                            >
+                              {s.oficina?.nombre ||
+                                "Sin oficina"}
+                            </span>
                           </td>
 
                           <td className="px-4 py-4 text-center">
@@ -1107,6 +1131,14 @@ function SupervisorCard({
           value={
             supervisor.user?.username ||
             "-"
+          }
+        />
+
+        <Info
+          label="Oficina"
+          value={
+            supervisor.oficina?.nombre ||
+            "Sin oficina"
           }
         />
       </div>

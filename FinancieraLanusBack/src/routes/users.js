@@ -24,7 +24,7 @@ router.put(
   '/:id',
   authorize('USERS_EDIT'),
   body('name').optional().notEmpty(),
-  body('password').optional().isLength({ min: 6 }),
+  body('password').optional({ checkFalsy: true }).isLength({ min: 6 }),
   body('roleId').optional().notEmpty(),
   body('oficinaIds').optional().isArray(),
   validateRequest,

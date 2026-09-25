@@ -15,10 +15,17 @@ import {
   MapPin,
   MapPinOff,
   UserRoundX,
-  Wallet
+  Wallet,
+  ChevronLeft,
+  ChevronRight,
+  Phone,
+  Home,
+  User,
+  Building2,
+  Navigation
 } from 'lucide-react'
 
-import { clientService } from '../services/clientService'
+import { clientService, fotoUrl } from '../services/clientService'
 import { collectorService } from '../services/collectorService'
 import { useAuthStore } from '../store/useAuthStore'
 import { zoneService } from '../services/zoneService'
@@ -112,6 +119,9 @@ export default function ClientesMapaPage() {
   const [zonaId, setZonaId] =
     useState('')
 
+  const [oficinaId, setOficinaId] =
+    useState('')
+
   const [loading, setLoading] =
     useState(true)
 
@@ -183,8 +193,30 @@ export default function ClientesMapaPage() {
 
     }, [zonas])
 
+  /*
+  Oficinas presentes entre los clientes cargados, para ofrecer el
+  filtro de oficina en el mapa (no mezclar oficinas en la vista).
+  */
+  const oficinasDisponibles =
+    Array.from(
+      new Map(
+        clientes
+          .filter((c) => c.oficina)
+          .map((c) => [c.oficina.id, c.oficina])
+      ).values()
+    ).sort((a, b) =>
+      (a.nombre || '').localeCompare(b.nombre || '')
+    )
+
   const clientesFiltrados =
     clientes.filter((cliente) => {
+
+      if (
+        oficinaId &&
+        cliente.oficinaId !== oficinaId
+      ) {
+        return false
+      }
 
       if (
         cobradorId &&
@@ -428,6 +460,47 @@ export default function ClientesMapaPage() {
               sm:flex-row
             "
           >
+
+            {oficinasDisponibles.length > 1 && (
+              <select
+                value={oficinaId}
+                onChange={(e) =>
+                  setOficinaId(
+                    e.target.value
+                  )
+                }
+                className="
+                  rounded-xl
+                  border
+                  border-stone-200
+                  bg-white
+                  px-3.5
+                  py-2.5
+                  text-sm
+                  text-stone-900
+                  outline-none
+                  transition
+                  focus:border-amber-400
+                  focus:ring-4
+                  focus:ring-amber-100
+                "
+              >
+                <option value="">
+                  Todas las oficinas
+                </option>
+
+                {oficinasDisponibles.map(
+                  (oficina) => (
+                    <option
+                      key={oficina.id}
+                      value={oficina.id}
+                    >
+                      {oficina.nombre}
+                    </option>
+                  )
+                )}
+              </select>
+            )}
 
             <select
               value={zonaId}
@@ -699,213 +772,16 @@ export default function ClientesMapaPage() {
                 }
               >
 
-                <Popup>
-
-                  <div
-                    className="
-                      min-w-[250px]
-                      space-y-2
-                    "
-                  >
-
-                    <div
-                      className="
-                        flex
-                        items-start
-                        justify-between
-                        gap-2
-                      "
-                    >
-
-                      <h3
-                        className="
-                          font-bold
-                          text-base
-                          leading-tight
-                        "
-                      >
-                        {cliente.apellido}
-                        {', '}
-                        {cliente.nombre}
-                      </h3>
-
-                      <span
-                        className={`
-                          shrink-0
-                          rounded-full
-                          px-2
-                          py-0.5
-                          text-[11px]
-                          font-bold
-
-                          ${
-                            !resumen.tieneCreditoActivo
-                              ? 'bg-stone-100 text-stone-500'
-                              : resumen.tieneMora
-                                ? 'bg-red-100 text-red-700'
-                                : 'bg-emerald-100 text-emerald-700'
-                          }
-                        `}
-                      >
-                        {
-                          !resumen.tieneCreditoActivo
-                            ? 'Sin crédito'
-                            : resumen.tieneMora
-                              ? 'En mora'
-                              : 'Al día'
-                        }
-                      </span>
-
-                    </div>
-
-                    <div
-                      className="
-                        space-y-0.5
-                        text-sm
-                        text-stone-700
-                      "
-                    >
-
-                      <p>
-                        DNI:
-                        {' '}
-                        {cliente.dni}
-                      </p>
-
-                      <p>
-                        Tel:
-                        {' '}
-                        {cliente.celular || '-'}
-                      </p>
-
-                      <p>
-                        Dirección:
-                        {' '}
-                        {cliente.direccion || '-'}
-                      </p>
-
-                      <p>
-                        Cobrador:
-                        {' '}
-                        {cliente.collector?.apellido}
-                        {' '}
-                        {cliente.collector?.nombre}
-                      </p>
-
-                      <p>
-                        Zona:
-                        {' '}
-                        {zonaCliente?.nombre || '-'}
-                      </p>
-
-                    </div>
-
-                    <div
-                      className="
-                        rounded-lg
-                        bg-stone-50
-                        p-2
-                        text-sm
-                      "
-                    >
-
-                      {resumen.tieneCreditoActivo ? (
-
-                        <>
-
-                          <p
-                            className="
-                              flex
-                              justify-between
-                            "
-                          >
-                            <span className="text-stone-500">
-                              Plan
-                            </span>
-
-                            <span className="font-semibold text-stone-800">
-                              {resumen.credito?.tipoPlan || '-'}
-                            </span>
-                          </p>
-
-                          <p
-                            className="
-                              flex
-                              justify-between
-                            "
-                          >
-                            <span className="text-stone-500">
-                              Monto crédito
-                            </span>
-
-                            <span className="font-semibold text-stone-800">
-                              ${money(resumen.credito?.montoCredito)}
-                            </span>
-                          </p>
-
-                          <p
-                            className="
-                              flex
-                              justify-between
-                            "
-                          >
-                            <span className="text-stone-500">
-                              Saldo pendiente
-                            </span>
-
-                            <span className="font-bold text-stone-800">
-                              ${money(resumen.saldoPendiente)}
-                            </span>
-                          </p>
-
-                          <p
-                            className="
-                              flex
-                              justify-between
-                            "
-                          >
-                            <span className="text-stone-500">
-                              Próxima cuota
-                            </span>
-
-                            <span className="font-semibold text-stone-800">
-                              {
-                                resumen.proximaCuota
-                                  ? `#${resumen.proximaCuota.numeroCuota} · ${formatDate(resumen.proximaCuota.fechaVencimiento)}`
-                                  : 'Sin cuotas pendientes'
-                              }
-                            </span>
-                          </p>
-
-                        </>
-
-                      ) : (
-
-                        <p className="text-stone-500">
-                          Este cliente no tiene
-                          ningún crédito vigente.
-                        </p>
-
-                      )}
-
-                    </div>
-
-                    <a
-                      href={`https://www.google.com/maps?q=${cliente.latitud},${cliente.longitud}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="
-                        inline-block
-                        text-amber-700
-                        font-medium
-                        text-sm
-                      "
-                    >
-                      Abrir en Google Maps
-                    </a>
-
-                  </div>
-
+                <Popup
+                  className="cliente-popup"
+                  maxWidth={360}
+                  minWidth={320}
+                >
+                  <ClientePopup
+                    cliente={cliente}
+                    resumen={resumen}
+                    zonaCliente={zonaCliente}
+                  />
                 </Popup>
 
               </Marker>
@@ -922,6 +798,228 @@ export default function ClientesMapaPage() {
     </div>
   )
 
+}
+
+
+/* ===================================================== */
+/* POPUP DE CLIENTE (tarjeta con carrusel de fotos)      */
+/* ===================================================== */
+
+function ClientePopup({
+  cliente,
+  resumen,
+  zonaCliente
+}) {
+
+  const fotos = cliente.fotos || []
+
+  const [fotoIndex, setFotoIndex] =
+    useState(0)
+
+  const indiceSeguro =
+    Math.min(fotoIndex, Math.max(fotos.length - 1, 0))
+
+  const irAnterior = () =>
+    setFotoIndex(
+      (prev) =>
+        (prev - 1 + fotos.length) % fotos.length
+    )
+
+  const irSiguiente = () =>
+    setFotoIndex(
+      (prev) => (prev + 1) % fotos.length
+    )
+
+  const estado =
+    !resumen.tieneCreditoActivo
+      ? {
+          label: 'Sin crédito',
+          badge: 'bg-white/25 text-white',
+          header: 'from-stone-500 to-stone-600'
+        }
+      : resumen.tieneMora
+        ? {
+            label: 'En mora',
+            badge: 'bg-white/25 text-white',
+            header: 'from-rose-500 to-red-600'
+          }
+        : {
+            label: 'Al día',
+            badge: 'bg-white/25 text-white',
+            header: 'from-emerald-500 to-teal-600'
+          }
+
+  return (
+
+    <div className="w-[320px] overflow-hidden rounded-2xl bg-white">
+
+      {/* CARRUSEL */}
+      {fotos.length > 0 && (
+
+        <div className="relative mb-3 h-56 bg-stone-800">
+
+          <a
+            href={fotoUrl(fotos[indiceSeguro].url)}
+            target="_blank"
+            rel="noreferrer"
+            className="block h-full w-full"
+          >
+            <img
+              src={fotoUrl(fotos[indiceSeguro].url)}
+              alt="Foto del cliente"
+              className="h-full w-full object-contain"
+            />
+          </a>
+
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/60 to-transparent" />
+
+          {fotos.length > 1 && (
+            <>
+              <button
+                type="button"
+                onClick={irAnterior}
+                className="absolute left-2 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-black/50 text-white transition hover:bg-black/70"
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </button>
+
+              <button
+                type="button"
+                onClick={irSiguiente}
+                className="absolute right-2 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-black/50 text-white transition hover:bg-black/70"
+              >
+                <ChevronRight className="h-5 w-5" />
+              </button>
+
+              <div className="absolute bottom-2 left-1/2 flex -translate-x-1/2 gap-1.5">
+                {fotos.map((foto, i) => (
+                  <button
+                    key={foto.id}
+                    type="button"
+                    onClick={() => setFotoIndex(i)}
+                    className={`h-1.5 rounded-full transition-all ${
+                      i === indiceSeguro
+                        ? 'w-5 bg-white'
+                        : 'w-1.5 bg-white/50'
+                    }`}
+                  />
+                ))}
+              </div>
+            </>
+          )}
+
+          <span className="absolute right-2 top-2 rounded-full bg-black/50 px-2 py-0.5 text-[11px] font-semibold text-white">
+            {indiceSeguro + 1}/{fotos.length}
+          </span>
+
+        </div>
+      )}
+
+      {/* ENCABEZADO */}
+      <div className={`mb-3 bg-gradient-to-r ${estado.header} px-4 py-3`}>
+        <div className="flex items-start justify-between gap-2">
+          <h3 className="text-base font-extrabold leading-tight text-white">
+            {cliente.apellido}, {cliente.nombre}
+          </h3>
+
+          <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-[11px] font-bold backdrop-blur ${estado.badge}`}>
+            {estado.label}
+          </span>
+        </div>
+      </div>
+
+      {/* DATOS */}
+      <div className="space-y-2 px-3 pb-3">
+
+        <div className="grid grid-cols-1 gap-1.5 text-sm">
+          <DatoPopup icon={User} label="DNI" value={cliente.dni} />
+          <DatoPopup icon={Phone} label="Tel" value={cliente.celular || '-'} />
+          <DatoPopup icon={Home} label="Dirección" value={cliente.direccion || '-'} />
+          <DatoPopup
+            icon={User}
+            label="Cobrador"
+            value={`${cliente.collector?.apellido || ''} ${cliente.collector?.nombre || ''}`.trim() || '-'}
+          />
+          <DatoPopup
+            icon={MapPin}
+            label="Zona"
+            value={zonaCliente?.nombre || '-'}
+          />
+          <DatoPopup
+            icon={Building2}
+            label="Oficina"
+            value={cliente.oficina?.nombre || '-'}
+            destacado
+          />
+        </div>
+
+        {/* RESUMEN CRÉDITO */}
+        {resumen.tieneCreditoActivo ? (
+          <div className="rounded-xl border border-amber-100 bg-amber-50/60 p-2.5">
+            <FilaResumen label="Plan" value={resumen.credito?.tipoPlan || '-'} />
+            <FilaResumen label="Monto crédito" value={`$${money(resumen.credito?.montoCredito)}`} />
+            <FilaResumen label="Saldo pendiente" value={`$${money(resumen.saldoPendiente)}`} fuerte />
+            <FilaResumen
+              label="Próxima cuota"
+              value={
+                resumen.proximaCuota
+                  ? `#${resumen.proximaCuota.numeroCuota} · ${formatDate(resumen.proximaCuota.fechaVencimiento)}`
+                  : 'Sin cuotas pendientes'
+              }
+            />
+          </div>
+        ) : (
+          <div className="rounded-xl border border-stone-200 bg-stone-50 p-2.5 text-sm text-stone-500">
+            Este cliente no tiene ningún crédito vigente.
+          </div>
+        )}
+
+        <a
+          href={`https://www.google.com/maps?q=${cliente.latitud},${cliente.longitud}`}
+          target="_blank"
+          rel="noreferrer"
+          className="mt-1 flex items-center justify-center gap-2 rounded-xl border border-stone-200 bg-white px-3 py-2.5 text-sm font-semibold !text-stone-700 no-underline transition hover:border-amber-300 hover:bg-amber-50 hover:!text-amber-700"
+        >
+          <Navigation className="h-4 w-4" />
+          Abrir en Google Maps
+        </a>
+
+      </div>
+
+    </div>
+  )
+}
+
+function DatoPopup({
+  icon: Icon,
+  label,
+  value,
+  destacado
+}) {
+  return (
+    <div className="flex items-center gap-2">
+      <Icon className={`h-3.5 w-3.5 shrink-0 ${destacado ? 'text-amber-600' : 'text-stone-400'}`} />
+      <span className="text-stone-400">{label}:</span>
+      <span className={`truncate font-semibold ${destacado ? 'text-amber-700' : 'text-stone-800'}`}>
+        {value}
+      </span>
+    </div>
+  )
+}
+
+function FilaResumen({
+  label,
+  value,
+  fuerte
+}) {
+  return (
+    <p className="flex justify-between gap-2 py-0.5 text-sm">
+      <span className="text-stone-500">{label}</span>
+      <span className={`text-right ${fuerte ? 'font-bold text-stone-900' : 'font-semibold text-stone-800'}`}>
+        {value}
+      </span>
+    </p>
+  )
 }
 
 

@@ -5,7 +5,8 @@ export const reporteService = {
   recaudacion: async ({
     fechaDesde,
     fechaHasta,
-    cobradorId
+    cobradorId,
+    oficinaIds = []
   }) => {
 
     const params = {
@@ -16,6 +17,11 @@ export const reporteService = {
     if (cobradorId) {
       params.cobradorId =
         cobradorId
+    }
+
+    if (oficinaIds.length) {
+      params.oficinaIds =
+        oficinaIds.join(',')
     }
 
     const response =

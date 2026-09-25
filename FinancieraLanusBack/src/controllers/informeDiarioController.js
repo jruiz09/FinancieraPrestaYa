@@ -15,6 +15,64 @@ import { ROLES } from '../config/auth.js';
 
 import { obtenerProximoDiaHabil } from '../utils/creditoUtils.js';
 
+import {
+  resolverOficinaIdsEfectivos,
+  parseOficinaIdsQuery
+} from '../utils/oficinaScope.js';
+
+/*
+Filtra las estructuras de obtenerZonasYCobradores a un conjunto
+de oficinas (para separar el informe por oficina). Deja solo los
+cobradores de esas oficinas y las zonas que tengan al menos uno,
+así hasta una zona compartida entre oficinas queda correctamente
+acotada. oficinaIdsEfectivos = null => sin filtro.
+*/
+const filtrarInformePorOficina = (base, oficinaIdsEfectivos) => {
+
+  if (!oficinaIdsEfectivos) {
+    return base;
+  }
+
+  const permitidas = new Set(oficinaIdsEfectivos);
+
+  const todosLosCollectorIds = base.todosLosCollectorIds.filter(
+    id => permitidas.has(base.collectorOficinaMap.get(id))
+  );
+
+  const collectorIdSet = new Set(todosLosCollectorIds);
+
+  const collectorZonaMap = new Map(
+    [...base.collectorZonaMap].filter(
+      ([id]) => collectorIdSet.has(id)
+    )
+  );
+
+  const zonaIdsConCollector = new Set(collectorZonaMap.values());
+
+  const zonas = base.zonas.filter(
+    z => zonaIdsConCollector.has(z.id)
+  );
+
+  const supervisorZonasMap = new Map();
+
+  for (const [supId, zonaSet] of base.supervisorZonasMap) {
+    const filtradas = new Set(
+      [...zonaSet].filter(zid => zonaIdsConCollector.has(zid))
+    );
+    if (filtradas.size) {
+      supervisorZonasMap.set(supId, filtradas);
+    }
+  }
+
+  return {
+    zonas,
+    collectorZonaMap,
+    collectorOficinaMap: base.collectorOficinaMap,
+    supervisorZonasMap,
+    todosLosCollectorIds
+  };
+};
+
 const ROLES_QUE_EDITAN = [
   ROLES.ADMIN,
   ROLES.ADMINISTRATIVO
@@ -101,7 +159,7 @@ export const obtenerZonasYCobradores = async ownerId => {
       {
         model: Collector,
         as: 'collectors',
-        attributes: ['id', 'supervisorId'],
+        attributes: ['id', 'supervisorId', 'oficinaId'],
         where: { activo: true },
         required: false
       }
@@ -110,6 +168,7 @@ export const obtenerZonasYCobradores = async ownerId => {
   });
 
   const collectorZonaMap = new Map();
+  const collectorOficinaMap = new Map();
   const supervisorZonasMap = new Map();
   const todosLosCollectorIds = [];
 
@@ -118,6 +177,7 @@ export const obtenerZonasYCobradores = async ownerId => {
     for (const collector of zona.collectors) {
 
       collectorZonaMap.set(collector.id, zona.id);
+      collectorOficinaMap.set(collector.id, collector.oficinaId);
       todosLosCollectorIds.push(collector.id);
 
       if (collector.supervisorId) {
@@ -134,6 +194,7 @@ export const obtenerZonasYCobradores = async ownerId => {
   return {
     zonas,
     collectorZonaMap,
+    collectorOficinaMap,
     supervisorZonasMap,
     todosLosCollectorIds
   };
@@ -869,11 +930,27 @@ export const getInformeDiario = async (req, res, next) => {
     const fechaManana = await diaHabilSiguiente(fecha);
 
     const {
+      oficinaIds: oficinaIdsEfectivos,
+      restringido: restringidoOficina
+    } = await resolverOficinaIdsEfectivos(
+      req.user,
+      parseOficinaIdsQuery(req.query.oficinaIds)
+    );
+
+    const baseZonasCobradores =
+      await obtenerZonasYCobradores(req.user.ownerId);
+
+    const {
       zonas,
       collectorZonaMap,
       supervisorZonasMap,
       todosLosCollectorIds
-    } = await obtenerZonasYCobradores(req.user.ownerId);
+    } = restringidoOficina
+      ? filtrarInformePorOficina(
+          baseZonasCobradores,
+          oficinaIdsEfectivos
+        )
+      : baseZonasCobradores;
 
     const zonaIds = zonas.map(z => z.id);
 
@@ -1115,11 +1192,27 @@ export const getInformeSemanal = async (req, res, next) => {
     const viernesSig = sumarDias(fechaLunes, 11);
 
     const {
+      oficinaIds: oficinaIdsEfectivos,
+      restringido: restringidoOficina
+    } = await resolverOficinaIdsEfectivos(
+      req.user,
+      parseOficinaIdsQuery(req.query.oficinaIds)
+    );
+
+    const baseZonasCobradores =
+      await obtenerZonasYCobradores(req.user.ownerId);
+
+    const {
       zonas,
       collectorZonaMap,
       supervisorZonasMap,
       todosLosCollectorIds
-    } = await obtenerZonasYCobradores(req.user.ownerId);
+    } = restringidoOficina
+      ? filtrarInformePorOficina(
+          baseZonasCobradores,
+          oficinaIdsEfectivos
+        )
+      : baseZonasCobradores;
 
     const zonaIds = zonas.map(z => z.id);
 

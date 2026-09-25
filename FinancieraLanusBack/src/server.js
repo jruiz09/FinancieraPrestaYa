@@ -13,6 +13,7 @@ import { seedColumnasBajaCredito } from './seeders/seedColumnasBajaCredito.js';
 import { seedEliminarEstadoVale } from './seeders/seedEliminarEstadoVale.js';
 import { seedFixForeignKeysAyuda } from './seeders/seedFixForeignKeysAyuda.js';
 import { seedPermisoOficinasAdministrativo } from './seeders/seedPermisoOficinasAdministrativo.js';
+import { seedOficinaIdEntidadesOperativas } from './seeders/seedOficinaIdEntidadesOperativas.js';
 
 dotenv.config();
 
@@ -36,6 +37,8 @@ const startServer = async () => {
     await seedEliminarEstadoVale();
 
     await seedFixForeignKeysAyuda();
+
+    await seedOficinaIdEntidadesOperativas();
 
     await seedRoles();
 

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 import {
   Calendar,
@@ -19,6 +19,12 @@ import CalculadoManualCell, { inputClass }
 
 import { informeDiarioService }
   from '../services/informeDiarioService'
+
+import OficinaVistaSelector
+  from '../components/OficinaVistaSelector'
+
+import { useOficinaVista }
+  from '../hooks/useOficinaVista'
 
 const DIAS_LABEL = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes']
 
@@ -86,6 +92,13 @@ export default function InformeSemanalPage() {
   const [lunes, setLunes] =
     useState(null)
 
+  const {
+    oficinasActivas,
+    oficinaVista,
+    setOficinaVista,
+    oficinaIdsFetch
+  } = useOficinaVista()
+
   const [zonas, setZonas] =
     useState([])
 
@@ -119,7 +132,10 @@ export default function InformeSemanalPage() {
         setError('')
 
         const data =
-          await informeDiarioService.obtenerSemanal(nuevoLunes)
+          await informeDiarioService.obtenerSemanal(
+            nuevoLunes,
+            oficinaIdsFetch
+          )
 
         setZonas(data.zonas || [])
 
@@ -167,6 +183,14 @@ export default function InformeSemanalPage() {
     cargarSemana(nuevoLunes)
 
   }
+
+  // Recarga la semana actual al cambiar la oficina en el selector.
+  useEffect(() => {
+    if (lunes) {
+      cargarSemana(lunes)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [oficinaVista])
 
   const handleSeleccionarFecha = (e) => {
 
@@ -600,6 +624,14 @@ export default function InformeSemanalPage() {
           setError('')
         }
       />
+
+      {oficinasActivas.length > 1 && (
+        <OficinaVistaSelector
+          oficinas={oficinasActivas}
+          value={oficinaVista}
+          onChange={setOficinaVista}
+        />
+      )}
 
       {!lunes && (
 

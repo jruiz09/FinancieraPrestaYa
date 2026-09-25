@@ -15,7 +15,9 @@ import {
 } from './informeDiarioController.js';
 
 import {
-  resolverZoneIdsEfectivos
+  resolverZoneIdsEfectivos,
+  resolverOficinaIdsEfectivos,
+  parseOficinaIdsQuery
 } from '../utils/oficinaScope.js';
 
 const numero = value => Number(value || 0);
@@ -49,6 +51,17 @@ export const getResumenDashboard =
       const { zoneIds, restringido } =
         await resolverZoneIdsEfectivos(req.user, zoneIdsSolicitados);
 
+      const {
+        oficinaIds: oficinaIdsEfectivos,
+        restringido: restringidoOficina
+      } = await resolverOficinaIdsEfectivos(
+        req.user,
+        parseOficinaIdsQuery(req.query.oficinaIds)
+      );
+
+      const oficinaIdsPermitidos =
+        restringidoOficina ? oficinaIdsEfectivos : null;
+
       const { zonas } =
         await obtenerZonasYCobradores(ownerId);
 
@@ -59,16 +72,31 @@ export const getResumenDashboard =
             )
           : zonas;
 
+      /*
+      Además del filtro por zona, se excluyen los cobradores
+      que no son de una oficina permitida del usuario: una
+      zona puede estar compartida entre oficinas, pero un
+      cobrador pertenece a una sola.
+      */
+      const hayFiltroCobrador =
+        restringido || oficinaIdsPermitidos !== null;
+
       const collectorIdsFiltro =
         zonasFiltradas.flatMap(
           zona =>
-            zona.collectors.map(
-              collector => collector.id
-            )
+            zona.collectors
+              .filter(
+                collector =>
+                  oficinaIdsPermitidos === null ||
+                  oficinaIdsPermitidos.includes(collector.oficinaId)
+              )
+              .map(
+                collector => collector.id
+              )
         );
 
       const whereCobrador =
-        restringido
+        hayFiltroCobrador
           ? { cobradorId: collectorIdsFiltro }
           : {};
 
@@ -102,6 +130,9 @@ export const getResumenDashboard =
             activo: true,
             ...(restringido
               ? { zoneId: zoneIds }
+              : {}),
+            ...(oficinaIdsPermitidos !== null
+              ? { oficinaId: { [Op.in]: oficinaIdsPermitidos } }
               : {})
           }
         });
@@ -359,6 +390,17 @@ export const getResumenPorZona = async (
         zoneIdsFiltroSolicitado
       );
 
+    const {
+      oficinaIds: oficinaIdsEfectivos,
+      restringido: restringidoOficina
+    } = await resolverOficinaIdsEfectivos(
+      req.user,
+      parseOficinaIdsQuery(req.query.oficinaIds)
+    );
+
+    const oficinaIdsPermitidos =
+      restringidoOficina ? oficinaIdsEfectivos : null;
+
     const hoy =
       new Date()
         .toISOString()
@@ -383,9 +425,15 @@ export const getResumenPorZona = async (
     const collectorIdsFiltrados =
       zonasFiltradas.flatMap(
         zona =>
-          zona.collectors.map(
-            collector => collector.id
-          )
+          zona.collectors
+            .filter(
+              collector =>
+                oficinaIdsPermitidos === null ||
+                oficinaIdsPermitidos.includes(collector.oficinaId)
+            )
+            .map(
+              collector => collector.id
+            )
       );
 
     const {

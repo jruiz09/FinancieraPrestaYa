@@ -8,8 +8,12 @@ import {
   createClient,
   updateClient,
   deleteClient,
-  geolocalizarDireccion
+  geolocalizarDireccion,
+  listClientFotos,
+  uploadClientFotos,
+  deleteClientFoto
 } from '../controllers/clientController.js';
+import { uploadClientFotos as uploadClientFotosMiddleware } from '../config/uploads.js';
 
 const router = Router();
 router.use(authenticate);
@@ -70,6 +74,36 @@ router.post(
   '/geolocalizar',
   authenticate,
   geolocalizarDireccion
+);
+
+/*
+FOTOS DEL CLIENTE. La subida usa multer (multipart, campo
+'fotos'); los permisos siguen el módulo de clientes.
+*/
+router.get(
+  '/:id/fotos',
+  authorize('CLIENTS_VIEW'),
+  param('id').isUUID(),
+  validateRequest,
+  listClientFotos
+);
+
+router.post(
+  '/:id/fotos',
+  authorize('CLIENTS_EDIT'),
+  param('id').isUUID(),
+  validateRequest,
+  uploadClientFotosMiddleware,
+  uploadClientFotos
+);
+
+router.delete(
+  '/:id/fotos/:fotoId',
+  authorize('CLIENTS_EDIT'),
+  param('id').isUUID(),
+  param('fotoId').isUUID(),
+  validateRequest,
+  deleteClientFoto
 );
 
 export default router;

@@ -7,6 +7,16 @@ import {
   zoneService,
 } from "../services/zoneService";
 
+import {
+  oficinaService,
+} from "../services/oficinaService";
+
+import {
+  useAuthStore,
+} from "../store/useAuthStore";
+
+import SearchSelect from "./SearchSelect";
+
 export default function SupervisorModal({
   open,
   onClose,
@@ -14,10 +24,20 @@ export default function SupervisorModal({
   supervisor,
   isLoading = false,
 }) {
+  /*
+  Oficina activa del switch del Header: default de la oficina en
+  un alta de supervisor (si hay una sola activa, esa; si hay
+  varias, se elige entre esas).
+  */
+  const selectedOficinaIds =
+    useAuthStore(
+      (state) => state.selectedOficinaIds,
+    );
   const emptyForm = {
     nombre: "",
     apellido: "",
     celular: "",
+    oficinaId: "",
   };
 
   const [
@@ -59,6 +79,11 @@ export default function SupervisorModal({
     setZoneIds,
   ] = useState([]);
 
+  const [
+    oficinasDisponibles,
+    setOficinasDisponibles,
+  ] = useState([]);
+
   useEffect(() => {
     if (!open) {
       return;
@@ -68,6 +93,17 @@ export default function SupervisorModal({
       .list()
       .then((data) =>
         setZonasDisponibles(
+          data || [],
+        ),
+      )
+      .catch((err) =>
+        console.error(err),
+      );
+
+    oficinaService
+      .list()
+      .then((data) =>
+        setOficinasDisponibles(
           data || [],
         ),
       )
@@ -87,6 +123,12 @@ export default function SupervisorModal({
 
         celular:
           supervisor.celular || "",
+
+        oficinaId:
+          supervisor.oficinaId ||
+          supervisor.oficina
+            ?.id ||
+          "",
       });
 
       setCrearUsuario(
@@ -110,7 +152,15 @@ export default function SupervisorModal({
         ).map((z) => z.id),
       );
     } else {
-      setForm(emptyForm);
+      setForm({
+        ...emptyForm,
+
+        oficinaId:
+          selectedOficinaIds
+            ?.length === 1
+            ? selectedOficinaIds[0]
+            : "",
+      });
 
       setCrearUsuario(false);
 
@@ -284,6 +334,38 @@ export default function SupervisorModal({
     }
   };
 
+  const handleOficinaChange = (
+    id,
+  ) => {
+    setForm((prev) => ({
+      ...prev,
+      oficinaId: id,
+    }));
+
+    /*
+    Se descartan las zonas ya marcadas que no pertenecen a la
+    nueva oficina destino.
+    */
+    setZoneIds((prev) =>
+      prev.filter((zid) =>
+        zonasDisponibles.some(
+          (z) =>
+            z.id === zid &&
+            (z.oficinas || []).some(
+              (o) => o.id === id,
+            ),
+        ),
+      ),
+    );
+
+    if (errors.oficinaId) {
+      setErrors((prev) => ({
+        ...prev,
+        oficinaId: "",
+      }));
+    }
+  };
+
   const handleCrearUsuario = (
     checked,
   ) => {
@@ -342,6 +424,11 @@ export default function SupervisorModal({
     ) {
       newErrors.celular =
         "Celular inválido";
+    }
+
+    if (!form.oficinaId) {
+      newErrors.oficinaId =
+        "Seleccione una oficina";
     }
 
     if (crearUsuario) {
@@ -447,6 +534,19 @@ export default function SupervisorModal({
     dark:focus:border-amber-600
     dark:focus:ring-amber-900/30
   `;
+
+  /*
+  Zonas asignables acotadas a la oficina destino del supervisor,
+  para no mezclar zonas de otras oficinas en la carga.
+  */
+  const zonasParaOficina =
+    form.oficinaId
+      ? zonasDisponibles.filter((z) =>
+          (z.oficinas || []).some(
+            (o) => o.id === form.oficinaId,
+          ),
+        )
+      : [];
 
   return (
     <div
@@ -675,6 +775,39 @@ export default function SupervisorModal({
                     }
                   />
                 </Field>
+
+                <Field
+                  label="Oficina"
+                  error={
+                    errors.oficinaId
+                  }
+                >
+                  <SearchSelect
+                    items={
+                      !supervisor &&
+                      selectedOficinaIds?.length
+                        ? oficinasDisponibles.filter(
+                            (o) =>
+                              selectedOficinaIds.includes(
+                                o.id,
+                              ),
+                          )
+                        : oficinasDisponibles
+                    }
+                    value={
+                      form.oficinaId
+                    }
+                    valueField="id"
+                    labelField="nombre"
+                    placeholder="Buscar oficina..."
+                    isDisabled={
+                      isLoading
+                    }
+                    onChange={
+                      handleOficinaChange
+                    }
+                  />
+                </Field>
               </div>
             </section>
 
@@ -687,7 +820,7 @@ export default function SupervisorModal({
                 description="Además de las zonas de sus cobradores, un supervisor puede cubrir zonas de otros equipos."
               />
 
-              {zonasDisponibles.length ===
+              {zonasParaOficina.length ===
               0 ? (
                 <p
                   className="
@@ -695,8 +828,9 @@ export default function SupervisorModal({
                     text-stone-400
                   "
                 >
-                  No hay zonas
-                  disponibles.
+                  {form.oficinaId
+                    ? "No hay zonas en esta oficina."
+                    : "Elegí una oficina para ver sus zonas."}
                 </p>
               ) : (
                 <div
@@ -708,7 +842,7 @@ export default function SupervisorModal({
                     md:grid-cols-3
                   "
                 >
-                  {zonasDisponibles.map(
+                  {zonasParaOficina.map(
                     (zona) => (
                       <label
                         key={

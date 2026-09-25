@@ -2,7 +2,7 @@ import api from '../api/axios'
 
 export const cajaService = {
 
-  listMovimientos: async (zoneIds = [], fechaDesde = '', fechaHasta = '') => {
+  listMovimientos: async (zoneIds = [], fechaDesde = '', fechaHasta = '', oficinaIds = []) => {
 
     const response =
       await api.get(
@@ -13,7 +13,10 @@ export const cajaService = {
               ? zoneIds.join(',')
               : undefined,
             fechaDesde: fechaDesde || undefined,
-            fechaHasta: fechaHasta || undefined
+            fechaHasta: fechaHasta || undefined,
+            oficinaIds: oficinaIds.length
+              ? oficinaIds.join(',')
+              : undefined
           }
         }
       )
@@ -42,7 +45,7 @@ export const cajaService = {
     return response.data.data
   },
 
-  resumen: async (fechaDesde = '', fechaHasta = '') => {
+  resumen: async (fechaDesde = '', fechaHasta = '', oficinaIds = []) => {
 
     const response =
       await api.get(
@@ -50,7 +53,10 @@ export const cajaService = {
         {
           params: {
             fechaDesde: fechaDesde || undefined,
-            fechaHasta: fechaHasta || undefined
+            fechaHasta: fechaHasta || undefined,
+            oficinaIds: oficinaIds.length
+              ? oficinaIds.join(',')
+              : undefined
           }
         }
       )
@@ -58,7 +64,7 @@ export const cajaService = {
     return response.data.data
   },
 
-  listMovimientosAutomaticos: async (zoneIds = [], fechaDesde = '', fechaHasta = '') => {
+  listMovimientosAutomaticos: async (zoneIds = [], fechaDesde = '', fechaHasta = '', oficinaIds = []) => {
 
     const response =
       await api.get(
@@ -69,7 +75,10 @@ export const cajaService = {
               ? zoneIds.join(',')
               : undefined,
             fechaDesde: fechaDesde || undefined,
-            fechaHasta: fechaHasta || undefined
+            fechaHasta: fechaHasta || undefined,
+            oficinaIds: oficinaIds.length
+              ? oficinaIds.join(',')
+              : undefined
           }
         }
       )

@@ -11,6 +11,14 @@ import {
   zoneService,
 } from "../services/zoneService";
 
+import {
+  oficinaService,
+} from "../services/oficinaService";
+
+import {
+  useAuthStore,
+} from "../store/useAuthStore";
+
 import SearchSelect from "../components/SearchSelect";
 
 export default function CollectorForm({
@@ -26,10 +34,23 @@ export default function CollectorForm({
     celular: "",
     zoneId: "",
     supervisorId: "",
+    oficinaId: "",
   };
 
   const [formData, setFormData] =
     useState(emptyForm);
+
+  /*
+  Oficina activa del switch del Header. En un alta se usa como
+  default de la oficina del cobrador; si hay una sola activa, es
+  la única opción; si hay varias, se elige entre esas.
+  */
+  const selectedOficinaIds =
+    useAuthStore(
+      (state) => state.selectedOficinaIds,
+    );
+
+  const esAlta = !initialData.id;
 
   const [errors, setErrors] =
     useState({});
@@ -59,6 +80,9 @@ export default function CollectorForm({
   const [zonas, setZonas] =
     useState([]);
 
+  const [oficinas, setOficinas] =
+    useState([]);
+
   useEffect(() => {
     const cargarDatos =
       async () => {
@@ -66,6 +90,7 @@ export default function CollectorForm({
           const [
             supervisoresData,
             zonasData,
+            oficinasData,
           ] =
             await Promise.all([
               supervisorService.listar(
@@ -74,6 +99,8 @@ export default function CollectorForm({
               ),
 
               zoneService.list(),
+
+              oficinaService.list(),
             ]);
 
           setSupervisores(
@@ -87,6 +114,14 @@ export default function CollectorForm({
               zonasData,
             )
               ? zonasData
+              : [],
+          );
+
+          setOficinas(
+            Array.isArray(
+              oficinasData,
+            )
+              ? oficinasData
               : [],
           );
         } catch (error) {
@@ -115,6 +150,16 @@ export default function CollectorForm({
         initialData.supervisor
           ?.id ||
         "",
+
+      oficinaId:
+        initialData.oficinaId ||
+        initialData.oficina
+          ?.id ||
+        (esAlta &&
+        selectedOficinaIds
+          ?.length === 1
+          ? selectedOficinaIds[0]
+          : ""),
     });
 
     setCrearUsuario(
@@ -169,6 +214,11 @@ export default function CollectorForm({
     ) {
       newErrors.supervisorId =
         "Seleccione un supervisor";
+    }
+
+    if (!formData.oficinaId) {
+      newErrors.oficinaId =
+        "Seleccione una oficina";
     }
 
     if (
@@ -289,6 +339,28 @@ export default function CollectorForm({
     }
   };
 
+  const handleOficinaChange = (
+    id,
+  ) => {
+    /*
+    Al cambiar la oficina destino se limpian zona y supervisor:
+    los que estaban elegidos podían pertenecer a otra oficina.
+    */
+    setFormData((prev) => ({
+      ...prev,
+      oficinaId: id,
+      zoneId: "",
+      supervisorId: "",
+    }));
+
+    if (errors.oficinaId) {
+      setErrors((prev) => ({
+        ...prev,
+        oficinaId: "",
+      }));
+    }
+  };
+
   const handleSubmit = (
     e,
   ) => {
@@ -394,6 +466,47 @@ export default function CollectorForm({
       }));
     }
   };
+
+  /*
+  En un alta con oficinas activas seleccionadas, se limita el
+  selector a esas oficinas (default = oficina activa). En edición
+  o sin selección se muestran todas las disponibles.
+  */
+  const oficinasDisponibles =
+    esAlta &&
+    selectedOficinaIds?.length
+      ? oficinas.filter((o) =>
+          selectedOficinaIds.includes(
+            o.id,
+          ),
+        )
+      : oficinas;
+
+  /*
+  Zona y supervisor se acotan a la oficina destino (formData
+  .oficinaId) para no mezclar entidades de oficinas distintas en
+  la carga. Sin oficina elegida, no hay opciones habilitadas.
+  */
+  const zonasDisponibles =
+    formData.oficinaId
+      ? zonas.filter((z) =>
+          (z.oficinas || []).some(
+            (o) =>
+              o.id ===
+              formData.oficinaId,
+          ),
+        )
+      : [];
+
+  const supervisoresDisponibles =
+    formData.oficinaId
+      ? supervisores.filter(
+          (s) =>
+            (s.oficina?.id ||
+              s.oficinaId) ===
+            formData.oficinaId,
+        )
+      : [];
 
   const inputClass = `
     w-full
@@ -557,7 +670,7 @@ export default function CollectorForm({
         <section>
           <SectionTitle
             title="Asignación"
-            description="Zona de trabajo y supervisor responsable."
+            description="Elegí primero la oficina; zona y supervisor se filtran por ella."
           />
 
           <div
@@ -569,21 +682,51 @@ export default function CollectorForm({
             "
           >
             <Field
+              label="Oficina"
+              error={
+                errors.oficinaId
+              }
+            >
+              <SearchSelect
+                items={oficinasDisponibles}
+                value={
+                  formData.oficinaId
+                }
+                valueField="id"
+                labelField="nombre"
+                placeholder="Buscar oficina..."
+                isDisabled={
+                  isLoading
+                }
+                onChange={
+                  handleOficinaChange
+                }
+              />
+            </Field>
+
+            <div className="hidden sm:block" />
+
+            <Field
               label="Zona"
               error={
                 errors.zoneId
               }
             >
               <SearchSelect
-                items={zonas}
+                items={zonasDisponibles}
                 value={
                   formData.zoneId
                 }
                 valueField="id"
                 labelField="nombre"
-                placeholder="Buscar zona..."
+                placeholder={
+                  formData.oficinaId
+                    ? "Buscar zona..."
+                    : "Elegí una oficina primero"
+                }
                 isDisabled={
-                  isLoading
+                  isLoading ||
+                  !formData.oficinaId
                 }
                 onChange={
                   handleZoneChange
@@ -599,7 +742,7 @@ export default function CollectorForm({
             >
               <SearchSelect
                 items={
-                  supervisores
+                  supervisoresDisponibles
                 }
                 value={
                   formData.supervisorId
@@ -608,9 +751,14 @@ export default function CollectorForm({
                 labelField={(s) =>
                   `${s.apellido || ""}, ${s.nombre || ""}`
                 }
-                placeholder="Buscar supervisor..."
+                placeholder={
+                  formData.oficinaId
+                    ? "Buscar supervisor..."
+                    : "Elegí una oficina primero"
+                }
                 isDisabled={
-                  isLoading
+                  isLoading ||
+                  !formData.oficinaId
                 }
                 onChange={
                   handleSupervisorChange

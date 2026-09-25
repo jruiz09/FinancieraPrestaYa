@@ -18,7 +18,8 @@ const saveToLocalStorage = (state) => {
       user: state.user,
       token: state.token,
       ownerId: state.ownerId,
-      selectedOficinaIds: state.selectedOficinaIds
+      selectedOficinaIds: state.selectedOficinaIds,
+      oficinaSeleccionConfirmada: state.oficinaSeleccionConfirmada
     })
   )
 }
@@ -48,6 +49,15 @@ export const useAuthStore = create((set) => {
     selectedOficinaIds:
       initialState?.selectedOficinaIds || [],
 
+    /*
+    Si el usuario tiene más de una oficina asignada, tiene que
+    elegir con cuál/cuáles va a trabajar antes de entrar al
+    panel (ver SeleccionarOficinaPage). Se resetea en cada
+    login para que el chequeo vuelva a pedirse esa sesión.
+    */
+    oficinaSeleccionConfirmada:
+      initialState?.oficinaSeleccionConfirmada || false,
+
     isLoading: false,
 
     error: null,
@@ -61,6 +71,25 @@ export const useAuthStore = create((set) => {
 
           selectedOficinaIds:
             oficinaIds || []
+
+        }
+
+        saveToLocalStorage(
+          newState
+        )
+
+        return newState
+
+      }),
+
+    confirmarSeleccionOficina: () =>
+      set((state) => {
+
+        const newState = {
+
+          ...state,
+
+          oficinaSeleccionConfirmada: true
 
         }
 
@@ -143,6 +172,8 @@ export const useAuthStore = create((set) => {
 
           selectedOficinaIds: [],
 
+          oficinaSeleccionConfirmada: false,
+
           isLoading: false,
 
           error: null
@@ -172,6 +203,8 @@ export const useAuthStore = create((set) => {
         ownerId: null,
 
         selectedOficinaIds: [],
+
+        oficinaSeleccionConfirmada: false,
 
         isLoading: false,
 

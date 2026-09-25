@@ -7,6 +7,7 @@ import SearchSelect from "./SearchSelect";
 
 import {
   clientService,
+  fotoUrl,
 } from "../services/clientService";
 
 export default function ClientForm({
@@ -39,10 +40,91 @@ export default function ClientForm({
   const [errors, setErrors] =
     useState({});
 
+  /*
+  Filtro de oficina para no mezclar cobradores de oficinas
+  distintas al cargar un cliente. Las opciones salen de las
+  oficinas presentes entre los cobradores disponibles.
+  */
+  const [oficinaFiltro, setOficinaFiltro] =
+    useState("");
+
+  /*
+  Fotos del cliente: las ya guardadas (edición), las que se
+  marcan para eliminar, y las nuevas seleccionadas (aún sin
+  subir; se suben al guardar).
+  */
+  const [
+    fotosExistentes,
+    setFotosExistentes,
+  ] = useState([]);
+
+  const [
+    fotosAEliminar,
+    setFotosAEliminar,
+  ] = useState([]);
+
+  const [nuevasFotos, setNuevasFotos] =
+    useState([]);
+
   const cobradorSeleccionado =
     collectors.find(
       (c) => c.id === formData.cobradorId,
     );
+
+  const oficinasDeCobradores =
+    Array.from(
+      new Map(
+        collectors
+          .filter((c) => c.oficina)
+          .map((c) => [
+            c.oficina.id,
+            c.oficina,
+          ]),
+      ).values(),
+    );
+
+  /*
+  Oficina efectiva: la elegida a mano, o la del cobrador ya
+  seleccionado (edición), o la única disponible.
+  */
+  const oficinaFiltroEfectivo =
+    oficinaFiltro ||
+    cobradorSeleccionado?.oficina?.id ||
+    (oficinasDeCobradores.length === 1
+      ? oficinasDeCobradores[0].id
+      : "");
+
+  const cobradoresFiltrados =
+    oficinaFiltroEfectivo
+      ? collectors.filter(
+          (c) =>
+            c.oficina?.id ===
+            oficinaFiltroEfectivo,
+        )
+      : collectors;
+
+  const handleOficinaFiltroChange = (
+    id,
+  ) => {
+    setOficinaFiltro(id || "");
+
+    /*
+    Si el cobrador elegido no es de la nueva oficina, se limpia.
+    */
+    if (
+      formData.cobradorId &&
+      !collectors.some(
+        (c) =>
+          c.id === formData.cobradorId &&
+          c.oficina?.id === id,
+      )
+    ) {
+      setFormData((prev) => ({
+        ...prev,
+        cobradorId: "",
+      }));
+    }
+  };
 
   useEffect(() => {
     setFormData({
@@ -75,7 +157,44 @@ export default function ClientForm({
     }
 
     setErrors({});
+
+    setFotosExistentes(
+      initialData.fotos || [],
+    );
+    setFotosAEliminar([]);
+    setNuevasFotos([]);
+    setOficinaFiltro("");
   }, [initialData]);
+
+  const handleAgregarFotos = (e) => {
+    const files = Array.from(
+      e.target.files || [],
+    );
+    if (files.length) {
+      setNuevasFotos((prev) => [
+        ...prev,
+        ...files,
+      ]);
+    }
+    // Permite volver a elegir el mismo archivo.
+    e.target.value = "";
+  };
+
+  const quitarNuevaFoto = (index) => {
+    setNuevasFotos((prev) =>
+      prev.filter((_, i) => i !== index),
+    );
+  };
+
+  const marcarFotoAEliminar = (fotoId) => {
+    setFotosAEliminar((prev) => [
+      ...prev,
+      fotoId,
+    ]);
+    setFotosExistentes((prev) =>
+      prev.filter((f) => f.id !== fotoId),
+    );
+  };
 
   const buscarUbicacion =
     async () => {
@@ -284,6 +403,9 @@ export default function ClientForm({
       longitud:
         ubicacion?.longitud ??
         null,
+
+      nuevasFotos,
+      fotosAEliminar,
     });
   };
 
@@ -494,6 +616,26 @@ export default function ClientForm({
             </p>
           </div>
 
+          {oficinasDeCobradores.length >
+            1 && (
+            <Field label="Oficina">
+              <SearchSelect
+                items={
+                  oficinasDeCobradores
+                }
+                value={
+                  oficinaFiltroEfectivo
+                }
+                valueField="id"
+                labelField="nombre"
+                placeholder="Elegí la oficina..."
+                onChange={
+                  handleOficinaFiltroChange
+                }
+              />
+            </Field>
+          )}
+
           <Field
             label="Cobrador"
             error={
@@ -502,7 +644,7 @@ export default function ClientForm({
           >
             <SearchSelect
               items={
-                collectors
+                cobradoresFiltrados
               }
               value={
                 formData.cobradorId
@@ -511,7 +653,18 @@ export default function ClientForm({
               labelField={(c) =>
                 `${c.apellido}, ${c.nombre} — ${c.zone?.nombre || "Sin zona"}`
               }
-              placeholder="Buscar cobrador..."
+              placeholder={
+                oficinasDeCobradores.length >
+                  1 &&
+                !oficinaFiltroEfectivo
+                  ? "Elegí una oficina primero"
+                  : "Buscar cobrador..."
+              }
+              isDisabled={
+                oficinasDeCobradores.length >
+                  1 &&
+                !oficinaFiltroEfectivo
+              }
               onChange={
                 handleCollectorChange
               }
@@ -785,6 +938,99 @@ export default function ClientForm({
               </div>
             )}
         </section>
+
+        {/* FOTOS */}
+        <section>
+          <div className="mb-4">
+            <h3
+              className="
+                font-semibold
+                text-stone-800
+                dark:text-stone-100
+              "
+            >
+              Fotos
+            </h3>
+
+            <p
+              className="
+                mt-0.5
+                text-xs
+                text-stone-400
+              "
+            >
+              Podés cargar una o varias fotos del cliente.
+            </p>
+          </div>
+
+          <div
+            className="
+              grid
+              grid-cols-3
+              gap-3
+              sm:grid-cols-4
+            "
+          >
+            {fotosExistentes.map((foto) => (
+              <FotoThumb
+                key={foto.id}
+                src={fotoUrl(foto.url)}
+                onRemove={() =>
+                  marcarFotoAEliminar(foto.id)
+                }
+                disabled={isLoading}
+              />
+            ))}
+
+            {nuevasFotos.map((file, index) => (
+              <FotoThumb
+                key={`nueva-${index}`}
+                src={URL.createObjectURL(file)}
+                nueva
+                onRemove={() =>
+                  quitarNuevaFoto(index)
+                }
+                disabled={isLoading}
+              />
+            ))}
+
+            <label
+              className="
+                flex
+                aspect-square
+                cursor-pointer
+                flex-col
+                items-center
+                justify-center
+                gap-1
+                rounded-xl
+                border-2
+                border-dashed
+                border-stone-300
+                bg-stone-50
+                text-stone-400
+                transition
+                hover:border-amber-400
+                hover:text-amber-600
+                dark:border-stone-600
+                dark:bg-stone-800
+              "
+            >
+              <span className="text-2xl">+</span>
+              <span className="text-[11px] font-medium">
+                Agregar
+              </span>
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                disabled={isLoading}
+                onChange={handleAgregarFotos}
+                className="hidden"
+              />
+            </label>
+          </div>
+        </section>
       </div>
 
       {/* FOOTER */}
@@ -876,6 +1122,82 @@ export default function ClientForm({
         </button>
       </div>
     </form>
+  );
+}
+
+function FotoThumb({
+  src,
+  nueva,
+  onRemove,
+  disabled,
+}) {
+  return (
+    <div
+      className="
+        group
+        relative
+        aspect-square
+        overflow-hidden
+        rounded-xl
+        border
+        border-stone-200
+        bg-stone-100
+        dark:border-stone-700
+        dark:bg-stone-800
+      "
+    >
+      <img
+        src={src}
+        alt="Foto del cliente"
+        className="h-full w-full object-cover"
+      />
+
+      {nueva && (
+        <span
+          className="
+            absolute
+            left-1
+            top-1
+            rounded
+            bg-amber-500
+            px-1.5
+            py-0.5
+            text-[10px]
+            font-bold
+            text-white
+          "
+        >
+          Nueva
+        </span>
+      )}
+
+      {!disabled && (
+        <button
+          type="button"
+          onClick={onRemove}
+          className="
+            absolute
+            right-1
+            top-1
+            flex
+            h-6
+            w-6
+            items-center
+            justify-center
+            rounded-full
+            bg-black/60
+            text-sm
+            font-bold
+            text-white
+            transition
+            hover:bg-red-600
+          "
+          title="Quitar"
+        >
+          ×
+        </button>
+      )}
+    </div>
   );
 }
 

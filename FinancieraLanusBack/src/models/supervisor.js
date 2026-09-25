@@ -37,6 +37,10 @@ userId: {
   allowNull: true,
   unique: true
 },
+oficinaId: {
+  type: DataTypes.UUID,
+  allowNull: false
+},
       activo: {
         type: DataTypes.BOOLEAN,
         defaultValue: true

@@ -24,6 +24,12 @@ import ZonaMultiSelect
 import ErrorAlert
   from '../components/ErrorAlert'
 
+import OficinaVistaSelector
+  from '../components/OficinaVistaSelector'
+
+import { useOficinaVista }
+  from '../hooks/useOficinaVista'
+
 import {
   cajaService
 } from '../services/cajaService'
@@ -79,6 +85,17 @@ export default function CajaPage() {
   const [selectedZoneIds, setSelectedZoneIds] =
     useState([])
 
+  const {
+    oficinasActivas,
+    oficinaVista,
+    setOficinaVista,
+    oficinaIdsFetch,
+    mostrarSubtotales
+  } = useOficinaVista()
+
+  const [subtotales, setSubtotales] =
+    useState([])
+
   const [fechaDesde, setFechaDesde] =
     useState(hoyString())
 
@@ -130,16 +147,18 @@ export default function CajaPage() {
 
         const [resumenData, movimientosData, automaticosData] =
           await Promise.all([
-            cajaService.resumen(fechaDesde, fechaHasta),
+            cajaService.resumen(fechaDesde, fechaHasta, oficinaIdsFetch),
             cajaService.listMovimientos(
               selectedZoneIds,
               fechaDesde,
-              fechaHasta
+              fechaHasta,
+              oficinaIdsFetch
             ),
             cajaService.listMovimientosAutomaticos(
               selectedZoneIds,
               fechaDesde,
-              fechaHasta
+              fechaHasta,
+              oficinaIdsFetch
             )
           ])
 
@@ -153,6 +172,33 @@ export default function CajaPage() {
         setResumen(zonasResumen)
         setMovimientos(movimientosData || [])
         setMovimientosAutomaticos(automaticosData || [])
+
+        if (mostrarSubtotales) {
+          const resultados = await Promise.all(
+            oficinasActivas.map((oficina) =>
+              cajaService
+                .resumen(fechaDesde, fechaHasta, [oficina.id])
+                .then((d) => {
+                  const t = (d?.zonas || []).reduce(
+                    (acc, z) => ({
+                      recaudado:
+                        acc.recaudado +
+                        Number(z.recaudadoEfectivo || 0) +
+                        Number(z.recaudadoTransferencia || 0),
+                      saldoCaja:
+                        acc.saldoCaja + Number(z.saldoCaja || 0)
+                    }),
+                    { recaudado: 0, saldoCaja: 0 }
+                  )
+                  return { oficina, totales: t }
+                })
+                .catch(() => ({ oficina, totales: null }))
+            )
+          )
+          setSubtotales(resultados)
+        } else {
+          setSubtotales([])
+        }
 
       } catch (error) {
 
@@ -177,7 +223,7 @@ export default function CajaPage() {
     cargarDatos()
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedZoneIds, fechaDesde, fechaHasta])
+  }, [selectedZoneIds, fechaDesde, fechaHasta, oficinaVista])
 
 
   const abrirModal =
@@ -386,6 +432,62 @@ export default function CajaPage() {
         message={error}
         onDismiss={() => setError('')}
       />
+
+      {oficinasActivas.length > 1 && (
+        <OficinaVistaSelector
+          oficinas={oficinasActivas}
+          value={oficinaVista}
+          onChange={setOficinaVista}
+        />
+      )}
+
+      {subtotales.length > 0 && (
+        <div className="
+          grid
+          grid-cols-1
+          gap-3
+          sm:grid-cols-2
+          xl:grid-cols-3
+        ">
+          {subtotales.map(({ oficina, totales: t }) => (
+            <button
+              key={oficina.id}
+              type="button"
+              onClick={() => setOficinaVista(oficina.id)}
+              className="
+                rounded-2xl
+                border
+                border-stone-200
+                bg-white
+                p-4
+                text-left
+                shadow-sm
+                transition
+                hover:border-amber-300
+                hover:shadow-md
+              "
+            >
+              <div className="mb-2 truncate font-bold text-stone-800">
+                {oficina.nombre}
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <p className="text-xs text-stone-400">Recaudado</p>
+                  <p className="mt-0.5 font-bold text-emerald-600">
+                    {money(t?.recaudado || 0)}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-stone-400">Saldo caja</p>
+                  <p className="mt-0.5 font-bold text-stone-800">
+                    {money(t?.saldoCaja || 0)}
+                  </p>
+                </div>
+              </div>
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* FILTROS */}
 

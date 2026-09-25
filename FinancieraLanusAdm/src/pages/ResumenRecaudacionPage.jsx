@@ -21,6 +21,12 @@ import {
   reporteService
 } from '../services/reporteService'
 
+import OficinaVistaSelector
+  from '../components/OficinaVistaSelector'
+
+import { useOficinaVista }
+  from '../hooks/useOficinaVista'
+
 
 export default function ResumenRecaudacionPage() {
 
@@ -78,6 +84,19 @@ export default function ResumenRecaudacionPage() {
     setData
   ] = useState(null)
 
+  const {
+    oficinasActivas,
+    oficinaVista,
+    setOficinaVista,
+    oficinaIdsFetch,
+    mostrarSubtotales
+  } = useOficinaVista()
+
+  const [
+    subtotales,
+    setSubtotales
+  ] = useState([])
+
   const [
     loading,
     setLoading
@@ -108,12 +127,32 @@ export default function ResumenRecaudacionPage() {
             .recaudacion({
               fechaDesde,
               fechaHasta,
-              cobradorId
+              cobradorId,
+              oficinaIds: oficinaIdsFetch
             })
 
         setData(
           response
         )
+
+        if (mostrarSubtotales) {
+          const resultados = await Promise.all(
+            oficinasActivas.map((oficina) =>
+              reporteService
+                .recaudacion({
+                  fechaDesde,
+                  fechaHasta,
+                  cobradorId,
+                  oficinaIds: [oficina.id]
+                })
+                .then((d) => ({ oficina, data: d }))
+                .catch(() => ({ oficina, data: null }))
+            )
+          )
+          setSubtotales(resultados)
+        } else {
+          setSubtotales([])
+        }
 
       } catch (error) {
 
@@ -136,8 +175,8 @@ export default function ResumenRecaudacionPage() {
   useEffect(() => {
 
     cargarDatos()
-
-  }, [])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [oficinaVista])
 
 
   /*
@@ -860,6 +899,77 @@ export default function ResumenRecaudacionPage() {
 
       )}
 
+
+      {oficinasActivas.length > 1 && (
+        <div className="mb-4">
+          <OficinaVistaSelector
+            oficinas={oficinasActivas}
+            value={oficinaVista}
+            onChange={setOficinaVista}
+          />
+        </div>
+      )}
+
+      {subtotales.length > 0 && (
+        <div className="mb-4 space-y-3">
+          <h2 className="text-lg font-bold text-stone-900">
+            Subtotales por oficina
+          </h2>
+          <div className="
+            grid
+            grid-cols-1
+            gap-3
+            sm:grid-cols-2
+            xl:grid-cols-3
+          ">
+            {subtotales.map(({ oficina, data: d }) => {
+              const r = d?.resumen || {}
+              return (
+                <button
+                  key={oficina.id}
+                  type="button"
+                  onClick={() => setOficinaVista(oficina.id)}
+                  className="
+                    rounded-2xl
+                    border
+                    border-stone-200
+                    bg-white
+                    p-4
+                    text-left
+                    shadow-sm
+                    transition
+                    hover:border-amber-300
+                    hover:shadow-md
+                  "
+                >
+                  <div className="mb-2 flex items-center justify-between gap-2">
+                    <span className="truncate font-bold text-stone-800">
+                      {oficina.nombre}
+                    </span>
+                    <span className="shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-bold text-amber-700">
+                      {Number(r.porcentajeRecaudacion || 0)}%
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <p className="text-xs text-stone-400">A recaudar</p>
+                      <p className="mt-0.5 font-bold text-stone-800">
+                        $ {money(r.aRecaudar)}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-stone-400">Recaudado</p>
+                      <p className="mt-0.5 font-bold text-emerald-600">
+                        $ {money(r.recaudado)}
+                      </p>
+                    </div>
+                  </div>
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      )}
 
       {/* ================================================= */}
       {/* RESUMEN PRINCIPAL */}

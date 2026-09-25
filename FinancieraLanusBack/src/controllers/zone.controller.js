@@ -98,6 +98,12 @@ export const listZones = async (
           {
             model: Collector,
             as: 'collectors'
+          },
+          {
+            model: Oficina,
+            as: 'oficinas',
+            attributes: ['id', 'nombre'],
+            through: { attributes: [] }
           }
         ],
 

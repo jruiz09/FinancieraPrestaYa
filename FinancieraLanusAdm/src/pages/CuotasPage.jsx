@@ -24,6 +24,12 @@ import Pagination
 import ZonaMultiSelect
   from '../components/ZonaMultiSelect'
 
+import OficinaVistaSelector
+  from '../components/OficinaVistaSelector'
+
+import { useOficinaVista }
+  from '../hooks/useOficinaVista'
+
 import {
   cuotaService
 } from '../services/cuotaService'
@@ -122,6 +128,19 @@ export default function CuotasPage() {
     setFechas
   ] = useState(cargarFechasGuardadas)
 
+  const {
+    oficinasActivas,
+    oficinaVista,
+    setOficinaVista,
+    oficinaIdsFetch,
+    mostrarSubtotales
+  } = useOficinaVista()
+
+  const [
+    subtotales,
+    setSubtotales
+  ] = useState([])
+
 
   /* ===================================================== */
   /* CARGA */
@@ -151,7 +170,8 @@ export default function CuotasPage() {
             CUOTAS_POR_PAGINA,
             selectedZoneIds,
             fechaDesde,
-            fechaHasta
+            fechaHasta,
+            oficinaIdsFetch
           )
 
         setCuotas(
@@ -165,6 +185,28 @@ export default function CuotasPage() {
         setCounts(
           data.counts || {}
         )
+
+        if (mostrarSubtotales) {
+          const resultados = await Promise.all(
+            oficinasActivas.map((oficina) =>
+              cuotaService
+                .list(
+                  estado,
+                  1,
+                  1,
+                  selectedZoneIds,
+                  fechaDesde,
+                  fechaHasta,
+                  [oficina.id]
+                )
+                .then((d) => ({ oficina, data: d }))
+                .catch(() => ({ oficina, data: null }))
+            )
+          )
+          setSubtotales(resultados)
+        } else {
+          setSubtotales([])
+        }
 
       } catch (error) {
 
@@ -191,7 +233,7 @@ export default function CuotasPage() {
     cargarDatos()
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [estado, page, selectedZoneIds, fechaDesde, fechaHasta])
+  }, [estado, page, selectedZoneIds, fechaDesde, fechaHasta, oficinaVista])
 
 
   const cambiarEstado =
@@ -1001,6 +1043,67 @@ export default function CuotasPage() {
 
       </div>
 
+
+      {oficinasActivas.length > 1 && (
+        <OficinaVistaSelector
+          oficinas={oficinasActivas}
+          value={oficinaVista}
+          onChange={setOficinaVista}
+        />
+      )}
+
+      {subtotales.length > 0 && (
+        <div className="
+          grid
+          grid-cols-1
+          gap-3
+          sm:grid-cols-2
+          xl:grid-cols-3
+        ">
+          {subtotales.map(({ oficina, data: d }) => (
+            <button
+              key={oficina.id}
+              type="button"
+              onClick={() => setOficinaVista(oficina.id)}
+              className="
+                rounded-2xl
+                border
+                border-stone-200
+                bg-white
+                p-4
+                text-left
+                shadow-sm
+                transition
+                hover:border-amber-300
+                hover:shadow-md
+              "
+            >
+              <div className="mb-2 flex items-center justify-between gap-2">
+                <span className="truncate font-bold text-stone-800">
+                  {oficina.nombre}
+                </span>
+                <span className="shrink-0 rounded-full bg-stone-100 px-2 py-0.5 text-[11px] font-bold text-stone-600">
+                  {d?.total || 0} cuotas
+                </span>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <p className="text-xs text-stone-400">Saldo</p>
+                  <p className="mt-0.5 font-bold text-stone-800">
+                    $ {Number(d?.totales?.saldo || 0).toLocaleString('es-AR')}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-stone-400">Cobrado</p>
+                  <p className="mt-0.5 font-bold text-emerald-600">
+                    $ {Number(d?.totales?.montoPago || 0).toLocaleString('es-AR')}
+                  </p>
+                </div>
+              </div>
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* ================================================= */}
       {/* TABLA */}

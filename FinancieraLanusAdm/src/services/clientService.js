@@ -1,5 +1,20 @@
 import api from '../api/axios'
 
+/*
+El backend guarda la URL de la foto como ruta relativa
+(/uploads/...). Para mostrarla hay que anteponerle el origen del
+API (sin el /api final).
+*/
+const API_ORIGIN = (
+  import.meta.env.VITE_API_URL ||
+  'http://localhost:4000/api'
+).replace(/\/api\/?$/, '')
+
+export const fotoUrl = (url) =>
+  !url || url.startsWith('http')
+    ? url
+    : `${API_ORIGIN}${url}`
+
 export const clientService = {
   list: async (page = 1, limit = 10, ownerId = null, zoneIds = []) => {
     const params = { page, limit }
@@ -76,4 +91,35 @@ export const clientService = {
   return response.data.data
 
 },
+
+  listFotos: async (clientId) => {
+    const response = await api.get(
+      `/clients/${clientId}/fotos`,
+    )
+    return response.data.data
+  },
+
+  /*
+   * Sube una o varias fotos (File[]) de un cliente. Se manda como
+   * multipart bajo el campo 'fotos'. Se fuerza Content-Type a
+   * undefined para que el browser ponga el boundary correcto.
+   */
+  uploadFotos: async (clientId, files) => {
+    const form = new FormData()
+    files.forEach((file) => form.append('fotos', file))
+
+    const response = await api.post(
+      `/clients/${clientId}/fotos`,
+      form,
+      { headers: { 'Content-Type': undefined } },
+    )
+    return response.data.data
+  },
+
+  deleteFoto: async (clientId, fotoId) => {
+    const response = await api.delete(
+      `/clients/${clientId}/fotos/${fotoId}`,
+    )
+    return response.data
+  },
 }

@@ -10,14 +10,20 @@ import {
   ShieldCheck,
   Landmark,
   Wallet,
-  CalendarRange
+  CalendarRange,
+  ClipboardList,
+  ChartNoAxesCombined
 } from 'lucide-react'
 
 export const RUTAS_POR_PERMISO = [
 
   { path: '/dashboard', permission: 'DASHBOARD_VIEW', label: 'Dashboard', icon: LayoutDashboard },
 
+  { path: '/informe-diario', permission: 'INFORME_DIARIO_VIEW', label: 'Informe diario', icon: ClipboardList },
+
   { path: '/informe-semanal', permission: 'INFORME_SEMANAL_VIEW', label: 'Informe semanal', icon: CalendarRange },
+
+  { path: '/recaudacion', permission: 'RECAUDACION_VIEW', label: 'Recaudación', icon: ChartNoAxesCombined },
 
   { path: '/clients', permission: 'CLIENTS_VIEW', label: 'Clientes', icon: Users },
 

@@ -14,6 +14,10 @@ import OficinaVistaSelector
   from '../components/OficinaVistaSelector'
 import { useOficinaVista }
   from '../hooks/useOficinaVista'
+import Permission
+  from '../components/Permission'
+import { PERMISSIONS }
+  from '../constants/permissions'
 
 const COLUMNAS_EXCEL = [
   { header: 'Zona', key: 'zona', width: 22 },
@@ -687,6 +691,7 @@ export default function InformeDiarioPage() {
 
                     <td className="px-5 py-4">
 
+                      <Permission permission={PERMISSIONS.INFORME_DIARIO_EDIT}>
                       <button
                         type="button"
                         onClick={() =>
@@ -715,6 +720,7 @@ export default function InformeDiarioPage() {
                             : 'Guardar'
                         }
                       </button>
+                      </Permission>
 
                     </td>
 

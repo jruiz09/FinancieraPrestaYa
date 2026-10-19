@@ -219,7 +219,7 @@ export default function AppRoutes() {
         <Route
   path="recaudacion"
   element={
-    <ProtectedRoute requiredPermissions={['CREDITS_VIEW']}>
+    <ProtectedRoute requiredPermissions={['RECAUDACION_VIEW']}>
       <ResumenRecaudacionPage />
     </ProtectedRoute>
   }
@@ -228,7 +228,7 @@ export default function AppRoutes() {
 <Route
   path="informe-diario"
   element={
-    <ProtectedRoute requiredPermissions={['DASHBOARD_VIEW']}>
+    <ProtectedRoute requiredPermissions={['INFORME_DIARIO_VIEW']}>
       <InformeDiarioPage />
     </ProtectedRoute>
   }

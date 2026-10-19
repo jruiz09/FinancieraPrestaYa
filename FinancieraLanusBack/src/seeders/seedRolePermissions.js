@@ -33,6 +33,11 @@ export const seedRolePermissions = async () => {
 
       'INFORME_SEMANAL_VIEW',
 
+      'INFORME_DIARIO_VIEW',
+      'INFORME_DIARIO_EDIT',
+
+      'RECAUDACION_VIEW',
+
       'CLIENTS_VIEW',
       'CLIENTS_CREATE',
       'CLIENTS_EDIT',

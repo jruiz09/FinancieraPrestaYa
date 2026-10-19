@@ -33,7 +33,9 @@ export const getUserById = async (req, res, next) => {
 
 export const createUser = async (req, res, next) => {
   try {
-    const { name, username, password, roleId, ownerId, oficinaIds } = req.body;
+    const { name, username, password, roleId, oficinaIds } = req.body;
+
+    const ownerId = req.user.ownerId;
 
     if (!name || !username || !password || !roleId) {
       return res.status(400).json({ success: false, message: 'Campos requeridos: name, username, password, roleId.' });

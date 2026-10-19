@@ -495,7 +495,7 @@ export default function Sidebar({
 
   )}
 
-  {permissions.includes('CREDITS_VIEW') && (
+  {permissions.includes('RECAUDACION_VIEW') && (
 
     <SidebarLink
       to="/recaudacion"
@@ -508,7 +508,7 @@ export default function Sidebar({
 
   )}
 
-  {permissions.includes('DASHBOARD_VIEW') && (
+  {permissions.includes('INFORME_DIARIO_VIEW') && (
 
     <SidebarLink
       to="/informe-diario"

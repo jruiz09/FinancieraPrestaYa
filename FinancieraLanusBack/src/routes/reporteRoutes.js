@@ -31,6 +31,7 @@ const router =
 router.get(
   '/recaudacion',
   authenticate,
+  authorize('RECAUDACION_VIEW'),
   getResumenRecaudacion
 );
 
@@ -38,6 +39,7 @@ router.get(
 router.get(
   '/informe-diario',
   authenticate,
+  authorize('INFORME_DIARIO_VIEW'),
   query('fecha').isDate(),
   validateRequest,
   getInformeDiario
@@ -57,6 +59,7 @@ router.get(
 router.put(
   '/informe-diario',
   authenticate,
+  authorize('INFORME_DIARIO_EDIT'),
   body('zoneId').isUUID(),
   body('fecha').isDate(),
   body('pr').optional().isFloat({ min: 0 }),

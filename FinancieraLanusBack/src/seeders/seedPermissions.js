@@ -10,6 +10,15 @@ const MODULES = {
     'VIEW'
   ],
 
+  INFORME_DIARIO: [
+    'VIEW',
+    'EDIT'
+  ],
+
+  RECAUDACION: [
+    'VIEW'
+  ],
+
   CLIENTS: [
     'VIEW',
     'CREATE',
@@ -136,6 +145,10 @@ const moduleName = {
   DASHBOARD: 'Dashboard',
 
   INFORME_SEMANAL: 'Informe Semanal',
+
+  INFORME_DIARIO: 'Informe Diario',
+
+  RECAUDACION: 'Recaudación',
 
   CLIENTS: 'Clientes',
 

@@ -8,7 +8,9 @@ import { Op } from 'sequelize'
 
 import {
   obtenerZoneIdsPermitidos,
-  filtrarZoneIdsPermitidos
+  filtrarZoneIdsPermitidos,
+  obtenerOficinaIdsPermitidos,
+  validarOficinaParaAlta
 } from '../utils/oficinaScope.js'
 
 /*
@@ -179,6 +181,12 @@ export const getZone = async (
 
 }
 
+/*
+La zona se crea dentro de una Oficina: si no, queda fuera del
+scoping de cualquier usuario con oficinas asignadas y no aparece
+en ningún listado. oficinaId es opcional solo para un usuario sin
+oficinas asignadas (sin restricción).
+*/
 export const createZone = async (
   req,
   res,
@@ -187,15 +195,55 @@ export const createZone = async (
 
   try {
 
+    const {
+      oficinaId,
+      ...datosZona
+    } = req.body
+
+    let oficina = null
+
+    if (oficinaId) {
+
+      const validacion =
+        await validarOficinaParaAlta(
+          req.user,
+          req.user.ownerId,
+          oficinaId
+        )
+
+      if (!validacion.ok) {
+        return res.status(validacion.status).json({
+          success: false,
+          message: validacion.message
+        })
+      }
+
+      oficina = validacion.oficina
+
+    } else if (
+      await obtenerOficinaIdsPermitidos(req.user) !== null
+    ) {
+
+      return res.status(400).json({
+        success: false,
+        message: 'Oficina es requerida'
+      })
+
+    }
+
     const zone =
       await Zone.create({
 
-        ...req.body,
+        ...datosZona,
 
         ownerId:
           req.user.ownerId
 
       })
+
+    if (oficina) {
+      await zone.addOficina(oficina)
+    }
 
     res.status(201).json({
 

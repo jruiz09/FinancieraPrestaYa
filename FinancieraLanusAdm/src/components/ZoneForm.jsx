@@ -9,11 +9,71 @@ import {
 import { clientService }
   from '../services/clientService'
 
+import { oficinaService }
+  from '../services/oficinaService'
+
+import { useAuthStore }
+  from '../store/useAuthStore'
+
+import SearchSelect
+  from './SearchSelect'
+
 export default function ZoneForm({
   initialData = {},
   onSubmit,
   isLoading
 }) {
+
+  const esAlta = !initialData.id
+
+  const selectedOficinaIds =
+    useAuthStore((state) => state.selectedOficinaIds)
+
+  const [oficinas, setOficinas] =
+    useState([])
+
+  const [oficinaId, setOficinaId] =
+    useState('')
+
+  const [errorOficina, setErrorOficina] =
+    useState('')
+
+  useEffect(() => {
+
+    if (!esAlta) return
+
+    oficinaService
+      .list()
+      .then((data) => setOficinas(data || []))
+      .catch((err) => console.error(err))
+
+  }, [esAlta])
+
+  /*
+  Una zona nueva se crea dentro de una oficina (si no, no
+  aparece para nadie con oficinas asignadas). Se limita a las
+  oficinas activas del switch del Header; con una sola, se
+  asigna sola y el selector no se muestra.
+  */
+  const oficinasParaSelector =
+    selectedOficinaIds?.length
+      ? oficinas.filter((o) =>
+          selectedOficinaIds.includes(o.id)
+        )
+      : oficinas
+
+  const oficinaUnicaId =
+    oficinasParaSelector.length === 1
+      ? oficinasParaSelector[0].id
+      : null
+
+  useEffect(() => {
+
+    if (oficinaUnicaId && !oficinaId) {
+      setOficinaId(oficinaUnicaId)
+    }
+
+  }, [oficinaUnicaId, oficinaId])
 
   const [formData,
     setFormData] = useState({
@@ -150,7 +210,20 @@ export default function ZoneForm({
 
     e.preventDefault()
 
-    onSubmit(formData)
+    if (!esAlta) {
+      onSubmit(formData)
+      return
+    }
+
+    if (oficinasParaSelector.length > 0 && !oficinaId) {
+      setErrorOficina('Seleccione una oficina')
+      return
+    }
+
+    onSubmit({
+      ...formData,
+      oficinaId: oficinaId || undefined
+    })
 
   }
 
@@ -196,6 +269,33 @@ export default function ZoneForm({
           className={inputClass}
         />
       </div>
+
+      {esAlta && !oficinaUnicaId && oficinasParaSelector.length > 0 && (
+        <div>
+          <label className={labelClass}>
+            Oficina
+          </label>
+
+          <SearchSelect
+            items={oficinasParaSelector}
+            value={oficinaId}
+            valueField="id"
+            labelField="nombre"
+            placeholder="Buscar oficina..."
+            isDisabled={isLoading}
+            onChange={(id) => {
+              setOficinaId(id || '')
+              setErrorOficina('')
+            }}
+          />
+
+          {errorOficina && (
+            <p className="mt-1 text-xs font-medium text-red-500">
+              {errorOficina}
+            </p>
+          )}
+        </div>
+      )}
 
       <div>
         <label className={labelClass}>

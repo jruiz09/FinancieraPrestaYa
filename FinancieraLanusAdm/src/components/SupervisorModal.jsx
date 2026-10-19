@@ -505,6 +505,38 @@ export default function SupervisorModal({
     });
   };
 
+  const oficinasParaSelector =
+    !supervisor &&
+    selectedOficinaIds?.length
+      ? oficinasDisponibles.filter(
+          (o) =>
+            selectedOficinaIds.includes(
+              o.id,
+            ),
+        )
+      : oficinasDisponibles;
+
+  /*
+  Con una sola oficina disponible no hay nada que elegir: se
+  asigna sola y el selector no se muestra.
+  */
+  const oficinaUnicaId =
+    oficinasParaSelector.length === 1
+      ? oficinasParaSelector[0].id
+      : null;
+
+  useEffect(() => {
+    if (
+      oficinaUnicaId &&
+      !form.oficinaId
+    ) {
+      setForm((prev) => ({
+        ...prev,
+        oficinaId: oficinaUnicaId,
+      }));
+    }
+  }, [oficinaUnicaId, form.oficinaId]);
+
   if (!open) {
     return null;
   }
@@ -776,38 +808,32 @@ export default function SupervisorModal({
                   />
                 </Field>
 
-                <Field
-                  label="Oficina"
-                  error={
-                    errors.oficinaId
-                  }
-                >
-                  <SearchSelect
-                    items={
-                      !supervisor &&
-                      selectedOficinaIds?.length
-                        ? oficinasDisponibles.filter(
-                            (o) =>
-                              selectedOficinaIds.includes(
-                                o.id,
-                              ),
-                          )
-                        : oficinasDisponibles
+                {!oficinaUnicaId && (
+                  <Field
+                    label="Oficina"
+                    error={
+                      errors.oficinaId
                     }
-                    value={
-                      form.oficinaId
-                    }
-                    valueField="id"
-                    labelField="nombre"
-                    placeholder="Buscar oficina..."
-                    isDisabled={
-                      isLoading
-                    }
-                    onChange={
-                      handleOficinaChange
-                    }
-                  />
-                </Field>
+                  >
+                    <SearchSelect
+                      items={
+                        oficinasParaSelector
+                      }
+                      value={
+                        form.oficinaId
+                      }
+                      valueField="id"
+                      labelField="nombre"
+                      placeholder="Buscar oficina..."
+                      isDisabled={
+                        isLoading
+                      }
+                      onChange={
+                        handleOficinaChange
+                      }
+                    />
+                  </Field>
+                )}
               </div>
             </section>
 

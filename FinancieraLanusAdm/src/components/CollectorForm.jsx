@@ -483,6 +483,27 @@ export default function CollectorForm({
       : oficinas;
 
   /*
+  Con una sola oficina disponible no hay nada que elegir: se
+  asigna sola y el selector no se muestra.
+  */
+  const oficinaUnicaId =
+    oficinasDisponibles.length === 1
+      ? oficinasDisponibles[0].id
+      : null;
+
+  useEffect(() => {
+    if (
+      oficinaUnicaId &&
+      !formData.oficinaId
+    ) {
+      setFormData((prev) => ({
+        ...prev,
+        oficinaId: oficinaUnicaId,
+      }));
+    }
+  }, [oficinaUnicaId, formData.oficinaId]);
+
+  /*
   Zona y supervisor se acotan a la oficina destino (formData
   .oficinaId) para no mezclar entidades de oficinas distintas en
   la carga. Sin oficina elegida, no hay opciones habilitadas.
@@ -681,30 +702,34 @@ export default function CollectorForm({
               sm:grid-cols-2
             "
           >
-            <Field
-              label="Oficina"
-              error={
-                errors.oficinaId
-              }
-            >
-              <SearchSelect
-                items={oficinasDisponibles}
-                value={
-                  formData.oficinaId
-                }
-                valueField="id"
-                labelField="nombre"
-                placeholder="Buscar oficina..."
-                isDisabled={
-                  isLoading
-                }
-                onChange={
-                  handleOficinaChange
-                }
-              />
-            </Field>
+            {!oficinaUnicaId && (
+              <>
+                <Field
+                  label="Oficina"
+                  error={
+                    errors.oficinaId
+                  }
+                >
+                  <SearchSelect
+                    items={oficinasDisponibles}
+                    value={
+                      formData.oficinaId
+                    }
+                    valueField="id"
+                    labelField="nombre"
+                    placeholder="Buscar oficina..."
+                    isDisabled={
+                      isLoading
+                    }
+                    onChange={
+                      handleOficinaChange
+                    }
+                  />
+                </Field>
 
-            <div className="hidden sm:block" />
+                <div className="hidden sm:block" />
+              </>
+            )}
 
             <Field
               label="Zona"

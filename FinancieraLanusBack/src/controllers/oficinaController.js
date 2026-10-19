@@ -3,6 +3,14 @@ import {
   Zone
 } from '../models/index.js'
 
+import {
+  obtenerOficinaIdsPermitidos
+} from '../utils/oficinaScope.js'
+
+/*
+Un usuario con oficinas asignadas solo ve esas; sin oficinas
+asignadas (null) ve todas las del owner.
+*/
 export const listOficinas = async (
   req,
   res,
@@ -11,14 +19,23 @@ export const listOficinas = async (
 
   try {
 
+    const oficinaIdsPermitidos =
+      await obtenerOficinaIdsPermitidos(req.user)
+
+    const where = {
+      activa: true,
+      ownerId:
+        req.user.ownerId
+    }
+
+    if (oficinaIdsPermitidos !== null) {
+      where.id = oficinaIdsPermitidos
+    }
+
     const oficinas =
       await Oficina.findAll({
 
-        where: {
-          activa: true,
-          ownerId:
-            req.user.ownerId
-        },
+        where,
 
         include: [
           {

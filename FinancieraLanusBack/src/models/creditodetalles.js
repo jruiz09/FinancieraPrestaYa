@@ -45,6 +45,16 @@ fechaPagoEsperada: {
         type: DataTypes.DATEONLY
       },
 
+      fechaVisitaSinPago: {
+        type: DataTypes.DATEONLY
+      },
+
+      visitasSinPago: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue: 0
+      },
+
       observaciones: {
         type: DataTypes.TEXT
       },

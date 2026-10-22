@@ -4,7 +4,8 @@ import {
   CheckCircle2,
   Phone,
   MessageCircle,
-  Navigation
+  Navigation,
+  UserX
 } from "lucide-react";
 
 import BadgeEstado from "./BadgeEstado";
@@ -25,6 +26,8 @@ export default function CuotaCard({
 
   onCobrar,
 
+  onNoPago,
+
   mostrarCobrador
 
 }) {
@@ -35,6 +38,23 @@ export default function CuotaCard({
 
   const cliente =
     cuota.credito?.cliente;
+
+  const vecesSinPago =
+    Number(cuota.visitasSinPago || 0);
+
+  const visitadoSinPago =
+    (!!cuota.fechaVisitaSinPago || vecesSinPago > 0) &&
+    cuota.estado !== "PAGADA";
+
+  const ahora =
+    new Date();
+
+  const hoy =
+    `${ahora.getFullYear()}-${String(ahora.getMonth() + 1).padStart(2, "0")}-${String(ahora.getDate()).padStart(2, "0")}`;
+
+  const visitadoSinPagoHoy =
+    visitadoSinPago &&
+    cuota.fechaVisitaSinPago === hoy;
 
   const tieneTelefono =
     !!cliente?.celular;
@@ -426,6 +446,54 @@ export default function CuotaCard({
 
       </div>
 
+      {visitadoSinPago && (
+
+        <div
+          className="
+            mt-3
+            flex
+            items-center
+            gap-2
+            bg-amber-500/15
+            border
+            border-amber-600
+            text-amber-300
+            rounded-xl
+            px-3
+            py-2
+            text-sm
+            font-medium
+          "
+        >
+
+          <UserX
+            size={16}
+          />
+
+          {vecesSinPago > 1
+            ? `No pagó ${vecesSinPago} veces`
+            : "Visitado sin pago"
+          }
+
+          {cuota.fechaVisitaSinPago && (
+
+            <strong>
+
+              {
+                cuota.fechaVisitaSinPago
+                  .split("-")
+                  .reverse()
+                  .join("/")
+              }
+
+            </strong>
+
+          )}
+
+        </div>
+
+      )}
+
       {!detalle && (
 
         <div
@@ -604,6 +672,8 @@ export default function CuotaCard({
 
           : onCobrar ?
 
+          <>
+
           <button
 
             onClick={() =>
@@ -642,6 +712,54 @@ export default function CuotaCard({
             Registrar Cobro
 
           </button>
+
+          {onNoPago && (
+
+            <button
+
+              type="button"
+
+              onClick={() =>
+                onNoPago(
+                  cuota,
+                  !visitadoSinPagoHoy
+                )
+              }
+
+              className={`
+                mt-3
+                w-full
+                rounded-2xl
+                py-3
+                flex
+                justify-center
+                items-center
+                gap-2
+                font-semibold
+                ${
+                  visitadoSinPagoHoy
+                    ? "bg-slate-800 text-slate-300"
+                    : "bg-amber-600/20 border border-amber-600 text-amber-300"
+                }
+              `}
+
+            >
+
+              <UserX
+                size={20}
+              />
+
+              {
+                visitadoSinPagoHoy
+                  ? "Quitar \"No pagó\""
+                  : "No pagó"
+              }
+
+            </button>
+
+          )}
+
+          </>
 
           :
 

@@ -14,6 +14,10 @@ import {
   registrarPagoCuota
 } from './creditoController.js'
 
+import {
+  registrarVisitaSinPago
+} from '../services/visitaSinPagoService.js'
+
 const obtenerCollector =
   async (userId) => {
 
@@ -434,6 +438,16 @@ const dashboardSupervisor =
                 cuota.montoPago
               )
             cuotasCobradas++
+            clientesVisitadosHoy.add(
+              credito.clienteId
+            )
+          }
+
+          if (
+            formatDate(
+              cuota.fechaVisitaSinPago
+            ) === hoyString
+          ) {
             clientesVisitadosHoy.add(
               credito.clienteId
             )
@@ -1192,6 +1206,93 @@ export const pagarCuotaMobile =
 
   }
 
+/*
+Marca (o desmarca) que el cobrador visitó al cliente y no le
+pagaron la cuota. La lógica de fecha y contador vive en
+visitaSinPagoService.
+*/
+export const visitaSinPagoMobile =
+  async (
+    req,
+    res,
+    next
+  ) => {
+
+    try {
+
+      if (esSupervisor(req.user)) {
+        return res.status(403).json({
+          success: false,
+          message:
+            'Supervisores no pueden registrar visitas desde mobile.'
+        })
+      }
+
+      const collector =
+        await obtenerCollector(
+          req.user.id
+        )
+
+      if (!collector) {
+        return res.status(404).json({
+          success: false,
+          message: 'Cobrador no encontrado'
+        })
+      }
+
+      const cuota =
+        await CreditoDetalle.findOne({
+          where: {
+            id: req.params.id,
+            activo: true
+          },
+          include: [
+            {
+              model: Credito,
+              as: 'credito',
+              attributes: ['id'],
+              where: {
+                cobradorId:
+                  collector.id
+              }
+            }
+          ]
+        })
+
+      if (!cuota) {
+        return res.status(404).json({
+          success: false,
+          message: 'Cuota no encontrada.'
+        })
+      }
+
+      if (cuota.estado === 'PAGADA') {
+        return res.status(400).json({
+          success: false,
+          message:
+            'La cuota ya se encuentra pagada.'
+        })
+      }
+
+      const data =
+        await registrarVisitaSinPago(
+          cuota,
+          req.body.marcar !== false
+        )
+
+      return res.json({
+        success: true,
+        data
+      })
+
+    } catch (error) {
+
+      next(error)
+
+    }
+
+  }
+
 export const getCreditoMobile =
   async (
     req,
@@ -1388,6 +1489,10 @@ export const perfilMobile =
             if (cuota.fechaPago === hoy) {
               cobradoHoy += Number(cuota.montoPago)
               cuotasCobradas++
+              clientesVisitadosHoy.add(credito.clienteId)
+            }
+
+            if (cuota.fechaVisitaSinPago === hoy) {
               clientesVisitadosHoy.add(credito.clienteId)
             }
 

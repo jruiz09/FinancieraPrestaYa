@@ -31,6 +31,12 @@ import PagoCuotaModal
 import ConfirmCascadaModal
   from './ConfirmCascadaModal'
 
+import VisitaSinPagoTag
+  from './VisitaSinPagoTag'
+
+import VisitaSinPagoButton
+  from './VisitaSinPagoButton'
+
 import Permission
   from './Permission'
 
@@ -942,11 +948,24 @@ export default function CuotasTable({
                         text-center
                       ">
 
-                        <EstadoBadge
-                          estado={
-                            cuota.estado
-                          }
-                        />
+                        <div className="
+                          flex
+                          flex-col
+                          items-center
+                          gap-1
+                        ">
+
+                          <EstadoBadge
+                            estado={
+                              cuota.estado
+                            }
+                          />
+
+                          <VisitaSinPagoTag
+                            cuota={cuota}
+                          />
+
+                        </div>
 
                       </td>
 
@@ -1016,6 +1035,16 @@ export default function CuotasTable({
                                 }
 
                               </button>
+
+                              <VisitaSinPagoButton
+                                cuota={cuota}
+                                onDone={onReload}
+                                className="
+                                  h-9
+                                  px-3
+                                  rounded-lg
+                                "
+                              />
 
                             </Permission>
 
@@ -1260,11 +1289,24 @@ export default function CuotasTable({
                     </div>
 
 
-                    <EstadoBadge
-                      estado={
-                        cuota.estado
-                      }
-                    />
+                    <div className="
+                      flex
+                      flex-col
+                      items-end
+                      gap-1
+                    ">
+
+                      <EstadoBadge
+                        estado={
+                          cuota.estado
+                        }
+                      />
+
+                      <VisitaSinPagoTag
+                        cuota={cuota}
+                      />
+
+                    </div>
 
                   </div>
 
@@ -1458,6 +1500,16 @@ export default function CuotasTable({
                           }
 
                         </button>
+
+                        <VisitaSinPagoButton
+                          cuota={cuota}
+                          onDone={onReload}
+                          className="
+                            flex-1
+                            h-10
+                            rounded-xl
+                          "
+                        />
 
                       </Permission>
 

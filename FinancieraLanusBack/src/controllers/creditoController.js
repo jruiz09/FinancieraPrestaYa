@@ -13,6 +13,7 @@ import crypto from 'crypto';
 import { Op } from 'sequelize';
 
 import { calcularCuotasAfectadas } from '../services/pagoCuotaService.js';
+import { registrarVisitaSinPago } from '../services/visitaSinPagoService.js';
 import {
   resolverZoneIdsEfectivos,
   resolverOficinaIdsEfectivos,
@@ -1078,6 +1079,71 @@ let fechaBase =
 };
 
 
+/*
+Marca (o desmarca) desde el panel que se visitó al cliente y
+no pagó la cuota. Misma lógica que mobile
+(visitaSinPagoService).
+*/
+export const visitaSinPagoCuota = async (
+  req,
+  res,
+  next
+) => {
+
+  try {
+
+    const cuota =
+      await CreditoDetalle.findOne({
+        where: {
+          id: req.params.id,
+          activo: true
+        },
+        include: [
+          {
+            model: Credito,
+            as: 'credito',
+            attributes: ['id', 'ownerId']
+          }
+        ]
+      });
+
+    if (
+      !cuota ||
+      (
+        !canViewAllOwners(req.user) &&
+        cuota.credito.ownerId !== req.user.ownerId
+      )
+    ) {
+      return res.status(404).json({
+        success: false,
+        message: 'Cuota no encontrada.'
+      });
+    }
+
+    if (cuota.estado === 'PAGADA') {
+      return res.status(400).json({
+        success: false,
+        message: 'La cuota ya se encuentra pagada.'
+      });
+    }
+
+    const data =
+      await registrarVisitaSinPago(
+        cuota,
+        req.body.marcar !== false
+      );
+
+    return res.json({
+      success: true,
+      data
+    });
+
+  } catch (error) {
+    next(error);
+  }
+};
+
+
 export const registrarPagoCuota = async (
   req,
   res,
@@ -1348,6 +1414,12 @@ export const registrarPagoCuota = async (
 
       c.fechaPago =
         fechaMovimiento;
+
+      c.fechaVisitaSinPago =
+        null;
+
+      c.visitasSinPago =
+        0;
 
       c.estado =
         nuevoMontoPago >=

@@ -266,6 +266,37 @@ export default function CobrosPage() {
 
     }
 
+  const registrarVisitaSinPago =
+    async (cuota, marcar) => {
+
+      try {
+
+        await mobileService.visitaSinPago(
+          cuota.id,
+          marcar
+        )
+
+        mostrarToast(
+          marcar
+            ? '🚪 Visita sin pago registrada'
+            : 'Marca "No pagó" quitada',
+          'success'
+        )
+
+        await cargar()
+
+      } catch (error) {
+
+        mostrarToast(
+          error.response?.data?.message ||
+          '❌ Error al registrar la visita',
+          'error'
+        )
+
+      }
+
+    }
+
   const mostrarToast = (
 
     message,
@@ -595,6 +626,14 @@ export default function CobrosPage() {
                   esSupervisor
                     ? undefined
                     : setCuotaSeleccionada
+
+                }
+
+                onNoPago={
+
+                  esSupervisor
+                    ? undefined
+                    : registrarVisitaSinPago
 
                 }
 

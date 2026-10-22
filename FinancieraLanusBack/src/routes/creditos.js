@@ -12,6 +12,7 @@ import {
   darDeBajaCredito,
   simularCredito,
   registrarPagoCuota,
+  visitaSinPagoCuota,
   listCuotas
 } from '../controllers/creditoController.js';
 
@@ -156,6 +157,22 @@ router.post(
   validateRequest,
 
   registrarPagoCuota
+);
+
+router.put(
+  '/cuotas/:id/visita-sin-pago',
+
+  authorize('CREDITS_EDIT'),
+
+  param('id').isUUID(),
+
+  body('marcar')
+    .optional()
+    .isBoolean(),
+
+  validateRequest,
+
+  visitaSinPagoCuota
 );
 
 export default router;

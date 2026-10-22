@@ -71,6 +71,20 @@ pagarCuota: async (
 
 }
 ,
+visitaSinPago: async (
+  cuotaId,
+  marcar
+) => {
+
+  const response =
+    await api.put(
+      `/mobile/cuotas/${cuotaId}/visita-sin-pago`,
+      { marcar }
+    )
+
+  return response.data.data
+
+},
 buscar: async (q) => {
 
   const response =

@@ -15,6 +15,7 @@ import { seedFixForeignKeysAyuda } from './seeders/seedFixForeignKeysAyuda.js';
 import { seedPermisoOficinasAdministrativo } from './seeders/seedPermisoOficinasAdministrativo.js';
 import { seedOficinaIdEntidadesOperativas } from './seeders/seedOficinaIdEntidadesOperativas.js';
 import { seedPermisosInformeDiarioRecaudacion } from './seeders/seedPermisosInformeDiarioRecaudacion.js';
+import { seedColumnaVisitaSinPago } from './seeders/seedColumnaVisitaSinPago.js';
 
 dotenv.config();
 
@@ -40,6 +41,8 @@ const startServer = async () => {
     await seedFixForeignKeysAyuda();
 
     await seedOficinaIdEntidadesOperativas();
+
+    await seedColumnaVisitaSinPago();
 
     await seedRoles();
 

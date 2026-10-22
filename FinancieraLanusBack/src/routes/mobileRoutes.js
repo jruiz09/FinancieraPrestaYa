@@ -18,6 +18,8 @@ import {
 
   pagarCuotaMobile,
 
+  visitaSinPagoMobile,
+
   getCreditoMobile,
   recorridoMobile,
   perfilMobile,
@@ -61,6 +63,11 @@ router.get(
 router.post(
   '/cuotas/:id/pagar',
   pagarCuotaMobile
+)
+
+router.put(
+  '/cuotas/:id/visita-sin-pago',
+  visitaSinPagoMobile
 )
 
 router.get(

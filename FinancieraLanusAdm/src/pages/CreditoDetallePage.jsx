@@ -46,6 +46,12 @@ import ConfirmCascadaModal
 import BajaCreditoModal
   from '../components/BajaCreditoModal'
 
+import VisitaSinPagoTag
+  from '../components/VisitaSinPagoTag'
+
+import VisitaSinPagoButton
+  from '../components/VisitaSinPagoButton'
+
 import Permission
   from '../components/Permission'
 
@@ -1475,11 +1481,23 @@ ${url}`
 
                 </div>
 
-                <EstadoCuotaBadge
-                  estado={
-                    proximaCuota.estado
-                  }
-                />
+                <div className="
+                  flex
+                  items-center
+                  gap-2
+                ">
+
+                  <VisitaSinPagoTag
+                    cuota={proximaCuota}
+                  />
+
+                  <EstadoCuotaBadge
+                    estado={
+                      proximaCuota.estado
+                    }
+                  />
+
+                </div>
 
               </div>
 
@@ -1615,6 +1633,17 @@ ${url}`
                     Registrar cobro
 
                   </button>
+
+                  <VisitaSinPagoButton
+                    cuota={proximaCuota}
+                    onDone={cargarCredito}
+                    className="
+                      w-full
+                      h-11
+                      mt-2
+                      rounded-xl
+                    "
+                  />
 
                 </Permission>
 
@@ -2188,11 +2217,24 @@ ${url}`
                         text-center
                       ">
 
-                        <EstadoCuotaBadge
-                          estado={
-                            cuota.estado
-                          }
-                        />
+                        <div className="
+                          flex
+                          flex-col
+                          items-center
+                          gap-1
+                        ">
+
+                          <EstadoCuotaBadge
+                            estado={
+                              cuota.estado
+                            }
+                          />
+
+                          <VisitaSinPagoTag
+                            cuota={cuota}
+                          />
+
+                        </div>
 
                       </td>
 
@@ -2279,6 +2321,17 @@ ${url}`
                               }
 
                             </button>
+
+                            <VisitaSinPagoButton
+                              cuota={cuota}
+                              onDone={cargarCredito}
+                              className="
+                                h-9
+                                px-3
+                                ml-2
+                                rounded-lg
+                              "
+                            />
 
                           </Permission>
 

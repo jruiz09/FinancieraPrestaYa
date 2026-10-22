@@ -46,6 +46,20 @@ export const creditoService = {
   return response.data;
 },
 
+  visitaSinPago: async (
+  cuotaId,
+  marcar
+) => {
+
+  const response =
+    await api.put(
+      `/creditos/cuotas/${cuotaId}/visita-sin-pago`,
+      { marcar }
+    );
+
+  return response.data.data;
+},
+
   darDeBaja: async (id, data) => {
     const response = await api.put(
       `/creditos/${id}/baja`,

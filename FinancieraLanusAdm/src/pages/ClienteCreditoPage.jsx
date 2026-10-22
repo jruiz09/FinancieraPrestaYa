@@ -31,6 +31,9 @@ import {
   creditoPublicService
 } from '../services/creditoPublicService'
 
+import VisitaSinPagoTag
+  from '../components/VisitaSinPagoTag'
+
 
 export default function ClienteCreditoPage() {
 
@@ -878,6 +881,69 @@ export default function ClienteCreditoPage() {
 
                   )}
 
+                  {(
+                    proximaCuota.fechaVisitaSinPago ||
+                    Number(proximaCuota.visitasSinPago || 0) > 0
+                  ) && (
+
+                    <div className="
+                      flex
+                      items-start
+                      gap-2
+                      mt-3
+                      bg-orange-50
+                      border
+                      border-orange-200
+                      text-orange-800
+                      rounded-xl
+                      px-3
+                      py-2.5
+                      text-sm
+                    ">
+
+                      <AlertTriangle
+                        className="
+                          w-4
+                          h-4
+                          mt-0.5
+                          shrink-0
+                        "
+                      />
+
+                      <p>
+
+                        {proximaCuota.fechaVisitaSinPago
+                          ? <>
+                              Te visitamos el
+                              {' '}
+                              <strong>
+                                {formatDate(
+                                  proximaCuota.fechaVisitaSinPago
+                                )}
+                              </strong>
+                              {' '}
+                              y no se registró el pago de esta cuota.
+                            </>
+                          : 'Te visitamos y no se registró el pago de esta cuota.'
+                        }
+
+                        {Number(proximaCuota.visitasSinPago || 0) > 1 && (
+                          <>
+                            {' '}
+                            Visitas sin pago:
+                            {' '}
+                            <strong>
+                              {proximaCuota.visitasSinPago}
+                            </strong>.
+                          </>
+                        )}
+
+                      </p>
+
+                    </div>
+
+                  )}
+
                 </div>
 
 
@@ -1461,6 +1527,10 @@ export default function ClienteCreditoPage() {
                                 estado={
                                   cuota.estado
                                 }
+                              />
+
+                              <VisitaSinPagoTag
+                                cuota={cuota}
                               />
 
                             </div>
